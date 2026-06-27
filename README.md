@@ -25,4 +25,8 @@ GitHub Pages 배포가 활성화되면 다음 주소에서 바로 볼 수 있습
 
 ## 배포 (GitHub Pages)
 
-`.github/workflows/pages.yml` 워크플로가 `main` 브랜치 푸시 시 리포 루트(`index.html`)를 자동으로 Pages에 배포합니다. 워크플로가 Pages를 자동 활성화하므로(`enablement: true`) 별도 설정이 필요 없습니다. 수동 실행은 Actions 탭의 *Deploy to GitHub Pages* → *Run workflow* 로 가능합니다.
+`.github/workflows/pages.yml` 워크플로가 `main` 브랜치 푸시 시 리포 루트(`index.html`)를 Pages에 빌드·배포합니다. 수동 실행은 Actions 탭의 *Deploy to GitHub Pages* → *Run workflow* 로도 가능합니다.
+
+> **최초 1회 설정 필요**: GitHub 보안 정책상 워크플로의 자동 토큰은 Pages를 처음으로 켤 수 없습니다.
+> 리포 **Settings → Pages → Build and deployment → Source** 를 **`GitHub Actions`** 로 한 번 설정한 뒤
+> 워크플로를 다시 실행하면 배포가 완료됩니다. 이후부터는 `main` 푸시마다 자동 배포됩니다.
