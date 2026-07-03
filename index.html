@@ -103,6 +103,7 @@
       <button id="random">🎲 무작위 생성</button>
       <button id="replay">↻ 다시 피우기</button>
       <button id="cycle" class="full">🔁 자동 순환 쇼케이스</button>
+      <button id="copySettings" class="full">📋 설정 클립보드 복사</button>
     </div>
   </div>
 
@@ -1261,6 +1262,41 @@ async function main() {
   presetSel.addEventListener('change', () => { loadPreset(+presetSel.value, true); });
 
   $('replay').addEventListener('click', () => { bloomT = 0; autoBloom = true; $('autoBloom').checked = true; });
+
+  // ---- Copy current settings (all panel controls + petal-axis flip) to clipboard as JSON ----
+  function collectSettings() {
+    const data = {};
+    document.querySelectorAll('#panel input, #panel select').forEach((el) => {
+      if (!el.id) return;
+      data[el.id] = (el.type === 'checkbox') ? el.checked : el.value;
+    });
+    data.flip = { x: flip.x, y: flip.y, z: flip.z };
+    return data;
+  }
+  async function copySettings() {
+    const json = JSON.stringify(collectSettings(), null, 2);
+    let ok = false;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(json);
+        ok = true;
+      }
+    } catch (e) { ok = false; }
+    if (!ok) {                                   // fallback for non-secure contexts (e.g. file://)
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = json;
+        ta.style.position = 'fixed'; ta.style.top = '-1000px'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.focus(); ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch (e) { ok = false; }
+    }
+    const btn = $('copySettings'); const prev = btn.textContent;
+    btn.textContent = ok ? '✅ 복사됨!' : '⚠️ 복사 실패';
+    setTimeout(() => { btn.textContent = prev; }, 1400);
+  }
+  $('copySettings').addEventListener('click', copySettings);
 
   function randomFlower() {
     seed = (Math.random() * 1e6) | 0;
