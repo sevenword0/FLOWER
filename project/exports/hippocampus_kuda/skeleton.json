@@ -1,0 +1,147 @@
+{
+  "rig_strategy": "spline_spine",
+  "coordinate_system": {
+    "symmetry_type": "bilateral",
+    "rig_strategy": "spline_spine",
+    "frame_definition": {
+      "origin": "snout_tip",
+      "x": "rostro_caudal",
+      "y": "dorsal",
+      "z": "left"
+    },
+    "normalized_scale_definition": "Normalized by standard length; x in [0,1] snout->tail; y,z as fraction of SL."
+  },
+  "spine": [
+    {
+      "joint_id": "spine_00",
+      "parent": null,
+      "position_m": [
+        0.0,
+        0.01014,
+        0.0
+      ],
+      "dof": [
+        "root6"
+      ]
+    },
+    {
+      "joint_id": "spine_01",
+      "parent": "spine_00",
+      "position_m": [
+        0.02897,
+        0.02028,
+        0.0
+      ],
+      "dof": [
+        "bend_z",
+        "bend_y"
+      ]
+    },
+    {
+      "joint_id": "spine_02",
+      "parent": "spine_01",
+      "position_m": [
+        0.05793,
+        0.02317,
+        0.0
+      ],
+      "dof": [
+        "bend_z",
+        "bend_y"
+      ]
+    },
+    {
+      "joint_id": "spine_03",
+      "parent": "spine_02",
+      "position_m": [
+        0.0869,
+        0.02124,
+        0.0
+      ],
+      "dof": [
+        "bend_z",
+        "bend_y"
+      ]
+    },
+    {
+      "joint_id": "spine_04",
+      "parent": "spine_03",
+      "position_m": [
+        0.11586,
+        0.01159,
+        0.0
+      ],
+      "dof": [
+        "bend_z",
+        "bend_y"
+      ]
+    },
+    {
+      "joint_id": "spine_05",
+      "parent": "spine_04",
+      "position_m": [
+        0.14483,
+        -0.00579,
+        0.0
+      ],
+      "dof": [
+        "bend_z",
+        "bend_y"
+      ]
+    },
+    {
+      "joint_id": "spine_06",
+      "parent": "spine_05",
+      "position_m": [
+        0.17379,
+        -0.02433,
+        0.0
+      ],
+      "dof": [
+        "bend_z",
+        "bend_y"
+      ]
+    },
+    {
+      "joint_id": "spine_07",
+      "parent": "spine_06",
+      "position_m": [
+        0.20276,
+        -0.04461,
+        0.0
+      ],
+      "dof": [
+        "bend_z",
+        "bend_y"
+      ]
+    }
+  ],
+  "fin_joints": [
+    {
+      "joint_id": "fin_dorsal",
+      "parent": "spine_03",
+      "position_m": [
+        0.09124,
+        0.0,
+        0.0
+      ],
+      "dof": [
+        "flex",
+        "abduct"
+      ]
+    },
+    {
+      "joint_id": "fin_pectoral",
+      "parent": "spine_01",
+      "position_m": [
+        0.0365,
+        0.0,
+        0.0
+      ],
+      "dof": [
+        "flex",
+        "abduct"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,687 @@
+{
+  "target_taxon": "어류",
+  "profile_key": "fish",
+  "symmetry_type": "bilateral",
+  "rig_strategy": "spline_spine",
+  "slots": {
+    "1_identity_lifecycle": {
+      "realized_structures": {
+        "structures": [
+          "species",
+          "population",
+          "sex",
+          "life_stage",
+          "size_class"
+        ],
+        "lifecycle": [
+          "egg",
+          "larva",
+          "juvenile",
+          "adult",
+          "senescent"
+        ]
+      },
+      "responsible_agents": [
+        "A01"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "taxonomy_authority",
+          "id": "worms",
+          "name": "WoRMS",
+          "api": true,
+          "scope": "marine"
+        },
+        {
+          "bucket": "taxonomy_authority",
+          "id": "fishbase",
+          "name": "FishBase",
+          "api": true,
+          "scope": "fishes"
+        },
+        {
+          "bucket": "taxonomy_authority",
+          "id": "gbif",
+          "name": "GBIF Backbone",
+          "api": true,
+          "scope": "all"
+        },
+        {
+          "bucket": "taxonomy_authority",
+          "id": "itis",
+          "name": "ITIS",
+          "api": true,
+          "scope": "all"
+        },
+        {
+          "bucket": "taxonomy_authority",
+          "id": "col",
+          "name": "Catalogue of Life",
+          "api": true,
+          "scope": "all"
+        }
+      ]
+    },
+    "2_structural_support": {
+      "realized_structures": {
+        "kind": "endoskeleton",
+        "structures": [
+          "neurocranium",
+          "vertebral_column",
+          "ribs",
+          "fin_ray_supports_pterygiophores"
+        ],
+        "material_model": "bone_cartilage"
+      },
+      "responsible_agents": [
+        "A04",
+        "A10"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "morphometry_specimen",
+          "id": "morphosource",
+          "name": "MorphoSource CT/3D",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "phenoscape",
+          "name": "Phenoscape (anatomy ontology)",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "idigbio",
+          "name": "iDigBio specimens",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "3_joints_linkages": {
+      "realized_structures": {
+        "structures": [
+          "intervertebral_joints",
+          "cranial_kinesis",
+          "jaw_four_bar_linkage",
+          "fin_ray_base_joints"
+        ],
+        "linkage_types": [
+          "bend",
+          "rotation",
+          "four_bar_protrusion"
+        ]
+      },
+      "responsible_agents": [
+        "A04",
+        "A10"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "morphometry_specimen",
+          "id": "morphosource",
+          "name": "MorphoSource CT/3D",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "phenoscape",
+          "name": "Phenoscape (anatomy ontology)",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "idigbio",
+          "name": "iDigBio specimens",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "4_feeding_capture": {
+      "realized_structures": {
+        "structures": [
+          "oral_jaws",
+          "premaxilla",
+          "maxilla",
+          "hyoid",
+          "opercular_suction",
+          "pharyngeal_jaws"
+        ],
+        "mechanism": "suction_and_ram"
+      },
+      "responsible_agents": [
+        "A04",
+        "A05"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "5_actuation": {
+      "realized_structures": {
+        "kind": "striated_muscle",
+        "structures": [
+          "myomeres_red_white",
+          "epaxial_hypaxial",
+          "jaw_adductors",
+          "fin_ray_muscles"
+        ],
+        "proxy": "contractile_segments"
+      },
+      "responsible_agents": [
+        "A05",
+        "A11"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "6_locomotion_structures": {
+      "realized_structures": {
+        "structures": [
+          "caudal_fin",
+          "body_axis",
+          "paired_pectoral",
+          "paired_pelvic",
+          "dorsal_fin",
+          "anal_fin"
+        ],
+        "stabilizers": [
+          "median_fins"
+        ]
+      },
+      "responsible_agents": [
+        "A06",
+        "A10",
+        "A11"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "morphometry_specimen",
+          "id": "morphosource",
+          "name": "MorphoSource CT/3D",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "phenoscape",
+          "name": "Phenoscape (anatomy ontology)",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "idigbio",
+          "name": "iDigBio specimens",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "7_core_physiology": {
+      "realized_structures": {
+        "respiration": "gills_opercular_pump",
+        "buoyancy": "swim_bladder",
+        "osmoregulation": "gill_kidney"
+      },
+      "responsible_agents": [
+        "A03",
+        "A13"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "obis",
+          "name": "OBIS occurrence",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "gbif_occ",
+          "name": "GBIF occurrences",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "movebank",
+          "name": "Movebank telemetry",
+          "api": true
+        }
+      ]
+    },
+    "8_surface_covering": {
+      "realized_structures": {
+        "structures": [
+          "scales",
+          "mucus_layer",
+          "lateral_line_pores",
+          "dermal_denticles_NA"
+        ],
+        "microstructure": [
+          "scale_overlap",
+          "ctenii",
+          "circuli"
+        ]
+      },
+      "responsible_agents": [
+        "A07",
+        "A08"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "morphometry_specimen",
+          "id": "morphosource",
+          "name": "MorphoSource CT/3D",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "phenoscape",
+          "name": "Phenoscape (anatomy ontology)",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "idigbio",
+          "name": "iDigBio specimens",
+          "api": true
+        },
+        {
+          "bucket": "media",
+          "id": "inaturalist",
+          "name": "iNaturalist (CC media)",
+          "api": true,
+          "license_filter": [
+            "CC0",
+            "CC-BY",
+            "CC-BY-NC"
+          ]
+        }
+      ]
+    },
+    "9_head_sensors_silhouette": {
+      "realized_structures": {
+        "head": "neurocranium_snout",
+        "eyes": "paired_camera_eyes",
+        "other_sensors": [
+          "lateral_line",
+          "olfactory_rosette",
+          "inner_ear",
+          "taste_barbels"
+        ]
+      },
+      "responsible_agents": [
+        "A09"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "morphosource",
+          "name": "MorphoSource CT/3D",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "phenoscape",
+          "name": "Phenoscape (anatomy ontology)",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "idigbio",
+          "name": "iDigBio specimens",
+          "api": true
+        }
+      ]
+    },
+    "10_optics_pattern": {
+      "realized_structures": {
+        "mechanisms": [
+          "pigment_chromatophores",
+          "structural_iridophores",
+          "guanine_platelets",
+          "countershading"
+        ],
+        "angle_dependent": "iridescence"
+      },
+      "responsible_agents": [
+        "A08"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "media",
+          "id": "inaturalist",
+          "name": "iNaturalist (CC media)",
+          "api": true,
+          "license_filter": [
+            "CC0",
+            "CC-BY",
+            "CC-BY-NC"
+          ]
+        },
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "11_behavior_movement": {
+      "realized_structures": {
+        "modes": [
+          "foraging",
+          "schooling",
+          "predator_avoidance",
+          "resting",
+          "territorial",
+          "courtship",
+          "migration"
+        ]
+      },
+      "responsible_agents": [
+        "A12"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "occurrence_behavior",
+          "id": "obis",
+          "name": "OBIS occurrence",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "gbif_occ",
+          "name": "GBIF occurrences",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "movebank",
+          "name": "Movebank telemetry",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "12_ecology_interactions": {
+      "realized_structures": {
+        "axes": [
+          "depth",
+          "temperature",
+          "salinity",
+          "oxygen",
+          "flow",
+          "turbidity",
+          "substrate",
+          "cover"
+        ],
+        "roles": [
+          "predator",
+          "prey",
+          "competitor",
+          "cleaner_symbiont"
+        ]
+      },
+      "responsible_agents": [
+        "A13"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "occurrence_behavior",
+          "id": "obis",
+          "name": "OBIS occurrence",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "gbif_occ",
+          "name": "GBIF occurrences",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "movebank",
+          "name": "Movebank telemetry",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "crossref",
+          "name": "Crossref",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "openalex",
+          "name": "OpenAlex",
+          "api": true
+        },
+        {
+          "bucket": "literature",
+          "id": "biodivlib",
+          "name": "Biodiversity Heritage Library",
+          "api": true
+        }
+      ]
+    },
+    "13_variation": {
+      "realized_structures": {
+        "axes": [
+          "sex",
+          "life_stage",
+          "season",
+          "population",
+          "condition",
+          "size"
+        ]
+      },
+      "responsible_agents": [
+        "A06",
+        "A12"
+      ],
+      "na": false,
+      "source_routes": [
+        {
+          "bucket": "morphometry_specimen",
+          "id": "morphosource",
+          "name": "MorphoSource CT/3D",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "phenoscape",
+          "name": "Phenoscape (anatomy ontology)",
+          "api": true
+        },
+        {
+          "bucket": "morphometry_specimen",
+          "id": "idigbio",
+          "name": "iDigBio specimens",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "obis",
+          "name": "OBIS occurrence",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "gbif_occ",
+          "name": "GBIF occurrences",
+          "api": true
+        },
+        {
+          "bucket": "occurrence_behavior",
+          "id": "movebank",
+          "name": "Movebank telemetry",
+          "api": true
+        }
+      ]
+    }
+  }
+}

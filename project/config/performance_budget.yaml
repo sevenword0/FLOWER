@@ -1,0 +1,36 @@
+# Performance budget (프롬프트 §15 성능, §10 행동 LOD). Targets are advisory
+# for the reference runtime and consumed by src/biogen/lod.py.
+target_hardware: "mid-range GPU workstation (reference)"
+frame_budget_ms: 16.6            # 60 fps
+agent_tick_budget_us: 40         # per-agent behavior+locomotion tick
+
+lod_tiers:
+  hero:
+    max_agents: 8
+    mesh_lod: 0
+    behavior: full_sensory_internal_state
+    locomotion: full_oscillator
+    tick_hz: 60
+  standard:
+    max_agents: 120
+    mesh_lod: 1
+    behavior: reduced_sensors
+    locomotion: full_oscillator
+    tick_hz: 30
+  crowd:
+    max_agents: 2000
+    mesh_lod: 2
+    behavior: flocking_rules_limited_state
+    locomotion: kinematic_curve
+    tick_hz: 10
+  far_field:
+    max_agents: 100000
+    mesh_lod: 3
+    behavior: density_biomass_aggregate
+    locomotion: none_statistical
+    tick_hz: 1
+
+memory_budget:
+  vram_mb: 4096
+  mesh_kb_per_hero: 2048
+  draw_calls_max: 1500

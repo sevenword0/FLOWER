@@ -1,0 +1,14 @@
+{
+  "model": "OpenPBR-approx",
+  "base_color": [
+    0.02,
+    0.02,
+    0.025
+  ],
+  "roughness": 0.7,
+  "iridescence": 0.0,
+  "subsurface": 0.02,
+  "ultra_black": true,
+  "hue_jitter": -0.0214,
+  "evidence_class": "runtime_approximation"
+}

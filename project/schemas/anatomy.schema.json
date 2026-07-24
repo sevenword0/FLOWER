@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://biogen.local/schemas/anatomy.schema.json",
+  "title": "AnatomyModule",
+  "description": "Anatomy part + support graph node (프롬프트 A03/A04). Ontology-linked, taxon-agnostic.",
+  "type": "object",
+  "required": ["part_id", "functional_slot"],
+  "additionalProperties": true,
+  "properties": {
+    "part_id": {"type": "string"},
+    "label": {"type": "string"},
+    "functional_slot": {
+      "type": "string",
+      "description": "One of the 13 functional slots (§2), e.g. '6_locomotion_structures'."
+    },
+    "ontology_ref": {"type": "string", "description": "e.g. UBERON:xxxxxxx or phenoscape id"},
+    "parent_part_id": {"type": ["string", "null"]},
+    "support_kind": {"enum": ["endoskeleton", "exoskeleton", "hydrostatic", "turgor", "colonial", "membrane", "soft_tissue", "other"]},
+    "position_normalized": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+    "actuator_ids": {"type": "array", "items": {"type": "string"}},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  }
+}

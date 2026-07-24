@@ -1,0 +1,43 @@
+{
+  "preset_version": "0.1.0",
+  "kind": "species_delta",
+  "taxon": {
+    "taxon_id": "melanocetus_johnsonii",
+    "accepted_scientific_name": "Melanocetus johnsonii",
+    "rank": "species",
+    "synonyms": ["Melanocetus krechi"],
+    "classification": ["Actinopterygii", "Lophiiformes", "Melanocetidae"],
+    "source_ids": ["worms", "gbif", "obis"]
+  },
+  "context": {"sex": "female", "life_stage": "adult", "population": "deep_sea", "reference_size_si": 0.12},
+  "parameter_hierarchy": {"clade_base_id": "actinopterygii", "morphotype_base_id": "globiform_bathy", "species_delta_id": "melanocetus_johnsonii"},
+  "morphometrics": {
+    "reference_length_m": 0.12,
+    "reference_length_by_sex": {"female": 0.12, "male": 0.028},
+    "body_depth_ratio": 0.55,
+    "body_width_ratio": 0.5,
+    "_note": "Extreme sexual dimorphism: dwarf males (P0031). reference_length_by_sex resolved by ContextDelta."
+  },
+  "locomotion": {"swim_mode": "subcarangiform_slow", "cruise_speed_bl": 0.3, "burst_speed_bl": 2.0, "tailbeat_freq_cruise": 1.2, "turn_rate_rad_s": 1.5,
+                 "_inference": "No direct kinematics; cruise Inferred via transfer (P0032/P0033), confidence <= 0.35."},
+  "sensory_system": {"vision_range_bl": 2.0, "vision_fov_deg": 160, "lateral_line_range_bl": 2.0,
+                     "_note": "Low ambient light; lure-based prey attraction dominates over vision range."},
+  "ecology": {"depth_range_m": [1000, 4000], "temperature_opt_c": 3, "strike_range_bl": 1.2, "strike_success_prob": 0.5, "handling_time_s": 45.0, "trophic_role_hint": "ambush_predator"},
+  "appearance": {
+    "material_parameters": {"base_color": [0.02, 0.02, 0.025], "roughness": 0.7, "iridescence": 0.0, "subsurface": 0.02, "ultra_black": true},
+    "emissive": {"source": "esca", "wavelength_nm": 480, "evidence_class": "Inferred", "confidence": 0.4, "evidence_refs": ["P0035"]},
+    "pattern_rules": ["ultra_black_dermis"]
+  },
+  "behavior": {
+    "min_dwell_s": 5.0,
+    "ethogram": [
+      {"behavior_id": "ambush", "label": "sit_and_wait_lure", "utility": {"bias": 1.0, "hunger": 0.3},
+       "steer": "hold", "throttle": 0.0, "action_primitive_ids": ["station", "esca_luring"], "confidence": 0.5, "evidence_refs": ["P0037"]},
+      {"behavior_id": "strike", "label": "engulf_strike", "utility": {"prey_adjacent": 3.0, "hunger": 1.0},
+       "steer": "seek", "throttle": 0.9, "action_primitive_ids": ["burst", "suction_engulf"], "confidence": 0.4},
+      {"behavior_id": "reposition", "label": "slow_reposition", "utility": {"fatigue": 0.4, "bias": 0.2},
+       "steer": "wander", "throttle": 0.2, "action_primitive_ids": ["cruise"], "confidence": 0.3}
+    ]
+  },
+  "provenance": {"evidence_refs": ["P0030", "P0031", "P0032", "P0033", "P0034", "P0035", "P0036", "P0037", "P0038"], "license_refs": ["obis", "literature_primary"]}
+}

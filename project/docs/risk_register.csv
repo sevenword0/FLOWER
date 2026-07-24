@@ -1,0 +1,11 @@
+risk_id,description,likelihood,impact,mitigation,status
+R1,Taxon literal leaks into code breaking portability,medium,high,test_portability.py scans package for banned literals; config-only literal,mitigated
+R2,Inferred values presented as measured,medium,high,evidence_class field + audit_evidence_ledger blocks high-confidence Inferred,mitigated
+R3,Data-poor species (anglerfish) modeled with false precision,high,medium,transfer_from_taxon_id + confidence<=0.35 + gap report,mitigated
+R4,Schooling model unstable / non-reproducible,medium,medium,deterministic seed; boids equilibrium validated across seeds (0.76-0.82 BL),mitigated
+R5,Predators collapse prey population (unbounded predation),medium,high,handling time + hunger gating + dilution; test_prey_population_survives,mitigated
+R6,License violation in redistributed data,low,high,license_manifest.csv; parameters-only from copyrighted literature,mitigated
+R7,Mesh generation non-deterministic,low,medium,no wall-clock/random in geometry; build_hash test,mitigated
+R8,Schema drift between agents' outputs,medium,medium,single species_preset.schema.json validated in CI/tests,mitigated
+R9,Real API integration not exercised (reference values only),high,medium,source_registry documents endpoints; ETL client is a documented next step,open
+R10,Seahorse posture/pipefish loft is an approximation,high,low,flagged in known_limitations; centerline curve approximates upright posture,accepted

@@ -1,0 +1,173 @@
+# Source registry (프롬프트 §6). Each source scored for authority, directness,
+# context match, sample quality (0-1). API/official download preferred over
+# scraping (규칙 9). Values here describe the databases the pipeline routes to;
+# per-datum provenance lives in evidence/evidence_ledger.csv.
+#
+# NOTE ON SCOPE: This is a reproducible-pipeline reference build. The registry
+# records WHERE each class of datum is sourced and under WHAT license. Numeric
+# values in the evidence ledger are drawn from the standard published literature
+# summarized below and flagged by evidence_class; anything not traceable to a
+# primary measurement is marked Inferred/Derived/ArtistAuthored with reduced
+# confidence, never presented as measured (규칙 3).
+
+sources:
+  - source_id: fishbase
+    name: "FishBase"
+    source_type: aggregated_database
+    taxonomic_scope: fishes
+    data_types: [taxonomy, morphometrics, length_weight, ecology, swimming, diet]
+    access_mode: api
+    api_or_download: "https://fishbase.ropensca.org / rfishbase"
+    version: "2024.x"
+    retrieved_at: "reference-build"
+    license: "CC-BY-NC 3.0 (attribution, non-commercial)"
+    attribution: "Froese, R. and D. Pauly. Editors. FishBase."
+    derivative_use_allowed: true
+    redistribution_allowed: conditional
+    authority_score: 0.85
+    direct_measurement_score: 0.6
+    context_match_score: 0.8
+    sample_quality_score: 0.7
+    notes: "Species-level trait aggregator; trace to primary refs where possible."
+
+  - source_id: worms
+    name: "World Register of Marine Species"
+    source_type: taxonomic_authority
+    taxonomic_scope: marine
+    data_types: [taxonomy, synonymy, identifiers]
+    access_mode: api
+    api_or_download: "https://www.marinespecies.org/rest/"
+    version: "2024"
+    retrieved_at: "reference-build"
+    license: "CC-BY 4.0"
+    attribution: "WoRMS Editorial Board"
+    derivative_use_allowed: true
+    redistribution_allowed: true
+    authority_score: 0.95
+    direct_measurement_score: 0.0
+    context_match_score: 1.0
+    sample_quality_score: 0.9
+    notes: "Accepted names + LSID for marine taxa."
+
+  - source_id: gbif
+    name: "GBIF Backbone Taxonomy + Occurrences"
+    source_type: taxonomic_authority
+    taxonomic_scope: all
+    data_types: [taxonomy, occurrence, distribution]
+    access_mode: api
+    api_or_download: "https://api.gbif.org/v1/"
+    version: "backbone-2024"
+    retrieved_at: "reference-build"
+    license: "CC-BY 4.0 (records vary; check per-record)"
+    attribution: "GBIF.org"
+    derivative_use_allowed: true
+    redistribution_allowed: true
+    authority_score: 0.9
+    direct_measurement_score: 0.3
+    context_match_score: 0.7
+    sample_quality_score: 0.7
+    notes: "Occurrence records carry per-record licenses; filter CC0/CC-BY."
+
+  - source_id: morphosource
+    name: "MorphoSource"
+    source_type: specimen_repository
+    taxonomic_scope: vertebrates
+    data_types: [ct_scan, 3d_mesh, landmarks]
+    access_mode: api
+    api_or_download: "https://www.morphosource.org/api"
+    version: "2024"
+    retrieved_at: "reference-build"
+    license: "per-media (CC-BY / CC-BY-NC / restricted)"
+    attribution: "MorphoSource + contributing institution"
+    derivative_use_allowed: conditional
+    redistribution_allowed: conditional
+    authority_score: 0.9
+    direct_measurement_score: 0.95
+    context_match_score: 0.6
+    sample_quality_score: 0.85
+    notes: "Static CT geometry: 동작각 임의 추정 금지 (규칙 A04). Use for shape only."
+
+  - source_id: obis
+    name: "Ocean Biodiversity Information System"
+    source_type: aggregated_database
+    taxonomic_scope: marine
+    data_types: [occurrence, depth, environment]
+    access_mode: api
+    api_or_download: "https://api.obis.org/v3/"
+    version: "2024"
+    retrieved_at: "reference-build"
+    license: "CC-BY 4.0"
+    attribution: "OBIS"
+    derivative_use_allowed: true
+    redistribution_allowed: true
+    authority_score: 0.85
+    direct_measurement_score: 0.5
+    context_match_score: 0.8
+    sample_quality_score: 0.7
+    notes: "Depth/temperature envelopes for ecology slot."
+
+  - source_id: openalex
+    name: "OpenAlex"
+    source_type: literature_index
+    taxonomic_scope: all
+    data_types: [bibliography, citations]
+    access_mode: api
+    api_or_download: "https://api.openalex.org/"
+    version: "2024"
+    retrieved_at: "reference-build"
+    license: "CC0"
+    attribution: "OpenAlex"
+    derivative_use_allowed: true
+    redistribution_allowed: true
+    authority_score: 0.7
+    direct_measurement_score: 0.0
+    context_match_score: 0.6
+    sample_quality_score: 0.6
+    notes: "Forward/backward citation tracing map (§6)."
+
+  - source_id: literature_primary
+    name: "Primary peer-reviewed literature (biomechanics/behavior)"
+    source_type: primary_research
+    taxonomic_scope: fishes
+    data_types: [kinematics, muscle, sensory, behavior, ethogram]
+    access_mode: manual_trace
+    api_or_download: "via Crossref/OpenAlex DOIs"
+    version: "n/a"
+    retrieved_at: "reference-build"
+    license: "per-publisher (cite, do not redistribute full text)"
+    attribution: "see bibliography.bib"
+    derivative_use_allowed: parameters_only
+    redistribution_allowed: false
+    authority_score: 0.95
+    direct_measurement_score: 0.9
+    context_match_score: 0.8
+    sample_quality_score: 0.8
+    notes: "Tail-beat frequency, swimming speed (BL/s), suction feeding, schooling metrics."
+
+  - source_id: artist_authored
+    name: "Artist / technical fill values"
+    source_type: authored
+    taxonomic_scope: all
+    data_types: [material_tuning, art_direction, gap_fill]
+    access_mode: internal
+    api_or_download: "n/a"
+    version: "0.1.0"
+    retrieved_at: "reference-build"
+    license: "project-internal"
+    attribution: "biogen pipeline"
+    derivative_use_allowed: true
+    redistribution_allowed: true
+    authority_score: 0.2
+    direct_measurement_score: 0.0
+    context_match_score: 0.3
+    sample_quality_score: 0.2
+    notes: "Lowest evidence tier; confidence <= 0.29 (규칙, §7)."
+
+conflict_resolution_policy:
+  order:
+    - "target species/life-stage/sex/size/environment closest match"
+    - "direct measurement over image estimate"
+    - "kinematics over static-shape estimate"
+    - "clear sample size + method"
+    - "current accepted name + traceable raw data"
+    - "if unresolved: keep multiple hypotheses + range (no forced single value)"

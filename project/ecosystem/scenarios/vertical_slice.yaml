@@ -1,0 +1,38 @@
+# Ecosystem scenario (프롬프트 §11, A13). DATA, not code: taxon ids, roles,
+# counts and spawn behavior live here so the runtime stays taxon-agnostic
+# (규칙 17). `role` selects the trophic interaction bucket (see ecosystem._PREY_TABLE);
+# it may also be read from each preset's ecology.trophic_role_hint.
+name: reef_and_pelagic_slice
+description: >
+  Mixed community exercising schooling, mesopredation, deep-sea ambush and
+  station-holding grazing over a shared, finite plankton resource field.
+world:
+  bounds_m: [16.0, 8.0, 16.0]
+  turbidity: 0.1
+  dt: 0.1
+  seed: 11
+  resource_regrow: 0.05
+populations:
+  - taxon_id: clupea_harengus
+    role: planktivore
+    count: 40
+    nnd_pref_bl: 0.7
+    cluster: true            # obligate schooler -> spawn as a shoal
+  - taxon_id: oncorhynchus_mykiss
+    role: mesopredator
+    count: 6
+    nnd_pref_bl: 3.0
+    cluster: false
+  - taxon_id: melanocetus_johnsonii
+    role: ambush_predator
+    count: 2
+    nnd_pref_bl: 5.0
+    cluster: false
+  - taxon_id: hippocampus_kuda
+    role: grazer
+    count: 4
+    nnd_pref_bl: 4.0
+    cluster: false
+metrics:
+  schooler_taxon_id: clupea_harengus   # which population to report NND for
+  steps: 600

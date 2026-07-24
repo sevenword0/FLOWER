@@ -1,0 +1,19 @@
+{
+  "kind": "morphotype_base",
+  "parameter_hierarchy": {"morphotype_base_id": "globiform_bathy"},
+  "morphometrics": {
+    "girth_profile": [[0.0, 0.05], [0.15, 0.9], [0.35, 1.0], [0.6, 0.7], [0.85, 0.3], [1.0, 0.05]],
+    "body_width_ratio": 0.55,
+    "allometry": {"life_stage_depth_scale": {"juvenile": 0.8, "adult": 1.0}}
+  },
+  "locomotion": {"swim_mode": "subcarangiform_slow", "cruise_speed_bl": 0.3, "burst_speed_bl": 2.0, "tailbeat_freq_cruise": 1.2, "turn_rate_rad_s": 1.5},
+  "external_structures": {
+    "fins": [
+      {"name": "illicium_esca", "kind": "median_dorsal", "x_norm": 0.12, "span_norm": 0.02, "height_norm": 0.35},
+      {"name": "dorsal", "kind": "median_dorsal", "x_norm": 0.7, "span_norm": 0.12, "height_norm": 0.1},
+      {"name": "anal", "kind": "median_ventral", "x_norm": 0.75, "span_norm": 0.1, "height_norm": 0.08},
+      {"name": "caudal", "kind": "caudal", "x_norm": 0.97, "span_norm": 0.08, "height_norm": 0.1},
+      {"name": "pectoral", "kind": "paired", "x_norm": 0.4, "span_norm": 0.08, "height_norm": 0.05}
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "preset_version": "0.1.0",
+  "kind": "clade_base",
+  "taxon": {
+    "taxon_id": "actinopterygii_base",
+    "accepted_scientific_name": "Actinopterygii",
+    "rank": "class",
+    "synonyms": [],
+    "classification": ["Chordata", "Actinopterygii"],
+    "source_ids": ["worms", "gbif"]
+  },
+  "context": {"sex": "unknown", "life_stage": "adult", "population": "generic", "reference_size_si": 0.2},
+  "coordinate_system": {
+    "symmetry_type": "bilateral",
+    "rig_strategy": "spline_spine",
+    "frame_definition": {"origin": "snout_tip", "x": "rostro_caudal", "y": "dorsal", "z": "left"},
+    "normalized_scale_definition": "Normalized by standard length; x in [0,1] snout->tail; y,z as fraction of SL."
+  },
+  "parameter_hierarchy": {"clade_base_id": "actinopterygii", "morphotype_base_id": "", "individual_seed_policy": "gaussian_bounded"},
+  "sensory_system": {"vision_range_bl": 8.0, "vision_fov_deg": 300, "lateral_line_range_bl": 1.0},
+  "locomotion": {"turn_rate_rad_s": 2.5},
+  "behavior": {
+    "drive_rates": {"hunger": 0.02, "fatigue": 0.015, "fear_decay": 0.25, "reproduction": 0.001},
+    "min_dwell_s": 2.0
+  },
+  "appearance": {
+    "material_parameters": {"model": "OpenPBR-approx", "base_color": [0.5, 0.55, 0.6], "roughness": 0.3, "iridescence": 0.15, "subsurface": 0.2},
+    "runtime_approximations": {"medium": "water", "wet": true}
+  },
+  "anatomy": {
+    "respiration_or_volume_control": [
+      {"part_id": "gills", "functional_slot": "7_core_physiology", "ontology_ref": "UBERON:0000161"},
+      {"part_id": "swim_bladder", "functional_slot": "7_core_physiology", "ontology_ref": "UBERON:0006860"}
+    ],
+    "joints": [
+      {"joint_id": "jaw", "parent_part_id": "neurocranium", "child_part_id": "lower_jaw",
+       "degrees_of_freedom": [{"type": "rotation", "axis": [0, 0, 1], "min": 0.0, "max": 0.6, "neutral": 0.0, "max_speed": 20.0, "stiffness": 5.0, "damping": 0.5}],
+       "evidence_refs": ["source:fishbase"], "confidence": 0.6}
+    ]
+  },
+  "provenance": {"evidence_refs": ["source:worms", "source:gbif", "source:fishbase"], "license_refs": ["worms", "gbif", "fishbase"]}
+}
