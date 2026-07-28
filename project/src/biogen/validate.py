@@ -68,27 +68,74 @@ def validate_provenance(resolved: dict) -> List[str]:
     return errs
 
 
+# 규칙 4 requires every parameter to carry these. A blank is not "unknown" —
+# it is an unanswered question, so the ledger must state the answer explicitly.
+REQUIRED_FIELDS = ("taxon_id", "parameter_name", "value", "unit", "distribution",
+                   "sample_size", "sex", "life_stage", "body_size", "population",
+                   "season", "environment_context", "measurement_method",
+                   "source_id", "source_location", "evidence_class", "confidence",
+                   "uncertainty_reason", "license_id", "review_status")
+
+# We never invent N. Where a real count is unavailable the row must say which
+# kind of un-counted evidence stands behind it.
+SAMPLE_SIZE_VOCAB = {"aggregate", "not_reported", "species_character", "n/a"}
+
+CATEGORICAL_UNITS = {"category", "bool"}
+
+
 def audit_evidence_ledger() -> Dict[str, object]:
-    """Cross-check the ledger: Inferred/ArtistAuthored rows must not carry high
-    confidence; transfers must record transfer_from_taxon_id (규칙 7, §7)."""
+    """Cross-check the ledger (규칙 4, 6, 7, §7).
+
+    Blocks: over-confident Inferred/ArtistAuthored values, transfers without a
+    recorded source taxon, blank required fields, fabricated-looking sample
+    sizes, numeric rows missing a range, categorical rows carrying a bogus one,
+    and Derived rows with no derivation formula.
+    """
     path = paths.EVIDENCE / "evidence_ledger.csv"
     problems: List[str] = []
     counts: Dict[str, int] = {}
     with open(path, newline="", encoding="utf-8") as fh:
         for row in csv.DictReader(fh):
+            pid = row["parameter_id"]
             ec = row["evidence_class"]
             counts[ec] = counts.get(ec, 0) + 1
             try:
                 conf = float(row["confidence"])
             except ValueError:
                 conf = -1
+
             if ec == "ArtistAuthored" and conf > 0.30:
-                problems.append(f"{row['parameter_id']}: ArtistAuthored conf {conf} > 0.30")
+                problems.append(f"{pid}: ArtistAuthored conf {conf} > 0.30")
             if ec == "Inferred" and conf >= 0.70:
-                problems.append(f"{row['parameter_id']}: Inferred conf {conf} >= 0.70")
+                problems.append(f"{pid}: Inferred conf {conf} >= 0.70")
             if ec == "Inferred" and "transfer" in row.get("derivation_formula", "").lower() \
                and not row.get("transfer_from_taxon_id"):
-                problems.append(f"{row['parameter_id']}: transfer without transfer_from_taxon_id")
+                problems.append(f"{pid}: transfer without transfer_from_taxon_id")
+
+            # 규칙 4 — no silent blanks
+            for f in REQUIRED_FIELDS:
+                if not (row.get(f) or "").strip():
+                    problems.append(f"{pid}: required field '{f}' is blank")
+
+            ss = (row.get("sample_size") or "").strip()
+            if ss and ss not in SAMPLE_SIZE_VOCAB and not ss.isdigit():
+                problems.append(
+                    f"{pid}: sample_size '{ss}' is neither a count nor one of "
+                    f"{sorted(SAMPLE_SIZE_VOCAB)}")
+
+            # 규칙 6 — a measured scalar without a range hides its spread
+            is_cat = row.get("unit") in CATEGORICAL_UNITS
+            has_range = bool((row.get("min_value") or "").strip()
+                             and (row.get("max_value") or "").strip())
+            if not is_cat and not has_range:
+                problems.append(f"{pid}: numeric parameter has no min/max range")
+            if is_cat and ((row.get("min_value") or "").strip()
+                           or (row.get("max_value") or "").strip()):
+                problems.append(f"{pid}: categorical parameter carries a numeric range")
+
+            if ec == "Derived" and not (row.get("derivation_formula") or "").strip():
+                problems.append(f"{pid}: Derived value has no derivation_formula")
+
     return {"counts": counts, "problems": problems}
 
 

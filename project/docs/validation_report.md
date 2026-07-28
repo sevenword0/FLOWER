@@ -5,14 +5,19 @@ All simulations are deterministic per seed.
 
 ## Automated gate tests
 
-`pytest` → **41 passed** (`tests/test_schema.py`, `test_determinism.py`,
+`pytest` → **59 passed** (`test_schema.py`, `test_determinism.py`,
 `test_portability.py`, `test_locomotion.py`, `test_ecosystem.py`,
-`test_etl.py`).
+`test_etl.py`, `test_shape.py`, `test_gltf.py`).
 
 ## Data / provenance (Gate G2)
 
-- Evidence ledger: 40 parameters — Measured 30, Derived 3, Inferred 5,
-  ArtistAuthored 2.
+- Evidence ledger: 40 parameters — Measured 30, Derived 2, Inferred 6,
+  ArtistAuthored 2. (P0016 was reclassified: it was labelled Derived but had no
+  derivation formula, which makes it an Inferred estimate, not a computed one.)
+- Every required field is populated. `sample_size` is a count where one exists
+  and otherwise names the kind of un-counted evidence — `aggregate` 11,
+  `species_character` 13, `not_reported` 11, `n/a` 5. No value was invented to
+  fill a column.
 - Evidence audit problems: **0** (no Inferred ≥ 0.7, no ArtistAuthored > 0.3,
   all transfers record `transfer_from_taxon_id`).
 - All 4 resolved presets validate against `species_preset.schema.json`.
@@ -97,12 +102,45 @@ Measured with `node project/tests/bench_lod.mjs`; full numbers in
 - Absolute times come from a software rasterizer (no GPU here) and are valid only
   as relative comparisons.
 
+## Shape (§15 형상)
+
+Full numbers in `docs/shape_report.md`, raw in `docs/shape_metrics.json`.
+
+- LOD silhouette IoU vs LOD0: **0.998–0.999 (LOD1)**, 0.949–0.963 (LOD2),
+  0.851–0.889 (LOD3) — decimation preserves the identifying outline.
+- Proportion error (length / depth / width): **< 1 %** for all four taxa, so
+  the loft realises the ratios its preset asked for.
+- Girth-profile landmark error: 0.4–0.8 % for the fusiform taxa, 6.3 % for the
+  seahorse, where discrete sampling along the posture curve costs the most.
+
+Writing these metrics exposed two faults **in the metrics themselves** — a
+length measured over the caudal fin, and a depth measured as a global bounding
+box on a curved body — both fixed. See the report.
+
+## Recruitment (§11)
+
+- `World.reproduction` is energy-gated with a logistic density brake. A herring
+  population started at 30 grows to and settles at its carrying capacity of 48,
+  rather than declining monotonically as before.
+- Offspring energy is paid by the parent; agent energy stays within [0,1].
+- Off by default, so the recorded NND and population validations stay comparable.
+
+## glTF export (§12)
+
+- `.gltf` + `.bin` + `.glb` per taxon, carrying mesh, an 8-joint spine skin and
+  a PBR material in one file — OBJ left the rig and material stranded beside it.
+- Tests check accessor bounds against the buffer, 4-byte alignment, skin weight
+  normalisation, GLB container length, and that `build_hash` travels with the
+  asset so a stray mesh can be traced back to its preset.
+
 ## Not fully validated (honest gaps)
 
 - **G4 appearance:** no measured reflectance spectra; colors are ArtistAuthored
   (confidence ≤ 0.29). No golden-render comparison.
-- **G8 performance:** LOD measured and verified relatively, but the absolute
-  16.6 ms budget is unverified (no GPU); behavior LOD not yet implemented.
+- **G8 performance:** absolute 16.6 ms budget unverified (no GPU). Behaviour
+  LOD works (7.5× when tiers engage) but is inert in the default 16 m scenario.
+- **Shape accuracy:** metrics are internal-consistency only; no reference
+  specimens to score against.
 - **Disturbed-school NND** not compared to a measured disturbed distribution.
 
 See `known_limitations.md` for the full list.

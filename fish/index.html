@@ -565,6 +565,30 @@ class Behavior {
 const PREY_OF = { mesopredator:["planktivore"], ambush_predator:["planktivore","mesopredator"],
                   planktivore:[], grazer:[] };
 
+/* Uniform spatial hash over agent positions. Rebuilt every step; queries return
+   the agents in the cells overlapping a radius, so neighbour lookups stop being
+   a full scan. Exact — it returns a superset of the radius and the caller still
+   does the precise distance test. */
+class SpatialHash {
+  constructor(cell){ this.cell=cell; this.m=new Map(); }
+  clear(){ this.m.clear(); }
+  _k(x,y,z){ return x+","+y+","+z; }
+  _c(v){ return Math.floor(v/this.cell); }
+  insert(a){
+    const k=this._k(this._c(a.pos[0]),this._c(a.pos[1]),this._c(a.pos[2]));
+    const b=this.m.get(k);
+    if(b) b.push(a); else this.m.set(k,[a]);
+  }
+  *query(pos, r){
+    const n=Math.max(1,Math.ceil(r/this.cell));
+    const cx=this._c(pos[0]), cy=this._c(pos[1]), cz=this._c(pos[2]);
+    for(let i=-n;i<=n;i++) for(let j=-n;j<=n;j++) for(let k=-n;k<=n;k++){
+      const b=this.m.get(this._k(cx+i,cy+j,cz+k));
+      if(b) yield* b;
+    }
+  }
+}
+
 const SCENARIO = [
   { id:"clupea_harengus",       role:"planktivore",     n:44, nnd:0.7, cluster:true  },
   { id:"oncorhynchus_mykiss",   role:"mesopredator",    n:5,  nnd:3.0, cluster:false },
@@ -581,6 +605,24 @@ class World {
     this.grid=[12,4,12]; this.resCap=1; this.regrow=0.05;
     this.res=new Float32Array(12*4*12).fill(0.8);
     this.occ={}; this.predations=0;
+    this.hash=new SpatialHash(2.0);       // ~ largest sensory radius in the slice
+    this.centroids={}; this.speciesCount={};
+    this.behLOD=false;                    // behaviour LOD off by default
+    this.observer=null;                   // camera position, set by the renderer
+    this.tick=0;
+
+    // --- recruitment (§11 번식) ---------------------------------------------
+    this.reproduction=true;
+    this.births=0;
+    this.maturityAge=25;        // s of sim time before an individual can spawn
+    this.spawnEnergy=0.72;      // surplus required — spawning costs the parent
+    this.spawnRate=0.05;        // per-second attempt rate at zero crowding
+    this.spawnRefractory=30;    // s between spawns for one individual
+    this.growthRate=0.02;       // recruit size recovery per second
+    // Carrying capacity per taxon: the density brake that stops the logistic
+    // growth from running away. Set from the scenario's starting counts.
+    this.carryingCapacity={};
+    for(const sc of SCENARIO) this.carryingCapacity[sc.id]=Math.round(sc.n*1.6);
     for(const s of SCENARIO){
       if(!withPredators && (s.role==="mesopredator"||s.role==="ambush_predator")) continue;
       this.spawn(s.id, s.n, s.role, s.nnd, s.cluster);
@@ -617,13 +659,14 @@ class World {
         aid:this.nid++, id, role, preset:p, alive:true,
         pos, fwd:V.norm([r()-.5, (r()-.5)*.3, r()-.5]),
         loco:new Loco(p), beh:new Behavior(p, seed),
-        L:L0*lenVar, scale:lenVar, hue:(r()-.5)*0.12,
+        L:L0*lenVar, scale:lenVar, baseScale:lenVar, refLen:L0, hue:(r()-.5)*0.12,
         energy:1, nndPref, last:"idle",
         turn:p.locomotion.turn_rate_rad_s||2,
         strikeR:(p.ecology&&p.ecology.strike_range_bl)||1.5,
         strikeP:(p.ecology&&p.ecology.strike_success_prob)||0.3,
         handling:(p.ecology&&p.ecology.handling_time_s)||20,
-        cool:0, amp:0.1, phase:0, visRange:((p.sensory_system.vision_range_bl)||8)*L0,
+        cool:0, amp:0.1, phase:0, age:0, spawnCool:0,
+        visRange:((p.sensory_system.vision_range_bl)||8)*L0,
         visFov:((p.sensory_system.vision_fov_deg)||300)*Math.PI/180,
         llRange:((p.sensory_system.lateral_line_range_bl)||1)*L0
       });
@@ -636,19 +679,56 @@ class World {
     if(dist>eff||dist<1e-9) return false;
     return Math.acos(clamp(V.dot(d,a.fwd)/dist,-1,1))<=a.visFov*0.5;
   }
-  perceive(a){
+  /* Rebuild the per-step acceleration structures.
+     Two exact optimisations (they change cost, never results):
+       * a uniform spatial hash, so a neighbour query touches nearby cells
+         instead of every agent — the O(n²) scan the benchmark flagged;
+       * a per-species shoal centroid. Cohesion membership uses a radius equal
+         to the domain diagonal, so every conspecific always qualifies and the
+         centroid is identical for every member — computing it per agent was
+         redundant work, not a modelling choice. */
+  rebuildIndex(){
+    this.hash.clear();
+    const sum={}, cnt={};
+    for(const a of this.agents){
+      if(!a.alive) continue;
+      this.hash.insert(a);
+      if(!sum[a.id]){ sum[a.id]=[0,0,0]; cnt[a.id]=0; }
+      sum[a.id][0]+=a.pos[0]; sum[a.id][1]+=a.pos[1]; sum[a.id][2]+=a.pos[2];
+      cnt[a.id]++;
+    }
+    this.centroids={}; this.speciesCount=cnt;
+    for(const id in sum) this.centroids[id]=V.mul(sum[id], 1/cnt[id]);
+  }
+
+  /* behaviourTier: 0 hero, 1 standard, 2 crowd, 3 far field — the same
+     body-length thresholds the render LOD uses (lod.py). Crowd drops the
+     predator/prey scan and keeps only flocking; far field stops deciding
+     altogether and coasts. */
+  behaviourTier(a){
+    if(!this.behLOD || !this.observer) return 0;
+    const bl = V.len(V.sub(a.pos, this.observer)) / Math.max(a.L, 1e-4);
+    if(bl <= 10) return 0;
+    if(bl <= 40) return 1;
+    if(bl <= 150) return 2;
+    return 3;
+  }
+
+  perceive(a, tier){
     let prey=null,pred=null,bestPrey=1e9,bestPred=1e9,preyNear=0;
-    const nb=[],nh=[],school=[];
+    const nb=[],nh=[];
     const localR=a.nndPref*a.L*4;
-    const cohR=Math.hypot(...this.bounds);
     const preyRoles=PREY_OF[a.role]||[];
-    for(const b of this.agents){
+    // full sensory reach; crowd tier skips the trophic scan entirely
+    const scanTrophic = tier <= 1;
+    const senseR = Math.max(a.visRange*(1-clamp(this.turbidity,0,.95)), a.llRange);
+    const qR = scanTrophic ? Math.max(localR, senseR, 6*a.L) : localR;
+
+    for(const b of this.hash.query(a.pos, qR)){
       if(b===a||!b.alive) continue;
-      const dv=V.sub(b.pos,a.pos), d=V.len(dv);
-      if(b.id===a.id && a.beh.schooler){
-        if(d<cohR) school.push(b.pos);
-        if(d<localR){ nb.push(b.pos); nh.push(b.fwd); }
-      }
+      const d=V.len(V.sub(b.pos,a.pos));
+      if(b.id===a.id && a.beh.schooler && d<localR){ nb.push(b.pos); nh.push(b.fwd); }
+      if(!scanTrophic) continue;
       const isPrey=preyRoles.includes(b.role);
       const isPred=(PREY_OF[b.role]||[]).includes(a.role);
       if(!this.detects(a,b.pos)) continue;
@@ -656,7 +736,9 @@ class World {
       if(isPred && d<bestPred){ bestPred=d; pred=b; }
     }
     const ci=this.cell(a.pos);
-    return { prey,pred,nb,nh,school,preyNear,ci,
+    const centroid = a.beh.schooler ? this.centroids[a.id] : null;
+    const nSchool = a.beh.schooler ? (this.speciesCount[a.id]||0) : 0;
+    return { prey,pred,nb,nh,centroid,nSchool,preyNear,ci,
       f:{ hunger:a.beh.d.hunger, prey_visible:prey?1:0,
           prey_adjacent:(prey&&bestPrey<a.strikeR*a.L)?1:0,
           predator_visible:pred?1:0, neighbor_count:nb.length,
@@ -665,10 +747,8 @@ class World {
   }
   boids(a,pc){
     const pref=a.nndPref*a.L;
-    let cx=0,cy=0,cz=0;
-    for(const s of pc.school){ cx+=s[0]; cy+=s[1]; cz+=s[2]; }
-    const n=pc.school.length;
-    const toC=[cx/n-a.pos[0], cy/n-a.pos[1], cz/n-a.pos[2]];
+    const c=pc.centroid;
+    const toC=[c[0]-a.pos[0], c[1]-a.pos[1], c[2]-a.pos[2]];
     const dc=V.len(toC);
     const coh=dc>1e-6?V.mul(toC,1/dc):[0,0,0];
     let sep=[0,0,0];
@@ -690,7 +770,7 @@ class World {
   desired(a,cmd,pc){
     if(cmd.steer==="flee"&&pc.pred) return V.norm(V.sub(a.pos,pc.pred.pos));
     if(cmd.steer==="seek"&&pc.prey) return V.norm(V.sub(pc.prey.pos,a.pos));
-    if(cmd.steer==="school"&&pc.school.length) return this.boids(a,pc);
+    if(cmd.steer==="school"&&pc.centroid&&pc.nSchool>1) return this.boids(a,pc);
     if(cmd.steer==="hold") return a.fwd;
     const r=this.rand;
     return V.norm(V.add(a.fwd,[(r()-.5)*.5,(r()-.5)*.25,(r()-.5)*.5]));
@@ -707,11 +787,34 @@ class World {
       const r=this.res[i];
       this.res[i]=clamp(r+this.regrow*r*(1-r/this.resCap)*dt,0,this.resCap);
     }
+    this.rebuildIndex();
+    this.tick++;
+    // Behaviour-LOD tick divisors per tier (lod.py: 60/30/10/1 Hz against a
+    // 20 Hz sim). A skipped agent keeps its last command and still integrates
+    // motion, so it drifts on instead of freezing.
+    const TICK_DIV=[1,1,2,8];
+    this.behTierCount=[0,0,0,0];
+
     for(const a of this.agents){
       if(!a.alive) continue;
       if(a.cool>0) a.cool=Math.max(0,a.cool-dt);
-      const pc=this.perceive(a);
-      const cmd=a.beh.select(dt,pc.f);
+
+      const tier=this.behaviourTier(a);
+      this.behTierCount[tier]++;
+      const decide = (this.tick % TICK_DIV[tier]) === 0;
+
+      let pc, cmd;
+      if(decide){
+        pc=this.perceive(a, tier);
+        cmd=a.beh.select(dt,pc.f);
+        a.lastCmd=cmd; a.lastPc=pc;
+      } else {
+        // reuse the previous decision; drives still advance so hunger/fatigue
+        // do not stall while an agent is off-tick
+        pc=a.lastPc || this.perceive(a, tier);
+        cmd=a.lastCmd || {behavior_id:"idle",throttle:0,steer:"hold"};
+        a.beh.update(dt, pc.f);
+      }
       this.occ[cmd.behavior_id]=(this.occ[cmd.behavior_id]||0)+1;
       a.last=cmd.behavior_id;
       const des=this.desired(a,cmd,pc);
@@ -732,8 +835,61 @@ class World {
         a.beh.d.hunger=Math.max(0,a.beh.d.hunger-take*2);
       } else if(pc.f.prey_adjacent>0.5 && pc.prey) this.strike(a,pc);
       if(a.energy<=0) a.alive=false;
+      a.age+=dt;
+      if(a.spawnCool>0) a.spawnCool=Math.max(0,a.spawnCool-dt);
     }
+    if(this.reproduction) this.reproduce();
     this.time+=dt;
+  }
+
+  /* Energy-gated reproduction with a density brake.
+     Without recruitment the sim is only an observation window — every run ends
+     in monotonic decline. Spawning is gated on surplus energy, maturity and a
+     refractory period, and damped by local crowding so the population settles
+     at a carrying capacity instead of running away. Offspring cost the parent
+     the energy they carry, so nothing is created from nothing (Gate G7). */
+  reproduce(){
+    const born=[];
+    for(const a of this.agents){
+      if(!a.alive || a.spawnCool>0) continue;
+      if(a.age < this.maturityAge) continue;
+      if(a.energy < this.spawnEnergy) continue;
+
+      const n=this.speciesCount[a.id]||0;
+      const K=this.carryingCapacity[a.id] ?? 60;
+      // logistic brake: probability falls to zero as the population reaches K
+      const room=Math.max(0, 1 - n/K);
+      if(room<=0) continue;
+      if(this.rand() > this.spawnRate*room*this.dt) continue;
+
+      const cost=0.35;
+      a.energy-=cost;
+      a.spawnCool=this.spawnRefractory;
+
+      const r=this.rand;
+      const child=Object.assign(Object.create(Object.getPrototypeOf(a)), a, {
+        aid:this.nid++,
+        pos:[clamp(a.pos[0]+(r()-.5)*0.4,.1,this.bounds[0]-.1),
+             clamp(a.pos[1]+(r()-.5)*0.4,.1,this.bounds[1]-.1),
+             clamp(a.pos[2]+(r()-.5)*0.4,.1,this.bounds[2]-.1)],
+        fwd:V.norm([r()-.5,(r()-.5)*.3,r()-.5]),
+        energy:cost*0.8, age:0, spawnCool:this.spawnRefractory,
+        alive:true, last:"idle", lastCmd:null, lastPc:null,
+        // recruits enter smaller and grow toward adult size
+        scale:a.scale*0.55, L:a.L*0.55,
+        loco:new Loco(a.preset), beh:new Behavior(a.preset, this.nid),
+      });
+      born.push(child);
+      this.births++;
+    }
+    for(const c of born) this.agents.push(c);
+    // recruits grow back toward the adult reference size
+    for(const a of this.agents){
+      if(a.alive && a.scale < a.baseScale){
+        a.scale=Math.min(a.baseScale, a.scale + this.growthRate*this.dt);
+        a.L=a.scale*a.refLen;
+      }
+    }
   }
   strike(a,pc){
     if(a.cool>0 || a.beh.d.hunger<0.3) return;
@@ -1024,17 +1180,24 @@ function main(){
   let withPred=true, playing=true, speed=1, turb=0.1;
   /* LOD_FORCE = -1 uses the distance policy; 0..3 pins a tier. Exposed so the
      benchmark harness can measure the policy against a fixed-tier baseline. */
-  let LOD_FORCE=-1;
+  let LOD_FORCE=-1, OBS_OVERRIDE=null;
   const STATS={tris:0, calls:0, tiers:[0,0,0,0], frameMs:0};
   window.__biogen={
     stats:STATS,
     setLOD:v=>{ LOD_FORCE=v; },
+    setBehaviorLOD:on=>{ world.behLOD=!!on; },
+    behTiers:()=>world.behTierCount||[0,0,0,0],
+    /* Pin the observer far away so the behaviour tiers actually engage. In the
+       16 m tank the standard-tier radius (40 BL ≈ 11 m) covers almost the whole
+       domain, so tiering is inert unless the viewer is genuinely distant. */
+    setObserverOverride:d=>{ OBS_OVERRIDE = d==null ? null : [8, 4, 8 + d]; },
     setPop:(id,n)=>{ const s=SCENARIO.find(x=>x.id===id); if(s){ s.n=n;
                      world=new World(11,withPred); world.turbidity=turb; target=null; } },
     agents:()=>world.agents.filter(a=>a.alive).length,
     lodTable:()=>window.__lodTable
   };
   let yaw=0.6, pitch=0.16, dist=6.0, target=null;   // target snaps to the shoal on frame 1
+  let lastEye=[8,4,14];                              // fed to the sim for behaviour tiering
 
   /* --- camera interaction --- */
   let drag=false,lx=0,ly=0;
@@ -1186,6 +1349,8 @@ function main(){
     if(playing){
       acc+=dtReal*speed;
       let guard=0;
+      // one-frame-old camera position is close enough to tier agents by distance
+      world.observer = OBS_OVERRIDE || lastEye;
       while(acc>=world.dt && guard++<6){ world.step(); acc-=world.dt; }
     }
 
@@ -1197,6 +1362,7 @@ function main(){
     const eye=[ target[0]+dist*Math.cos(pitch)*Math.sin(yaw),
                 target[1]+dist*Math.sin(pitch),
                 target[2]+dist*Math.cos(pitch)*Math.cos(yaw) ];
+    lastEye=eye;
 
     const dpr=Math.min(devicePixelRatio||1,2);
     const w=Math.floor(innerWidth*dpr), h=Math.floor(innerHeight*dpr);

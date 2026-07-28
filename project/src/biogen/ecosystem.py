@@ -45,6 +45,11 @@ class Agent:
     strike_cooldown: float = 0.0    # remaining refractory time
     hunt_hunger_threshold: float = 0.3
     last_behavior: str = "idle"
+    # recruitment state (§11 번식)
+    age: float = 0.0
+    spawn_cooldown: float = 0.0
+    base_scale: float = 1.0
+    ref_length_m: float = 0.2
 
 
 @dataclass
@@ -64,6 +69,15 @@ class World:
     behavior_counts: Dict[str, int] = field(default_factory=dict)
     transitions: Dict[str, int] = field(default_factory=dict)
     predation_events: int = 0
+    births: int = 0
+    # --- recruitment (§11). Without it a run is only an observation window. ---
+    reproduction: bool = False       # opt-in: existing scenarios stay comparable
+    maturity_age_s: float = 25.0
+    spawn_energy: float = 0.72       # surplus required; spawning costs the parent
+    spawn_rate_hz: float = 0.05
+    spawn_refractory_s: float = 30.0
+    growth_rate: float = 0.02
+    carrying_capacity: Dict[str, int] = field(default_factory=dict)
     _next_id: int = 0
 
     def __post_init__(self):
@@ -113,9 +127,11 @@ class World:
                 nnd_pref_bl=nnd_pref_bl,
                 strike_range_bl=float(get_param(resolved, "ecology.strike_range_bl", 1.5)),
                 handling_time_s=float(get_param(resolved, "ecology.handling_time_s", 20.0)),
+                base_scale=1.0, ref_length_m=L,
             )
             self._next_id += 1
             self.agents.append(agent)
+        self.carrying_capacity.setdefault(taxon_id, int(round(count * 1.6)))
 
     # --- resource grid helpers ---------------------------------------------
     def _cell(self, pos: np.ndarray) -> Tuple[int, int, int]:
@@ -287,8 +303,73 @@ class World:
 
             if a.energy <= 0.0:
                 a.alive = False  # starvation prevents unbounded population
+            a.age += dt
+            if a.spawn_cooldown > 0.0:
+                a.spawn_cooldown = max(0.0, a.spawn_cooldown - dt)
 
+        if self.reproduction:
+            self._reproduce()
         self.time += dt
+
+    def _reproduce(self) -> None:
+        """Energy-gated recruitment with a logistic density brake.
+
+        Spawning requires maturity, surplus energy and a refractory period, and
+        its probability falls to zero as a population approaches its carrying
+        capacity — so the population settles instead of exploding. The parent
+        pays the offspring's energy, so nothing is created from nothing (G7).
+        """
+        counts: Dict[str, int] = {}
+        for a in self.agents:
+            if a.alive:
+                counts[a.taxon_id] = counts.get(a.taxon_id, 0) + 1
+
+        born = []
+        for a in self.agents:
+            if not a.alive or a.spawn_cooldown > 0.0:
+                continue
+            if a.age < self.maturity_age_s or a.energy < self.spawn_energy:
+                continue
+            k = self.carrying_capacity.get(a.taxon_id, 60)
+            room = max(0.0, 1.0 - counts.get(a.taxon_id, 0) / max(k, 1))
+            if room <= 0.0:
+                continue
+            if self.rng.random() > self.spawn_rate_hz * room * self.dt:
+                continue
+
+            cost = 0.35
+            a.energy -= cost
+            a.spawn_cooldown = self.spawn_refractory_s
+            r = self.rng
+            child = Agent(
+                aid=self._next_id, taxon_id=a.taxon_id, role=a.role,
+                resolved=a.resolved,
+                loco=LocomotionController.from_preset(a.resolved),
+                behavior=BehaviorController.from_preset(a.resolved, seed=self._next_id),
+                sensory=a.sensory,
+                pos=np.clip(a.pos + (r.random(3) - 0.5) * 0.4,
+                            0.1, np.array(self.bounds) - 0.1),
+                heading=_normalize(r.normal(size=3)),
+                energy=cost * 0.8,
+                turn_rate=a.turn_rate,
+                # recruits enter small and grow toward the adult reference size
+                body_length_m=a.ref_length_m * 0.55,
+                nnd_pref_bl=a.nnd_pref_bl,
+                strike_range_bl=a.strike_range_bl,
+                handling_time_s=a.handling_time_s,
+                base_scale=1.0, ref_length_m=a.ref_length_m,
+                spawn_cooldown=self.spawn_refractory_s,
+            )
+            self._next_id += 1
+            born.append(child)
+            self.births += 1
+
+        self.agents.extend(born)
+        for a in self.agents:
+            if a.alive and a.body_length_m < a.ref_length_m:
+                a.body_length_m = min(a.ref_length_m,
+                                      a.body_length_m + self.growth_rate
+                                      * a.ref_length_m * self.dt)
 
     def _attempt_predation(self, a: Agent, perc: dict) -> None:
         # A predator hunts only when hungry and not in a handling/digestion

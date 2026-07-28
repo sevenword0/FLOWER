@@ -44,7 +44,11 @@ enforces min ≤ neutral ≤ max and non-negative speeds; cruise ≤ burst enfor
 `sensory_system` (vision cone + lateral line), anglerfish esca emissive (Inferred).
 **Gate G4 (comparable across lighting/views):** PARTIAL. Material fields are
 structured for spectral data, but only runtime-approx colors (ArtistAuthored) are
-present; no measured reflectance golden-render comparison yet (see limitations #3).
+present; no measured reflectance golden-render comparison yet (limitation #3).
+Shape-side validation now exists (`docs/shape_report.md`): silhouette IoU,
+proportion and landmark error, all internal-consistency checks — <1 % proportion
+error across the slice — but with no reference specimens they are not accuracy
+claims (limitation #4).
 
 ## Stage 5 — Procedural model / rig vertical slice
 **Deliverables:** `geometry.py` → `exports/<taxon>/mesh_lod0..3.obj` +
@@ -69,6 +73,9 @@ interactions.
 and resource are clamped; predation bounded by handling time + hunger gating +
 schooling dilution. Prey population stays **35–40 / 40** over 60 s (no collapse);
 predator/prey interactions and bidirectional resource depletion occur.
+Recruitment is now available (opt-in `World.reproduction`): energy-gated with a
+logistic density brake, a herring population settles at carrying capacity
+(30 → 48) instead of only declining, and offspring energy is paid by the parent.
 
 ## Stage 8 — Optimization / LOD
 **Deliverables:** `lod.py` (Hero/Standard/Crowd/Far-field), `performance_budget.yaml`,
@@ -99,7 +106,7 @@ handling for buoyancy. A package scan confirms no taxon literal in code.
 ## Overall verdict (A16)
 
 **Conditional APPROVED.** All hard gates (G0, G1, G2, G3, G5, G6, G7, G9) pass with
-41/41 automated tests. G4 and G8 remain PARTIAL by environment, not by omission:
+59/59 automated tests. G4 and G8 remain PARTIAL by environment, not by omission:
 G4 lacks measured reflectance spectra, and G8 now has a real LOD benchmark but no
 GPU to verify the absolute frame budget against. R9 (live taxonomic verification)
 is implemented and unit-tested but blocked by this environment's network policy.

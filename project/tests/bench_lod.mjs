@@ -14,9 +14,27 @@
  * so treat absolute ms as a *relative* comparison only. The triangle counts are
  * hardware-independent and are the load-bearing measurement for Gate G8.
  */
-import { chromium } from 'playwright';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { createRequire } from 'node:module';
+
+// Resolve Playwright from a local install, else from a global one. A bare ESM
+// import does not search global node_modules, so a globally-installed toolchain
+// (CI images, this container) would otherwise fail to start.
+const { chromium } = await (async () => {
+  try { return await import('playwright'); }
+  catch {
+    const req = createRequire(import.meta.url);
+    for (const g of ['/opt/node22/lib/node_modules/playwright/index.mjs',
+                     '/usr/lib/node_modules/playwright/index.mjs',
+                     '/usr/local/lib/node_modules/playwright/index.mjs']) {
+      try { return await import(g); } catch { /* try next */ }
+    }
+    try { return req('playwright'); } catch {
+      throw new Error('playwright not found — npm i -D playwright, or install it globally');
+    }
+  }
+})();
 
 const here = dirname(fileURLToPath(import.meta.url));
 const target = process.argv[2] || resolve(here, '../../fish/index.html');
@@ -80,15 +98,36 @@ const pol = results['policy'], l0 = results['forced LOD0'];
 console.log(`\npolicy vs forced LOD0: triangles -${((1 - pol.tris / l0.tris) * 100).toFixed(1)}% ` +
             `· frame ${(l0.median / pol.median).toFixed(2)}x`);
 
-console.log('\n--- scaling: policy vs forced LOD0 at larger populations ---');
-for (const n of [120]) {
+console.log('\n--- scaling: mesh LOD + behaviour LOD at larger populations ---');
+for (const n of [120, 260]) {
   await page.evaluate(k => window.__biogen.setPop('clupea_harengus', k), n);
   await page.waitForTimeout(900);
-  const a = await measure(-1, 60), b = await measure(0, 60);
-  console.log(`agents=${a.agents}  policy=${a.median.toFixed(2)}ms/${a.tris}tri  ` +
-              `lod0=${b.median.toFixed(2)}ms/${b.tris}tri  ` +
-              `frame=${(b.median / a.median).toFixed(2)}x  tris=-${((1 - a.tris / b.tris) * 100).toFixed(1)}%`);
+
+  await page.evaluate(() => window.__biogen.setBehaviorLOD(false));
+  const off = await measure(-1, 50);
+  await page.evaluate(() => window.__biogen.setBehaviorLOD(true));
+  const on = await measure(-1, 50);
+  const tiers = await page.evaluate(() => window.__biogen.behTiers());
+
+  console.log(`agents=${off.agents}  behLOD off=${off.median.toFixed(2)}ms  ` +
+              `on=${on.median.toFixed(2)}ms  gain=${(off.median / on.median).toFixed(2)}x  ` +
+              `behTiers=${JSON.stringify(tiers)}`);
 }
+
+/* Behaviour LOD can only pay off when agents actually fall into the lower
+   tiers. In the 16 m tank the standard-tier radius covers the whole domain, so
+   this case pins the observer far away to exercise the tier machinery. */
+console.log('\n--- behaviour LOD with the observer far enough for tiers to engage ---');
+await page.evaluate(() => window.__biogen.setBehaviorLOD(true));
+for (const d of [0, 60, 200]) {
+  await page.evaluate(v => window.__biogen.setObserverOverride(v || null), d);
+  await page.waitForTimeout(700);
+  const r = await measure(-1, 50);
+  const tiers = await page.evaluate(() => window.__biogen.behTiers());
+  console.log(`observer=${d ? d + 'm' : 'camera'}  median=${r.median.toFixed(2)}ms  ` +
+              `behTiers=${JSON.stringify(tiers)}  agents=${r.agents}`);
+}
+await page.evaluate(() => window.__biogen.setObserverOverride(null));
 
 console.log('\nERRORS: ' + (errs.length ? errs.join(' | ') : 'none'));
 await browser.close();

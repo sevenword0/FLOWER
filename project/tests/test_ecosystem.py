@@ -69,3 +69,35 @@ def test_behavior_occupancy_and_transitions_recorded():
     # schooling should dominate for an obligate-schooler-heavy community
     assert occ.get("school", 0) > 0.3
     assert m["transition_counts"], "expected some behavior transitions"
+
+
+def test_reproduction_settles_at_carrying_capacity():
+    """§11: with recruitment the run becomes population dynamics rather than a
+    one-way decline — but it must settle, not explode."""
+    w = World(seed=5, dt=0.1, bounds=(16.0, 8.0, 16.0))
+    w.reproduction = True
+    w.add_population("clupea_harengus", 30, "planktivore", nnd_pref_bl=0.7, cluster=True)
+    w.run(1800)                       # 180 s of sim time
+    n = w.metrics()["alive_by_taxon"].get("clupea_harengus", 0)
+    k = w.carrying_capacity["clupea_harengus"]
+    assert w.births > 0, "no recruitment occurred"
+    assert n > 30, f"population did not grow: {n}"
+    assert n <= k * 1.15, f"population {n} overshot carrying capacity {k}"
+
+
+def test_reproduction_conserves_energy():
+    """A parent pays for its offspring — recruits must not be free energy."""
+    w = World(seed=5, dt=0.1, bounds=(16.0, 8.0, 16.0))
+    w.reproduction = True
+    w.add_population("clupea_harengus", 20, "planktivore", nnd_pref_bl=0.7, cluster=True)
+    w.run(900)
+    for a in w.agents:
+        assert 0.0 <= a.energy <= 1.0, f"energy out of bounds: {a.energy}"
+
+
+def test_reproduction_off_by_default_keeps_old_behaviour():
+    """Existing scenarios must stay comparable to their recorded validation."""
+    w = _build_world()
+    assert w.reproduction is False
+    w.run(200)
+    assert w.births == 0

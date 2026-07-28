@@ -263,4 +263,9 @@ def generate_all(resolved: dict, taxon_id: str, lods=(0, 1, 2, 3)) -> Dict[str, 
     mat = build_material(resolved)
     (out_dir / "material.json").write_text(json.dumps(mat, indent=2, ensure_ascii=False), encoding="utf-8")
     written["material"] = str(out_dir / "material.json")
+
+    # glTF carries mesh + skin + material in one file that DCCs and engines
+    # import directly; OBJ leaves the rig and material stranded beside it.
+    from .gltf import write_gltf
+    written.update(write_gltf(resolved, taxon_id, lod=0))
     return written

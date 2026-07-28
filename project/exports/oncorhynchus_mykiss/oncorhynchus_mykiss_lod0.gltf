@@ -1,0 +1,260 @@
+{
+ "asset": {
+  "version": "2.0",
+  "generator": "biogen procedural pipeline",
+  "extras": {
+   "taxon_id": "oncorhynchus_mykiss",
+   "lod": 0,
+   "build_hash": "b28291b3bcbccb99e58d228cad42cddec30d2799bb3c29dc667d7316ee7cf072",
+   "swim_mode": "subcarangiform",
+   "rig_strategy": "spline_spine"
+  }
+ },
+ "scene": 0,
+ "scenes": [
+  {
+   "nodes": [
+    0,
+    1
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "name": "oncorhynchus_mykiss",
+   "mesh": 0,
+   "skin": 0
+  },
+  {
+   "name": "spine_00",
+   "translation": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "children": [
+    2
+   ]
+  },
+  {
+   "name": "spine_01",
+   "translation": [
+    0.04345,
+    0.0,
+    0.0
+   ],
+   "children": [
+    3
+   ]
+  },
+  {
+   "name": "spine_02",
+   "translation": [
+    0.04345,
+    0.0,
+    0.0
+   ],
+   "children": [
+    4
+   ]
+  },
+  {
+   "name": "spine_03",
+   "translation": [
+    0.04344999999999999,
+    0.0,
+    0.0
+   ],
+   "children": [
+    5
+   ]
+  },
+  {
+   "name": "spine_04",
+   "translation": [
+    0.043450000000000016,
+    0.0,
+    0.0
+   ],
+   "children": [
+    6
+   ]
+  },
+  {
+   "name": "spine_05",
+   "translation": [
+    0.04344999999999999,
+    0.0,
+    0.0
+   ],
+   "children": [
+    7
+   ]
+  },
+  {
+   "name": "spine_06",
+   "translation": [
+    0.04344999999999999,
+    0.0,
+    0.0
+   ],
+   "children": [
+    8
+   ]
+  },
+  {
+   "name": "spine_07",
+   "translation": [
+    0.04344999999999999,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "meshes": [
+  {
+   "name": "oncorhynchus_mykiss",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "JOINTS_0": 2,
+      "WEIGHTS_0": 3
+     },
+     "indices": 4,
+     "material": 0,
+     "mode": 4
+    }
+   ]
+  }
+ ],
+ "skins": [
+  {
+   "inverseBindMatrices": 5,
+   "joints": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "skeleton": 1
+  }
+ ],
+ "materials": [
+  {
+   "name": "oncorhynchus_mykiss_runtime_approx",
+   "pbrMetallicRoughness": {
+    "baseColorFactor": [
+     0.55,
+     0.58,
+     0.6,
+     1.0
+    ],
+    "metallicFactor": 0.0,
+    "roughnessFactor": 0.28
+   },
+   "doubleSided": true,
+   "extras": {
+    "evidence_class": "runtime_approximation",
+    "iridescence": 0.35,
+    "subsurface": 0.25
+   }
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 1175,
+   "type": "VEC3",
+   "min": [
+    0.0,
+    -0.05543437972664833,
+    -0.04866399988532066
+   ],
+   "max": [
+    0.33152350783348083,
+    0.06455887854099274,
+    0.04866399988532066
+   ]
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 1175,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5121,
+   "count": 1175,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5126,
+   "count": 1175,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5123,
+   "count": 6795,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 8,
+   "type": "MAT4"
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 14100,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 14100,
+   "byteLength": 14100,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 28200,
+   "byteLength": 4700,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 32900,
+   "byteLength": 18800,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 51700,
+   "byteLength": 13590,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 65292,
+   "byteLength": 512
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 65804,
+   "uri": "oncorhynchus_mykiss_lod0.bin"
+  }
+ ]
+}

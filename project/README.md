@@ -64,9 +64,10 @@ evidence/     evidence_ledger.csv (Measured/Derived/Inferred/ArtistAuthored + co
 ontology/     anatomy_ontology.jsonld + functional_module_map.yaml (generated)
 bases/        clade/ + morphotype/ reusable bases
 presets/      <taxon_id>/preset.json species deltas
-src/biogen/   taxon_profile, preset_compiler, geometry, locomotion, sensory, behavior, ecosystem, lod, validate, cli
+src/biogen/   taxon_profile, preset_compiler, geometry, gltf, shape_metrics, locomotion,
+              sensory, behavior, ecosystem, lod, etl, validate, cli
 ecosystem/    scenarios/*.yaml (data-driven world composition)
-exports/      generated mesh_lod*.obj + skeleton.json + material.json
+exports/      generated mesh_lod*.obj + .gltf/.glb + skeleton.json + material.json
 tests/        pytest gate checks
 docs/         master_plan, architecture, decision_log, known_limitations, validation_report, STAGE_REPORT, risk_register, dependency_graph
 ```
@@ -81,6 +82,7 @@ is and isn't grounded in primary measurement.
 
 ## Status
 
-41/41 tests pass. See `docs/STAGE_REPORT.md` for the Stage 0–9 gate report,
-`docs/validation_report.md` for measured validation numbers, and
-`docs/performance_report.md` for the LOD benchmark.
+See `docs/STAGE_REPORT.md` for the Stage 0–9 gate report,
+`docs/validation_report.md` for measured validation numbers,
+`docs/performance_report.md` for the LOD benchmark, and
+`docs/shape_report.md` for silhouette / proportion metrics.

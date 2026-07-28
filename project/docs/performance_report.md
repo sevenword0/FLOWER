@@ -75,12 +75,52 @@ tiers in config would have kept reporting "four tiers" indefinitely; measuring
 them is what exposed that only three existed. Fixed, and the ladder above is the
 post-fix measurement.
 
+## Behaviour LOD — it works, and it is inert in this scenario
+
+Mesh LOD could not fix the CPU-bound regime the earlier scaling test found, so
+the behaviour ladder from `lod.py` is now implemented in the browser build:
+crowd tier drops the predator/prey scan, far field stops deciding and coasts,
+and tick rate divides by tier. Two exact optimisations went in alongside it —
+a uniform spatial hash for neighbour queries, and a per-species shoal centroid
+computed once per step instead of once per agent (cohesion membership spans the
+domain, so every member always saw the same centroid).
+
+The controlled comparison holds the world fixed and moves only the observer:
+
+| observer | median frame | behaviour tiers (H/S/C/F) |
+|---|---:|---|
+| at the camera | 30.10 ms | 0 / 265 / 6 / 0 |
+| 60 m away | **4.00 ms** | 0 / 0 / 0 / 271 |
+| 200 m away | 3.80 ms | 0 / 0 / 0 / 271 |
+
+**7.5× at 271 agents** once the tiers engage (combined with mesh LOD, which
+also drops to LOD3 at that distance).
+
+But in the default scenario it does nothing, and the reason is worth writing
+down: `lod.py`'s standard-tier radius is 40 body lengths, which for a 0.28 m
+herring is **11.2 m** — and the tank is 16 m across with a 24 m diagonal. Every
+agent is permanently within standard tier, so there is nothing to demote. The
+thresholds are written for an open world, not an aquarium.
+
+Measured with the tiering switched on but nothing to demote, the extra
+per-agent work is a net loss (20.2 ms → 27.6 ms at 271 agents, though those two
+runs are different world states and some of that is noise). The honest reading:
+**behaviour LOD is a large-world optimisation, and its thresholds should be
+derived from the scenario's spatial scale rather than fixed globally.** Enabling
+it inside a small domain costs without paying.
+
 ## Verdict — Gate G8
 
-**PARTIAL.** Verified: the tier ladder exists and is distinct, the distance
-policy assigns tiers as specified, and geometry cost falls as designed
-(−59.9 % triangles, 23× hero→far-field). Not verified: the absolute
-`frame_budget_ms: 16.6` target on the stated hardware, because no GPU is
-available in this environment; and the large-population budget, which the
-scaling test shows is CPU-bound and therefore blocked on behavior LOD rather
-than on rendering.
+**PARTIAL.** Verified: the mesh tier ladder is distinct and the distance policy
+assigns tiers as specified (−59.9 % triangles, 23× hero→far field); the
+behaviour ladder is implemented and delivers **7.5×** at 271 agents once the
+tiers actually engage; silhouette IoU stays at 0.999 for LOD1 and 0.85–0.89 at
+LOD3 (`docs/shape_metrics.json`), so decimation preserves the outline.
+
+Not verified: the absolute `frame_budget_ms: 16.6` target on the stated
+hardware — this environment has no GPU, so absolute milliseconds are software
+rasterizer numbers and only relative comparisons are meaningful.
+
+Known-inert: behaviour LOD does nothing in the default 16 m scenario, because
+the standard-tier radius (40 BL ≈ 11 m) covers the domain. Deriving the
+thresholds from world scale is the remaining work.

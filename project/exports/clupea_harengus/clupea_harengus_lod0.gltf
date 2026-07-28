@@ -1,0 +1,260 @@
+{
+ "asset": {
+  "version": "2.0",
+  "generator": "biogen procedural pipeline",
+  "extras": {
+   "taxon_id": "clupea_harengus",
+   "lod": 0,
+   "build_hash": "051274921c4ed3b0e5c52158be2545b550edabd4b2ec5b0726b4551d200e86d1",
+   "swim_mode": "carangiform",
+   "rig_strategy": "spline_spine"
+  }
+ },
+ "scene": 0,
+ "scenes": [
+  {
+   "nodes": [
+    0,
+    1
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "name": "clupea_harengus",
+   "mesh": 0,
+   "skin": 0
+  },
+  {
+   "name": "spine_00",
+   "translation": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "children": [
+    2
+   ]
+  },
+  {
+   "name": "spine_01",
+   "translation": [
+    0.04055,
+    0.0,
+    0.0
+   ],
+   "children": [
+    3
+   ]
+  },
+  {
+   "name": "spine_02",
+   "translation": [
+    0.04056,
+    0.0,
+    0.0
+   ],
+   "children": [
+    4
+   ]
+  },
+  {
+   "name": "spine_03",
+   "translation": [
+    0.04055,
+    0.0,
+    0.0
+   ],
+   "children": [
+    5
+   ]
+  },
+  {
+   "name": "spine_04",
+   "translation": [
+    0.04054999999999999,
+    0.0,
+    0.0
+   ],
+   "children": [
+    6
+   ]
+  },
+  {
+   "name": "spine_05",
+   "translation": [
+    0.04055,
+    0.0,
+    0.0
+   ],
+   "children": [
+    7
+   ]
+  },
+  {
+   "name": "spine_06",
+   "translation": [
+    0.04056000000000001,
+    0.0,
+    0.0
+   ],
+   "children": [
+    8
+   ]
+  },
+  {
+   "name": "spine_07",
+   "translation": [
+    0.04055,
+    0.0,
+    0.0
+   ]
+  }
+ ],
+ "meshes": [
+  {
+   "name": "clupea_harengus",
+   "primitives": [
+    {
+     "attributes": {
+      "POSITION": 0,
+      "NORMAL": 1,
+      "JOINTS_0": 2,
+      "WEIGHTS_0": 3
+     },
+     "indices": 4,
+     "material": 0,
+     "mode": 4
+    }
+   ]
+  }
+ ],
+ "skins": [
+  {
+   "inverseBindMatrices": 5,
+   "joints": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "skeleton": 1
+  }
+ ],
+ "materials": [
+  {
+   "name": "clupea_harengus_runtime_approx",
+   "pbrMetallicRoughness": {
+    "baseColorFactor": [
+     0.6,
+     0.66,
+     0.72,
+     1.0
+    ],
+    "metallicFactor": 0.0,
+    "roughnessFactor": 0.18
+   },
+   "doubleSided": true,
+   "extras": {
+    "evidence_class": "runtime_approximation",
+    "iridescence": 0.6,
+    "subsurface": 0.15
+   }
+  }
+ ],
+ "accessors": [
+  {
+   "bufferView": 0,
+   "componentType": 5126,
+   "count": 1175,
+   "type": "VEC3",
+   "min": [
+    0.0,
+    -0.046002551913261414,
+    -0.03832244873046875
+   ],
+   "max": [
+    0.3150956928730011,
+    0.051679953932762146,
+    0.03832244873046875
+   ]
+  },
+  {
+   "bufferView": 1,
+   "componentType": 5126,
+   "count": 1175,
+   "type": "VEC3"
+  },
+  {
+   "bufferView": 2,
+   "componentType": 5121,
+   "count": 1175,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 3,
+   "componentType": 5126,
+   "count": 1175,
+   "type": "VEC4"
+  },
+  {
+   "bufferView": 4,
+   "componentType": 5123,
+   "count": 6795,
+   "type": "SCALAR"
+  },
+  {
+   "bufferView": 5,
+   "componentType": 5126,
+   "count": 8,
+   "type": "MAT4"
+  }
+ ],
+ "bufferViews": [
+  {
+   "buffer": 0,
+   "byteOffset": 0,
+   "byteLength": 14100,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 14100,
+   "byteLength": 14100,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 28200,
+   "byteLength": 4700,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 32900,
+   "byteLength": 18800,
+   "target": 34962
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 51700,
+   "byteLength": 13590,
+   "target": 34963
+  },
+  {
+   "buffer": 0,
+   "byteOffset": 65292,
+   "byteLength": 512
+  }
+ ],
+ "buffers": [
+  {
+   "byteLength": 65804,
+   "uri": "clupea_harengus_lod0.bin"
+  }
+ ]
+}
