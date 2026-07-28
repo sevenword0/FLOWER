@@ -20,9 +20,11 @@ pip install -r requirements.txt          # numpy, PyYAML, jsonschema, pytest
 ./run.sh validate                        # schema + biomech + evidence audit for the vertical slice
 ./run.sh simulate                        # run the mixed-community ecosystem scenario
 ./run.sh simulate schooling_validation   # run the cruising-school NND validation scenario
+./run.sh resolve-taxa                    # verify names against GBIF + WoRMS (needs network egress)
 ./run.sh build-all                       # generate + validate everything
 
-pytest                                   # 24 gate tests (G2..G9)
+pytest                                   # gate tests (G2..G9) + ETL fixtures
+node tests/bench_lod.mjs                 # LOD benchmark against the browser build (G8)
 ```
 
 (`run.sh` just sets `PYTHONPATH=src`; equivalently `pip install -e .` then use the
@@ -79,5 +81,6 @@ is and isn't grounded in primary measurement.
 
 ## Status
 
-24/24 tests pass. See `docs/STAGE_REPORT.md` for the Stage 0–9 gate report and
-`docs/validation_report.md` for measured validation numbers.
+41/41 tests pass. See `docs/STAGE_REPORT.md` for the Stage 0–9 gate report,
+`docs/validation_report.md` for measured validation numbers, and
+`docs/performance_report.md` for the LOD benchmark.

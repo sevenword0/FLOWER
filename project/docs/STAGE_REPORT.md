@@ -18,7 +18,13 @@ map + source routing from the single config literal; `bird.yaml` proves the swap
 `sources/source_registry.yaml`, `sources/license_manifest.csv`, `bibliography.bib`.
 **Gate G1 (no name conflicts / unlicensed data into build):** PASS. Every source
 carries license + redistribution flags; copyrighted literature is parameters-only.
-**Residual (R9):** live API ETL clients documented but not exercised.
+**Residual (R9), partially closed:** the ETL client is now implemented
+(`src/biogen/etl.py`, `./run.sh resolve-taxa`) with GBIF + WoRMS backends,
+caching, conflict reporting and 17 offline fixture tests. It has *not* been run
+against the live APIs — this environment's network policy denies those hosts
+(`CONNECT 403`), so the resolver records `unresolved_network`, changes nothing,
+and exits non-zero. `taxonomy/resolution_report.json` documents a blocked run,
+not a verified one.
 
 ## Stage 2 — Ontology / schema / evidence ledger
 **Deliverables:** `schemas/*.json`, `ontology/anatomy_ontology.jsonld`,
@@ -67,9 +73,18 @@ predator/prey interactions and bidirectional resource depletion occur.
 ## Stage 8 — Optimization / LOD
 **Deliverables:** `lod.py` (Hero/Standard/Crowd/Far-field), `performance_budget.yaml`,
 LOD mesh sets and per-tier tick/behavior fidelity.
-**Gate G8 (budget met, silhouette/behavior within tolerance):** PARTIAL. Tiering,
-budgets, and LOD meshes exist and are selectable by distance/importance; a
-hardware benchmark on a target engine is out of scope (limitation #10).
+**Gate G8 (budget met, silhouette/behavior within tolerance):** PARTIAL —
+now measured. The browser build implements the distance policy end to end and
+`project/tests/bench_lod.mjs` benchmarks it: the tier ladder is distinct
+(2270→1006→354→98 tri, 23× hero→far field) and the policy cuts **59.9 % of
+triangles** for **1.55×** the frame rate at 55 agents. Benchmarking caught a
+real bug — the browser port clamped the tier index to 0..2, so far-field was
+silently drawing at crowd detail. Still unverified: the absolute 16.6 ms budget
+on target hardware (no GPU here, software rasterizer only), and the
+large-population budget — the scaling test shows that past ~130 agents the
+workload is CPU-bound, so it is blocked on *behavior* LOD (specified in
+`lod.py`, not yet implemented in the browser build) rather than on geometry.
+See `docs/performance_report.md`.
 
 ## Stage 9 — Extensibility & portability
 **Deliverables:** new species = add a preset (no code change); `bird.yaml` +
@@ -84,7 +99,11 @@ handling for buoyancy. A package scan confirms no taxon literal in code.
 ## Overall verdict (A16)
 
 **Conditional APPROVED.** All hard gates (G0, G1, G2, G3, G5, G6, G7, G9) pass with
-24/24 automated tests. G4 and G8 are PARTIAL by scope (no measured spectra / no
-engine benchmark in this environment), documented in `known_limitations.md`. No
-"plausible-but-unsupported" value survives the evidence audit; data-poor cases are
-explicitly Inferred with recorded transfer provenance.
+41/41 automated tests. G4 and G8 remain PARTIAL by environment, not by omission:
+G4 lacks measured reflectance spectra, and G8 now has a real LOD benchmark but no
+GPU to verify the absolute frame budget against. R9 (live taxonomic verification)
+is implemented and unit-tested but blocked by this environment's network policy.
+All three are documented in `known_limitations.md` and
+`docs/performance_report.md`. No "plausible-but-unsupported" value survives the
+evidence audit; data-poor cases are explicitly Inferred with recorded transfer
+provenance, and a blocked verification run is never reported as a passing one.

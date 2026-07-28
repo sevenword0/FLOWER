@@ -397,10 +397,21 @@ function sampleCurve(curve, x){
    parametric fin membranes at the recorded fin stations. Vertices carry their
    normalized body coordinate so the vertex shader can apply the swimming wave.
    =========================================================================== */
-const LOD_BUDGET = [ {seg:44,ring:20}, {seg:30,ring:14}, {seg:18,ring:10} ];
+/* Ring/segment budgets per tier — identical to biogen/geometry.py LOD_BUDGET,
+   so the browser build and the offline generator produce the same silhouettes. */
+const LOD_BUDGET = [ {seg:48,ring:24}, {seg:32,ring:16}, {seg:18,ring:10}, {seg:8,ring:6} ];
+
+/* Distance thresholds in body lengths, from config/performance_budget.yaml via
+   biogen/lod.py: hero ≤10 BL, standard ≤40 BL, crowd ≤150 BL, then far field. */
+const LOD_BL = [10, 40, 150];
+function lodFor(distM, bodyLen){
+  const bl = distM / Math.max(bodyLen, 1e-4);
+  for(let i=0;i<LOD_BL.length;i++) if(bl <= LOD_BL[i]) return i;
+  return 3;
+}
 
 function buildMesh(p, lod){
-  const b = LOD_BUDGET[clamp(lod,0,2)];
+  const b = LOD_BUDGET[clamp(lod, 0, LOD_BUDGET.length-1)];
   const nSeg=b.seg, nRing=b.ring;
   const m = p.morphometrics;
   const L = m.reference_length_m;
@@ -951,30 +962,37 @@ function main(){
   const species={};
   for(const id in PRESETS.species){
     const p=PRESETS.species[id];
-    const m=buildMesh(p,0);
-    const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
-    const mk=(data,loc,size)=>{
-      const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
-      gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
-      gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,size,gl.FLOAT,false,0,0);
-    };
-    mk(m.pos,0,3); mk(m.nrm,1,3); mk(m.xn,2,1); mk(m.part,3,1);
-    const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
-    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,m.idx,gl.STATIC_DRAW);
-    const inst=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,inst);
-    // interleaved: pos(3) fwd(3) prm(4) = 10 floats
-    const stride=40;
-    gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4,3,gl.FLOAT,false,stride,0);  gl.vertexAttribDivisor(4,1);
-    gl.enableVertexAttribArray(5); gl.vertexAttribPointer(5,3,gl.FLOAT,false,stride,12); gl.vertexAttribDivisor(5,1);
-    gl.enableVertexAttribArray(6); gl.vertexAttribPointer(6,4,gl.FLOAT,false,stride,24); gl.vertexAttribDivisor(6,1);
-    gl.bindVertexArray(null);
     const mp=p.appearance.material_parameters||{};
-    species[id]={ vao, inst, count:m.idx.length, refLen:m.refLen,
+    const lods=[]; let refLen=0;
+    for(let L=0;L<LOD_BUDGET.length;L++){
+      const m=buildMesh(p,L);
+      refLen=m.refLen;
+      const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+      const mk=(data,loc,size)=>{
+        const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
+        gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,size,gl.FLOAT,false,0,0);
+      };
+      mk(m.pos,0,3); mk(m.nrm,1,3); mk(m.xn,2,1); mk(m.part,3,1);
+      const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,m.idx,gl.STATIC_DRAW);
+      const inst=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,inst);
+      // interleaved per instance: pos(3) fwd(3) prm(4) = 10 floats
+      const stride=40;
+      gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4,3,gl.FLOAT,false,stride,0);  gl.vertexAttribDivisor(4,1);
+      gl.enableVertexAttribArray(5); gl.vertexAttribPointer(5,3,gl.FLOAT,false,stride,12); gl.vertexAttribDivisor(5,1);
+      gl.enableVertexAttribArray(6); gl.vertexAttribPointer(6,4,gl.FLOAT,false,stride,24); gl.vertexAttribDivisor(6,1);
+      gl.bindVertexArray(null);
+      lods.push({ vao, inst, count:m.idx.length, tris:m.idx.length/3,
+                  verts:m.pos.length/3, data:new Float32Array(0) });
+    }
+    species[id]={ lods, refLen,
       isMPF:MPF_MODES.has(p.locomotion.swim_mode)?1:0,
       base:mp.base_color||[.5,.55,.6], irid:mp.iridescence||0, rough:mp.roughness||.35,
-      emis:(p.appearance.emissive?0.85:0.0),
-      data:new Float32Array(0) };
+      emis:(p.appearance.emissive?0.85:0.0) };
   }
+  window.__lodTable = Object.fromEntries(Object.entries(species).map(
+    ([k,v])=>[k, v.lods.map(l=>({tris:l.tris, verts:l.verts}))]));
 
   /* --- reference grid: floor at y=0 plus the four vertical tank edges --- */
   const gprog=program(gl,GVS,GFS);
@@ -1004,6 +1022,18 @@ function main(){
   /* --- state --- */
   let world=new World(11,true);
   let withPred=true, playing=true, speed=1, turb=0.1;
+  /* LOD_FORCE = -1 uses the distance policy; 0..3 pins a tier. Exposed so the
+     benchmark harness can measure the policy against a fixed-tier baseline. */
+  let LOD_FORCE=-1;
+  const STATS={tris:0, calls:0, tiers:[0,0,0,0], frameMs:0};
+  window.__biogen={
+    stats:STATS,
+    setLOD:v=>{ LOD_FORCE=v; },
+    setPop:(id,n)=>{ const s=SCENARIO.find(x=>x.id===id); if(s){ s.n=n;
+                     world=new World(11,withPred); world.turbidity=turb; target=null; } },
+    agents:()=>world.agents.filter(a=>a.alive).length,
+    lodTable:()=>window.__lodTable
+  };
   let yaw=0.6, pitch=0.16, dist=6.0, target=null;   // target snaps to the shoal on frame 1
 
   /* --- camera interaction --- */
@@ -1143,10 +1173,15 @@ function main(){
   /* --- frame loop --- */
   let acc=0, last=performance.now(), fps=60, fAcc=0, fN=0;
   function frame(now){
+    const t0=performance.now();
     const dtReal=Math.min((now-last)/1000,0.1); last=now;
     fAcc+=dtReal; fN++;
     if(fAcc>0.5){ fps=fN/fAcc; fAcc=0; fN=0;
-      $("fps").textContent=`${fps.toFixed(0)} fps · ${world.agents.filter(a=>a.alive).length} 개체 · sim 20 Hz`; }
+      const t=STATS.tiers;
+      $("fps").textContent=
+        `${fps.toFixed(0)} fps · ${world.agents.filter(a=>a.alive).length} 개체 · `+
+        `LOD ${t[0]}/${t[1]}/${t[2]}/${t[3]} · ${(STATS.tris/1000).toFixed(1)}k tri · `+
+        `${STATS.calls} draw · sim 20 Hz`; }
 
     if(playing){
       acc+=dtReal*speed;
@@ -1182,26 +1217,19 @@ function main(){
     gl.uniform1f(u.turb,turb);
     gl.uniform1f(u.tankY,world.bounds[1]);
 
-    // build instance data per species
-    const buckets={};
+    // Bucket every agent by (species, LOD tier). Tier comes from distance in
+    // body lengths, so a 12 cm anglerfish drops tier closer than a 30 cm trout —
+    // the budget is perceptual, not metric.
+    const buckets={}; let drawTris=0, drawCalls=0;
+    const tierCount=[0,0,0,0];
     for(const a of world.agents){
       if(!a.alive) continue;
-      (buckets[a.id]||(buckets[a.id]=[])).push(a);
+      const L = LOD_FORCE>=0 ? LOD_FORCE : lodFor(V.len(V.sub(a.pos,eye)), a.L);
+      tierCount[L]++;
+      ((buckets[a.id]||(buckets[a.id]={}))[L] ||= []).push(a);
     }
     for(const id in buckets){
       const sp=species[id]; if(!sp) continue;
-      const list=buckets[id];
-      if(sp.data.length<list.length*10) sp.data=new Float32Array(list.length*10);
-      const d=sp.data;
-      for(let i=0;i<list.length;i++){
-        const a=list[i], o=i*10;
-        d[o]=a.pos[0]; d[o+1]=a.pos[1]; d[o+2]=a.pos[2];
-        d[o+3]=a.fwd[0]; d[o+4]=a.fwd[1]; d[o+5]=a.fwd[2];
-        d[o+6]=a.phase; d[o+7]=a.amp; d[o+8]=a.scale; d[o+9]=a.hue;
-      }
-      gl.bindVertexArray(sp.vao);
-      gl.bindBuffer(gl.ARRAY_BUFFER,sp.inst);
-      gl.bufferData(gl.ARRAY_BUFFER,d.subarray(0,list.length*10),gl.DYNAMIC_DRAW);
       gl.uniform3fv(u.base,sp.base);
       gl.uniform1f(u.irid,sp.irid);
       gl.uniform1f(u.rough,sp.rough);
@@ -1209,8 +1237,24 @@ function main(){
       gl.uniform1f(u.refLen,sp.refLen);
       // the anglerfish esca pulses; everything else is non-emissive
       gl.uniform1f(u.emis, sp.emis*(0.55+0.45*Math.sin(world.time*1.7)));
-      gl.drawElementsInstanced(gl.TRIANGLES,sp.count,gl.UNSIGNED_SHORT,0,list.length);
+      for(const Lk in buckets[id]){
+        const lod=sp.lods[Lk], list=buckets[id][Lk];
+        if(lod.data.length<list.length*10) lod.data=new Float32Array(list.length*10);
+        const d=lod.data;
+        for(let i=0;i<list.length;i++){
+          const a=list[i], o=i*10;
+          d[o]=a.pos[0]; d[o+1]=a.pos[1]; d[o+2]=a.pos[2];
+          d[o+3]=a.fwd[0]; d[o+4]=a.fwd[1]; d[o+5]=a.fwd[2];
+          d[o+6]=a.phase; d[o+7]=a.amp; d[o+8]=a.scale; d[o+9]=a.hue;
+        }
+        gl.bindVertexArray(lod.vao);
+        gl.bindBuffer(gl.ARRAY_BUFFER,lod.inst);
+        gl.bufferData(gl.ARRAY_BUFFER,d.subarray(0,list.length*10),gl.DYNAMIC_DRAW);
+        gl.drawElementsInstanced(gl.TRIANGLES,lod.count,gl.UNSIGNED_SHORT,0,list.length);
+        drawTris += lod.tris*list.length; drawCalls++;
+      }
     }
+    STATS.tris=drawTris; STATS.calls=drawCalls; STATS.tiers=tierCount;
 
     gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
     gl.depthMask(false);
@@ -1231,6 +1275,7 @@ function main(){
     gl.depthMask(true); gl.disable(gl.BLEND);
     gl.bindVertexArray(null);
 
+    STATS.frameMs = performance.now()-t0;
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

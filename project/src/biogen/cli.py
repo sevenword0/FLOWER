@@ -7,6 +7,7 @@ Usage:
     python -m biogen.cli generate <taxon_id>   # mesh/rig/material to exports/
     python -m biogen.cli validate [taxon_id]   # schema + biomech + evidence audit
     python -m biogen.cli simulate              # run the ecosystem vertical slice
+    python -m biogen.cli resolve-taxa          # verify names against GBIF + WoRMS (needs network)
     python -m biogen.cli build-all             # generate + validate the whole slice
 
 The active taxon comes ONLY from config/target_taxon.yaml.
@@ -92,6 +93,27 @@ def cmd_simulate(args):
     _print(metrics)
 
 
+def cmd_resolve_taxa(args):
+    """Resolve accepted names + identifiers against GBIF and WoRMS.
+
+    Writes taxonomy/resolution_report.json. Nothing in the taxon index is
+    mutated automatically: disagreements are reported for review (규칙 8).
+    Exit code 1 when no authority was reachable, so a blocked run cannot be
+    mistaken for a verified one in CI.
+    """
+    from .etl import resolve_index
+    rep = resolve_index(use_cache="--no-cache" not in args)
+    _print({k: rep[k] for k in ("generated_at", "network_reachable",
+                                "verdict_counts", "requires_review")
+            if k in rep})
+    print(f"# wrote {rep['_path']}")
+    if not rep["network_reachable"]:
+        print("# NOT VERIFIED: no taxonomic authority was reachable from this "
+              "environment. The taxon index was left unchanged.")
+        return 1
+    return 0
+
+
 def cmd_build_all(_args):
     tp = load_profile()
     cmd_module_map(None)
@@ -110,6 +132,7 @@ COMMANDS = {
     "generate": cmd_generate,
     "validate": cmd_validate,
     "simulate": cmd_simulate,
+    "resolve-taxa": cmd_resolve_taxa,
     "build-all": cmd_build_all,
 }
 

@@ -7,5 +7,5 @@ R5,Predators collapse prey population (unbounded predation),medium,high,handling
 R6,License violation in redistributed data,low,high,license_manifest.csv; parameters-only from copyrighted literature,mitigated
 R7,Mesh generation non-deterministic,low,medium,no wall-clock/random in geometry; build_hash test,mitigated
 R8,Schema drift between agents' outputs,medium,medium,single species_preset.schema.json validated in CI/tests,mitigated
-R9,Real API integration not exercised (reference values only),high,medium,source_registry documents endpoints; ETL client is a documented next step,open
+R9,Real API integration not exercised (reference values only),high,medium,"ETL client implemented (src/biogen/etl.py) with GBIF+WoRMS backends, caching, conflict reporting and 17 offline fixture tests; live call blocked by this environment's network policy (CONNECT 403), so resolve-taxa records unresolved_network and exits 1 rather than reporting a pass",partially-mitigated
 R10,Seahorse posture/pipefish loft is an approximation,high,low,flagged in known_limitations; centerline curve approximates upright posture,accepted

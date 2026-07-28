@@ -5,8 +5,9 @@ All simulations are deterministic per seed.
 
 ## Automated gate tests
 
-`pytest` → **24 passed** (`tests/test_schema.py`, `test_determinism.py`,
-`test_portability.py`, `test_locomotion.py`, `test_ecosystem.py`).
+`pytest` → **41 passed** (`tests/test_schema.py`, `test_determinism.py`,
+`test_portability.py`, `test_locomotion.py`, `test_ecosystem.py`,
+`test_etl.py`).
 
 ## Data / provenance (Gate G2)
 
@@ -68,11 +69,40 @@ Mixed community (40 herring, 6 trout, 2 anglerfish, 4 seahorse), 600 steps, 8 se
   N/A buoyancy correctly flagged and re-realized.
 - Package scan finds **0** taxon literals in `src/biogen/*.py`.
 
+## Taxonomic resolution (R9)
+
+`./run.sh resolve-taxa` queries GBIF and WoRMS, caches raw responses, and
+reconciles the answers against `taxonomy/taxon_index.csv` without mutating it.
+Parsing and reconciliation are covered by 17 offline fixture tests, including
+fuzzy-match flagging, synonym→accepted redirection, authority disagreement, and
+the blocked-network path.
+
+**Not verified against the live APIs.** This environment's network policy denies
+`api.gbif.org` and `www.marinespecies.org` (`CONNECT 403`), so the run recorded
+`network_reachable: false`, `unresolved_network` ×4, changed nothing, and exited
+1. `taxonomy/resolution_report.json` is a record of a blocked run and must not be
+read as name confirmation.
+
+## LOD performance (G8)
+
+Measured with `node project/tests/bench_lod.mjs`; full numbers in
+`docs/performance_report.md`.
+
+- Tier ladder is distinct: **2270 → 1006 → 354 → 98** triangles (23× hero→far field).
+- Distance policy vs everything at hero detail: **−59.9 % triangles, 1.55× frame rate**
+  at 55 agents, 6 draw calls (budget 1500).
+- At 131 agents the triangle cut holds (−56.1 %) but frame time is unchanged
+  (1.00×) — the workload is CPU-bound there, so behavior LOD, not geometry, is
+  the next lever.
+- Absolute times come from a software rasterizer (no GPU here) and are valid only
+  as relative comparisons.
+
 ## Not fully validated (honest gaps)
 
 - **G4 appearance:** no measured reflectance spectra; colors are ArtistAuthored
   (confidence ≤ 0.29). No golden-render comparison.
-- **G8 performance:** LOD tiers/budgets defined, no on-hardware engine benchmark.
+- **G8 performance:** LOD measured and verified relatively, but the absolute
+  16.6 ms budget is unverified (no GPU); behavior LOD not yet implemented.
 - **Disturbed-school NND** not compared to a measured disturbed distribution.
 
 See `known_limitations.md` for the full list.
