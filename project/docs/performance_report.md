@@ -103,11 +103,36 @@ agent is permanently within standard tier, so there is nothing to demote. The
 thresholds are written for an open world, not an aquarium.
 
 Measured with the tiering switched on but nothing to demote, the extra
-per-agent work is a net loss (20.2 ms → 27.6 ms at 271 agents, though those two
-runs are different world states and some of that is noise). The honest reading:
-**behaviour LOD is a large-world optimisation, and its thresholds should be
-derived from the scenario's spatial scale rather than fixed globally.** Enabling
-it inside a small domain costs without paying.
+per-agent work is a net loss (20.2 ms → 27.6 ms at 271 agents; those two runs
+are different world states, so some of that is noise).
+
+### Why the thresholds were not rescaled
+
+The obvious fix — compress the ladder until the tiers split in a 16 m tank —
+is wrong. The thresholds are *perceptual*: a fish 40 body lengths away covers
+few pixels, which is what makes demoting it free. In a 16 m tank viewed from
+6 m every fish genuinely is near and clearly visible, so compressing the ladder
+would degrade animals the viewer can plainly see. That is the one thing LOD must
+not do, and it would have made the benchmark numbers move while making the
+picture worse.
+
+### What was done instead: the ladder measures whether it is paying
+
+Whether tiering earns its own per-agent cost depends on where the viewer is and
+how the population is spread, which is not predictable from domain size. So it
+is probed rather than assumed: every ~3 s the tier is evaluated for every agent,
+and the ladder stays enabled only while at least 10 % actually fall below
+standard tier.
+
+| scenario | demoted fraction | gate |
+|---|---:|---|
+| 55 agents, camera close | 14.5 % | enabled |
+| 271 agents, camera close | 2.2 % | **disabled** — avoids the ~27 % overhead |
+| any count, observer 150 m | 100 % | enabled |
+
+Enabling or moving the observer forces an immediate re-probe, so pulling the
+camera back re-enables tiering without a restart. The result is a ladder that
+helps when it can and costs nothing when it cannot.
 
 ## Verdict — Gate G8
 
@@ -121,6 +146,7 @@ Not verified: the absolute `frame_budget_ms: 16.6` target on the stated
 hardware — this environment has no GPU, so absolute milliseconds are software
 rasterizer numbers and only relative comparisons are meaningful.
 
-Known-inert: behaviour LOD does nothing in the default 16 m scenario, because
-the standard-tier radius (40 BL ≈ 11 m) covers the domain. Deriving the
-thresholds from world scale is the remaining work.
+Self-gating: rather than rescaling perceptual thresholds to force tiers apart in
+a small domain — which would degrade clearly-visible animals — the ladder probes
+its own demotion rate and disables itself below 10 %, so the dense 271-agent case
+avoids the overhead it would otherwise pay.

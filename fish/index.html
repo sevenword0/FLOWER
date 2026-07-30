@@ -246,6 +246,7 @@
     <select id="taxonSel" aria-label="대상 생물군 선택">
       <option value="fish" selected>어류</option>
       <option value="bird">조류</option>
+      <option value="cnidarian">해파리 (방사대칭)</option>
     </select>
   </div>
   <p id="swapNote"></p>
@@ -329,12 +330,16 @@ const PRESETS = {"target_taxon":"어류","profile_key":"fish","rig_strategy":"sp
 /* Module map for the one-word-swap demo (Gate G9). Both profiles ship in the
    repo; swapping the config value regenerates rig strategy + source routing. */
 const PROFILES = {
-  fish: { name: "어류", rig: "spline_spine", sym: "bilateral",
+  fish: { name: "어류", rig: "spline_spine", sym: "양측대칭",
           slots: "지느러미·부레·측선·비늘", src: "WoRMS · FishBase · OBIS",
           na: null },
-  bird: { name: "조류", rig: "limbed_biped_with_wings", sym: "bilateral",
+  bird: { name: "조류", rig: "limbed_biped_with_wings", sym: "양측대칭",
           slots: "날개·기낭·깃털·용골돌기", src: "Avibase · eBird · Macaulay",
-          na: "부력 슬롯 → N/A (기낭·함기골로 기능 대체)" }
+          na: "부력 없음 → 기낭·함기골로 기능 대체" },
+  cnidarian: { name: "해파리", rig: "radial_umbrella", sym: "방사대칭",
+          slots: "종·촉수·자포·중교층", src: "WoRMS · OBIS · iDigBio",
+          na: "턱·지느러미·비늘·머리 없음 → 촉수·종수축·표피·산재신경망으로 대체",
+          hard: true }
 };
 
 /* ===========================================================================
@@ -402,11 +407,35 @@ function sampleCurve(curve, x){
 const LOD_BUDGET = [ {seg:48,ring:24}, {seg:32,ring:16}, {seg:18,ring:10}, {seg:8,ring:6} ];
 
 /* Distance thresholds in body lengths, from config/performance_budget.yaml via
-   biogen/lod.py: hero ≤10 BL, standard ≤40 BL, crowd ≤150 BL, then far field. */
+   biogen/lod.py: hero ≤10 BL, standard ≤40 BL, crowd ≤150 BL, then far field.
+   These are written for an open world. */
 const LOD_BL = [10, 40, 150];
-function lodFor(distM, bodyLen){
-  const bl = distM / Math.max(bodyLen, 1e-4);
-  for(let i=0;i<LOD_BL.length;i++) if(bl <= LOD_BL[i]) return i;
+
+/* The thresholds are perceptual: a fish 40 body lengths away really does cover
+   few pixels, so demoting it is free. That also means they must NOT be squeezed
+   to fit a small domain. In a 16 m tank viewed from 6 m every fish genuinely is
+   near and clearly visible; compressing the ladder until the tiers split would
+   degrade animals the viewer can plainly see, which is the one thing LOD must
+   not do.
+
+   So instead of rescaling, ask whether tiering can pay off at all: if the
+   furthest an agent can ever get from the viewer is still inside its own
+   standard-tier radius, nothing can ever be demoted, and the honest move is to
+   skip the per-agent tier work rather than charge for it. */
+function tierRadii(bodyLen){ return LOD_BL.map(bl => bl * bodyLen); }
+
+/* Whether tiering is worth its own per-agent cost is not predictable from the
+   domain size alone — it depends on where the viewer actually is and how the
+   population is spread. So it is measured, not guessed: every PROBE_EVERY ticks
+   the tier is evaluated for everyone, and the ladder stays enabled only while a
+   worthwhile fraction is actually being demoted. A viewer who pulls back
+   re-enables it on the next probe without a restart. */
+const PROBE_EVERY = 60;          // ticks between full re-evaluations (~3 s at 20 Hz)
+const WORTH_DEMOTING = 0.10;     // enable only if ≥10 % land below standard tier
+
+function lodFor(distM, bodyLen, radii){
+  const r = radii || tierRadii(bodyLen);
+  for(let i=0;i<r.length;i++) if(distM <= r[i]) return i;
   return 3;
 }
 
@@ -609,6 +638,13 @@ class World {
     this.centroids={}; this.speciesCount={};
     this.behLOD=false;                    // behaviour LOD off by default
     this.observer=null;                   // camera position, set by the renderer
+    /* Largest viewer→agent distance this scenario can produce. Compared against
+       the standard-tier radius to decide whether tiering is worth evaluating. */
+    this.maxViewDist=Math.hypot(...this.bounds)*1.5;
+    this.behLODPays=false;         // measured every PROBE_EVERY ticks
+    this.behLODFraction=0;
+    this.behLODProbeDue=true;      // probe on the first step, and whenever re-enabled
+    this.behLODReason="not probed yet";
     this.tick=0;
 
     // --- recruitment (§11 번식) ---------------------------------------------
@@ -699,6 +735,23 @@ class World {
     }
     this.centroids={}; this.speciesCount=cnt;
     for(const id in sum) this.centroids[id]=V.mul(sum[id], 1/cnt[id]);
+
+    if(this.behLOD && this.observer
+       && (this.behLODProbeDue || (this.tick % PROBE_EVERY)===0)){
+      this.behLODProbeDue=false;
+      let n=0, demoted=0;
+      for(const a of this.agents){
+        if(!a.alive) continue;
+        n++;
+        if(lodFor(V.len(V.sub(a.pos,this.observer)), a.L) >= 2) demoted++;
+      }
+      const frac = n ? demoted/n : 0;
+      this.behLODPays = frac >= WORTH_DEMOTING;
+      this.behLODFraction = frac;
+      this.behLODReason = this.behLODPays ? ""
+        : `inert: only ${(frac*100).toFixed(1)} % of agents fall below standard `
+          + `tier, so evaluating tiers for all ${n} costs more than it saves`;
+    }
   }
 
   /* behaviourTier: 0 hero, 1 standard, 2 crowd, 3 far field — the same
@@ -706,12 +759,10 @@ class World {
      predator/prey scan and keeps only flocking; far field stops deciding
      altogether and coasts. */
   behaviourTier(a){
-    if(!this.behLOD || !this.observer) return 0;
-    const bl = V.len(V.sub(a.pos, this.observer)) / Math.max(a.L, 1e-4);
-    if(bl <= 10) return 0;
-    if(bl <= 40) return 1;
-    if(bl <= 150) return 2;
-    return 3;
+    // `behLODPays` is false when no agent can ever leave standard tier, so the
+    // distance computation itself is skipped instead of costing for nothing.
+    if(!this.behLOD || !this.observer || !this.behLODPays) return 0;
+    return lodFor(V.len(V.sub(a.pos, this.observer)), a.L);
   }
 
   perceive(a, tier){
@@ -1185,12 +1236,18 @@ function main(){
   window.__biogen={
     stats:STATS,
     setLOD:v=>{ LOD_FORCE=v; },
-    setBehaviorLOD:on=>{ world.behLOD=!!on; },
+    setBehaviorLOD:on=>{ world.behLOD=!!on; world.behLODProbeDue=true; },
     behTiers:()=>world.behTierCount||[0,0,0,0],
+    behLODStatus:()=>({pays:world.behLODPays,
+                       demotedFraction:world.behLODFraction,
+                       reason:world.behLODReason,
+                       tick:world.tick, behLOD:world.behLOD,
+                       hasObserver:!!world.observer}),
     /* Pin the observer far away so the behaviour tiers actually engage. In the
        16 m tank the standard-tier radius (40 BL ≈ 11 m) covers almost the whole
        domain, so tiering is inert unless the viewer is genuinely distant. */
-    setObserverOverride:d=>{ OBS_OVERRIDE = d==null ? null : [8, 4, 8 + d]; },
+    setObserverOverride:d=>{ OBS_OVERRIDE = d==null ? null : [8, 4, 8 + d];
+                             world.behLODProbeDue=true; },
     setPop:(id,n)=>{ const s=SCENARIO.find(x=>x.id===id); if(s){ s.n=n;
                      world=new World(11,withPred); world.turbidity=turb; target=null; } },
     agents:()=>world.agents.filter(a=>a.alive).length,
@@ -1232,10 +1289,14 @@ function main(){
     const p=PROFILES[k];
     $("swapNote").innerHTML =
       `<code>target_taxon: "${p.name}"</code> 한 값만 바꾸면 모듈 맵이 재생성됩니다.<br>` +
-      `리그 <code>${p.rig}</code> · 슬롯 ${p.slots}<br>` +
+      `대칭 <b>${p.sym}</b> · 리그 <code>${p.rig}</code><br>` +
+      `슬롯 ${p.slots}<br>` +
       `소스 라우팅 ${p.src}` +
       (p.na ? `<br><span style="color:var(--inferred)">${p.na}</span>` : "") +
-      (k==="bird" ? `<br><span style="color:var(--dim)">조류 프로필은 이식성 검증(G9)용입니다. 화면의 슬라이스는 어류 프리셋으로 계속 구동됩니다.</span>` : "");
+      (p.hard ? `<br><span style="color:var(--measured)">골격·척추·지느러미가 전무한 방사대칭 —
+                 좌표계가 실제로 바뀌는 유일한 케이스입니다.</span>` : "") +
+      (k!=="fish" ? `<br><span style="color:var(--dim)">이식성 검증(G9)용 프로필입니다.
+                     화면의 슬라이스는 어류 프리셋으로 계속 구동됩니다.</span>` : "");
   }
   $("taxonSel").onchange=e=>renderSwap(e.target.value);
   renderSwap("fish");
@@ -1390,7 +1451,8 @@ function main(){
     const tierCount=[0,0,0,0];
     for(const a of world.agents){
       if(!a.alive) continue;
-      const L = LOD_FORCE>=0 ? LOD_FORCE : lodFor(V.len(V.sub(a.pos,eye)), a.L);
+      const L = LOD_FORCE>=0 ? LOD_FORCE
+              : lodFor(V.len(V.sub(a.pos,eye)), a.L);
       tierCount[L]++;
       ((buckets[a.id]||(buckets[a.id]={}))[L] ||= []).push(a);
     }

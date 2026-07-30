@@ -5,7 +5,7 @@ All simulations are deterministic per seed.
 
 ## Automated gate tests
 
-`pytest` → **59 passed** (`test_schema.py`, `test_determinism.py`,
+`pytest` → **62 passed** (`test_schema.py`, `test_determinism.py`,
 `test_portability.py`, `test_locomotion.py`, `test_ecosystem.py`,
 `test_etl.py`, `test_shape.py`, `test_gltf.py`).
 
@@ -69,10 +69,24 @@ Mixed community (40 herring, 6 trout, 2 anglerfish, 4 seahorse), 600 steps, 8 se
 
 ## Portability — Gate G9
 
-- `target_taxon: 조류` regenerates the module map with rig strategy
-  `limbed_biped_with_wings`, bird source routing (avibase/ebird/macaulay), and
-  N/A buoyancy correctly flagged and re-realized.
-- Package scan finds **0** taxon literals in `src/biogen/*.py`.
+Three profiles, swapped by changing one config value:
+
+| target | symmetry | rig strategy | absent sub-structures |
+|---|---|---|---|
+| 어류 | bilateral | `spline_spine` | — |
+| 조류 | bilateral | `limbed_biped_with_wings` | buoyancy |
+| 해파리 | **radial** | `radial_umbrella` | jaws, fins, scales/feathers, head |
+
+- The cnidarian case is the load-bearing one: radial symmetry, no skeleton, no
+  spine, no fins. `어류 → 조류` alone never tests the coordinate system.
+- No slot is reported wholly absent for any profile, which is correct — all
+  three animals feed, move, have a surface and sense. Only *sub-structures* are
+  absent, and they are named.
+- Three distinct rig strategies; source routing retargets away from the fish
+  authorities.
+- Package scan finds **0** taxon literals in `src/biogen/*.py` — and it earns
+  its keep: it caught the word "jellyfish" in a docstring written minutes
+  earlier during this very change.
 
 ## Taxonomic resolution (R9)
 
@@ -97,8 +111,8 @@ Measured with `node project/tests/bench_lod.mjs`; full numbers in
 - Distance policy vs everything at hero detail: **−59.9 % triangles, 1.55× frame rate**
   at 55 agents, 6 draw calls (budget 1500).
 - At 131 agents the triangle cut holds (−56.1 %) but frame time is unchanged
-  (1.00×) — the workload is CPU-bound there, so behavior LOD, not geometry, is
-  the next lever.
+  (1.00×): the workload is CPU-bound there, which is why the behaviour ladder
+  exists. With tiers engaged it gives **7.5×** at 271 agents.
 - Absolute times come from a software rasterizer (no GPU here) and are valid only
   as relative comparisons.
 

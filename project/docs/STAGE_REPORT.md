@@ -30,8 +30,9 @@ not a verified one.
 **Deliverables:** `schemas/*.json`, `ontology/anatomy_ontology.jsonld`,
 `evidence/evidence_ledger.csv` (40 parameters), `evidence_gap_report.md`.
 **Gate G2 (all outputs validate against common schema):** PASS. Evidence classes:
-Measured 30 / Derived 3 / Inferred 5 / ArtistAuthored 2. Audit finds 0 problems
-(no Inferred≥0.7, no ArtistAuthored>0.3, transfers record source taxon).
+Measured 30 / Derived 2 / Inferred 6 / ArtistAuthored 2. Audit finds 0 problems
+(no blank required field, no Inferred≥0.7, no ArtistAuthored>0.3, every
+transfer records its source taxon, no Derived value without a formula).
 
 ## Stage 3 — Morphology / structure / joints / actuators
 **Deliverables:** `bases/clade/actinopterygii.json`, `bases/morphotype/*.json`
@@ -86,27 +87,42 @@ now measured. The browser build implements the distance policy end to end and
 (2270→1006→354→98 tri, 23× hero→far field) and the policy cuts **59.9 % of
 triangles** for **1.55×** the frame rate at 55 agents. Benchmarking caught a
 real bug — the browser port clamped the tier index to 0..2, so far-field was
-silently drawing at crowd detail. Still unverified: the absolute 16.6 ms budget
-on target hardware (no GPU here, software rasterizer only), and the
-large-population budget — the scaling test shows that past ~130 agents the
-workload is CPU-bound, so it is blocked on *behavior* LOD (specified in
-`lod.py`, not yet implemented in the browser build) rather than on geometry.
-See `docs/performance_report.md`.
+silently drawing at crowd detail. The scaling test then showed that past ~130
+agents the workload is CPU-bound, so the *behaviour* ladder was implemented too:
+it gives **7.5×** at 271 agents once the tiers engage, and tier radii are now
+derived from the scenario's spatial scale rather than fixed globally. Still
+unverified: the absolute 16.6 ms budget on target hardware (no GPU here,
+software rasterizer only). See `docs/performance_report.md`.
 
 ## Stage 9 — Extensibility & portability
-**Deliverables:** new species = add a preset (no code change); `bird.yaml` +
-`test_portability.py`.
-**Gate G9 (no hardcoding / schema break / wrong slot residue):** PASS. Swapping
-`target_taxon` to 조류 regenerates the module map with the bird rig strategy
-(`limbed_biped_with_wings`), bird source routing (avibase/ebird), and correct N/A
-handling for buoyancy. A package scan confirms no taxon literal in code.
+**Deliverables:** new species = add a preset (no code change); three adaptation
+profiles (`fish`, `bird`, `cnidarian`) + `test_portability.py`.
+**Gate G9 (no hardcoding / schema break / wrong slot residue):** PASS, and now
+on a genuinely hard case. `어류 → 조류` is bilateral → bilateral: it swaps the rig
+but never challenges the coordinate system. `해파리` (cnidarian medusa) is
+**radially symmetric with no skeleton, no jaws, no fins and no spine**, and the
+swap still regenerates cleanly:
+
+| target | symmetry | rig strategy | absent sub-structures |
+|---|---|---|---|
+| 어류 | bilateral | `spline_spine` | — |
+| 조류 | bilateral | `limbed_biped_with_wings` | buoyancy |
+| 해파리 | **radial** | `radial_umbrella` | jaws, fins, scales/feathers, head |
+
+Three distinct rig strategies, source routing retargeted away from the fish
+authorities, and no taxon literal in code (package scan). The radial profile also
+**exposed a semantic bug**: a slot was marked wholly N/A when any one
+sub-structure was N/A, so the map claimed a jellyfish does not feed and a bird
+has no physiology. `na` (slot absent) and `na_substructures` (slot re-realized,
+these features absent) are now separate — which is what 규칙 "없으면 N/A 후 기능
+대응 구조로 교체" actually asks for.
 
 ---
 
 ## Overall verdict (A16)
 
 **Conditional APPROVED.** All hard gates (G0, G1, G2, G3, G5, G6, G7, G9) pass with
-59/59 automated tests. G4 and G8 remain PARTIAL by environment, not by omission:
+62/62 automated tests. G4 and G8 remain PARTIAL by environment, not by omission:
 G4 lacks measured reflectance spectra, and G8 now has a real LOD benchmark but no
 GPU to verify the absolute frame budget against. R9 (live taxonomic verification)
 is implemented and unit-tested but blocked by this environment's network policy.

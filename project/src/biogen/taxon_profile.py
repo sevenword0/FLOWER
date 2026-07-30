@@ -105,7 +105,7 @@ class TaxonProfile:
             amap["slots"][slot_key] = {
                 "realized_structures": realized,
                 "responsible_agents": SLOT_TO_AGENTS.get(slot_key, []),
-                "na": _slot_is_na(realized),
+                **_na_analysis(realized),
                 "source_routes": routes,
             }
         self.adaptation_map = amap
@@ -124,18 +124,37 @@ class TaxonProfile:
                     "agents": info["responsible_agents"],
                     "source_buckets": sorted({r["bucket"] for r in info["source_routes"]}),
                     "na": info["na"],
+                    "na_substructures": info["na_substructures"],
                 }
                 for slot, info in amap["slots"].items()
             },
         }
 
 
-def _slot_is_na(realized: Any) -> bool:
-    """A slot counts as N/A when its realization is explicitly 'N/A' anywhere
-    at the top level (규칙: 없으면 N/A + 기능 대응)."""
-    if isinstance(realized, dict):
-        return any(str(v).upper() == "N/A" for v in realized.values())
-    return str(realized).upper() == "N/A"
+def _na_analysis(realized: Any) -> Dict[str, Any]:
+    """Separate "this slot does not exist for this clade" from "one sub-structure
+    of it does not exist" (규칙: 없으면 N/A + 기능 대응 구조로 교체).
+
+    The distinction matters and conflating them loses information. A radially
+    symmetric predator may have no jaws while its feeding slot is very much
+    present, realized by tentacles and stinging cells. An air-breathing flier
+    may have no swim bladder while its physiology slot is present, with air sacs
+    doing the equivalent job. Marking either slot simply "N/A" would assert that
+    the animal does not feed, or does not breathe.
+
+    So `na` means the whole slot is absent, and `na_substructures` names the
+    individual features that are absent while the slot itself is re-realized.
+    """
+    if not isinstance(realized, dict):
+        return {"na": str(realized).upper() == "N/A", "na_substructures": []}
+
+    absent = [k for k, v in realized.items() if str(v).upper() == "N/A"]
+    present = [k for k, v in realized.items()
+               if str(v).upper() != "N/A" and not k.startswith(("note", "_"))]
+    return {
+        "na": not present,                     # nothing realizes this slot at all
+        "na_substructures": sorted(absent),    # re-realized, minus these features
+    }
 
 
 def load_profile(config_path=None) -> TaxonProfile:

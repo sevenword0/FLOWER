@@ -1,0 +1,129 @@
+# =============================================================================
+# ADAPTATION PROFILE: cnidarian (자포동물 / medusozoan jellyfish)
+# -----------------------------------------------------------------------------
+# The real portability test. Fish → bird is bilateral → bilateral: it swaps the
+# rig strategy but never challenges the coordinate system. This profile is
+# radially symmetric, has no skeleton, no jaws, no fins and no spine, so it
+# exercises whether the functional-slot indirection actually generalises or
+# whether bilateral assumptions leaked into the pipeline.
+#
+# Several slots are genuinely N/A here and are re-realized rather than faked
+# (규칙: 없으면 N/A + 기능 대응 구조).
+# =============================================================================
+profile_key: cnidarian
+display_name: "자포동물"
+clade_scope:
+  primary: "Medusozoa"
+  broader: ["Cnidaria", "Anthozoa(polyp-only)"]
+  note: >
+    Slice targets the free-swimming medusa stage. Polyp and colonial forms
+    (Anthozoa, siphonophores) would need a modular/colonial body plan, which
+    the schema reserves but this profile does not author.
+
+# --- Coordinate system / rig strategy ----------------------------------------
+body_plan:
+  symmetry_type: radial            # NOT bilateral — this is the point
+  primary_axis: oral_aboral        # apex of the bell -> mouth/manubrium
+  radial_symmetry_order: 4         # tetramerous, typical of scyphozoans
+  dorsoventral_axis: N/A           # meaningless under radial symmetry
+  lateral_axis: N/A
+  rig_strategy: radial_umbrella    # bell rings + tentacle chains, no spine
+  normalized_scale_definition: >
+    Normalized by bell diameter (the standard measure for medusae, not length).
+    r in [0,1] from central axis outward; h along the oral-aboral axis.
+
+# --- 13 functional slots -> real cnidarian structures ------------------------
+functional_slots:
+  1_identity_lifecycle:
+    structures: [species, population, life_stage, bell_diameter_class]
+    lifecycle: [planula, polyp, strobila, ephyra, medusa]   # metagenetic
+    note: "Sex is often not externally determinable; life cycle alternates forms."
+  2_structural_support:
+    kind: hydrostatic              # no bone, no chitin
+    structures: [mesoglea, bell_margin, no_skeleton]
+    material_model: gelatinous_mesoglea
+  3_joints_linkages:
+    structures: [bell_margin_flexion, tentacle_bending, manubrium_flexion]
+    linkage_types: [continuous_deformation, membrane_flexion]
+    note: "No discrete joints. Deformation is continuous, not articulated."
+  4_feeding_capture:
+    structures: [tentacles, nematocysts, oral_arms, manubrium, gastrovascular_cavity]
+    mechanism: cnidocyte_capture_and_transport
+    jaws: N/A
+  5_actuation:
+    kind: coronal_and_radial_muscle
+    structures: [coronal_muscle_sheet, radial_muscle, epitheliomuscular_cells]
+    proxy: bell_contraction_cycle
+    note: "Subumbrellar sheet contracts against elastic mesoglea recoil."
+  6_locomotion_structures:
+    structures: [bell, velum_or_velarium, bell_margin]
+    stabilizers: [statocysts]
+    fins: N/A
+  7_core_physiology:
+    respiration: diffusion_across_epidermis     # no gills, no lungs
+    buoyancy: near_neutral_density_regulation   # no swim bladder, no air sac
+    osmoregulation: isosmotic_with_seawater
+    circulation: gastrovascular_canals
+  8_surface_covering:
+    structures: [epidermis, mucus_layer]
+    microstructure: [nematocyst_batteries, cilia]
+    scales: N/A
+    feathers: N/A
+  9_head_sensors_silhouette:
+    head: N/A                                   # no cephalization at all
+    eyes: ocelli_or_rhopalia                    # cubozoans have lensed eyes
+    other_sensors: [statocysts, chemoreceptors, mechanoreceptors_nerve_net]
+    note: "Nerve net, not a brain. Sensing is distributed around the margin."
+  10_optics_pattern:
+    mechanisms: [translucency, pigment_spots, bioluminescence_variable]
+    angle_dependent: transmission_scatter
+    note: "Appearance is dominated by transmission through mesoglea, not surface reflectance."
+  11_behavior_movement:
+    modes: [pulsed_swimming, vertical_migration, passive_drift, feeding_posture,
+            tentacle_retraction, aggregation_bloom]
+  12_ecology_interactions:
+    axes: [depth, temperature, salinity, oxygen, current, prey_density, light]
+    roles: [predator_zooplanktivore, prey, host_symbiont]
+  13_variation:
+    axes: [life_stage, bell_diameter, season, population, condition]
+
+# --- Morphotype registry ------------------------------------------------------
+morphotypes:
+  scyphomedusa: {locomotion_mode: pulsed_jet, aspect: broad_shallow_bell, example: aurelia_generic}
+  cubomedusa:   {locomotion_mode: pulsed_jet_fast, aspect: cuboid_bell, example: chironex_generic}
+  hydromedusa:  {locomotion_mode: pulsed_jet_small, aspect: deep_bell_with_velum, example: clytia_generic}
+
+# --- Locomotion vocabulary ----------------------------------------------------
+# Not BCF/MPF at all: propulsion is a contraction-recoil jet cycle.
+locomotion_families:
+  jet: [pulsed_contraction, coasting_glide, rowing_paddle]
+  passive: [drift, current_riding]
+
+# --- Source routing -----------------------------------------------------------
+source_routing:
+  taxonomy_authority:
+    - {id: worms,  name: "WoRMS", api: true, scope: marine}
+    - {id: gbif,   name: "GBIF Backbone", api: true, scope: all}
+    - {id: col,    name: "Catalogue of Life", api: true, scope: all}
+  morphometry_specimen:
+    - {id: idigbio, name: "iDigBio specimens", api: true}
+    - {id: jellywatch, name: "JellyWatch / bloom observation networks", api: false}
+  literature:
+    - {id: crossref, name: "Crossref", api: true}
+    - {id: openalex, name: "OpenAlex", api: true}
+  ontology:
+    - {id: uberon,  name: "Uberon (limited cnidarian coverage)", api: true}
+  occurrence_behavior:
+    - {id: obis,    name: "OBIS occurrence", api: true}
+    - {id: gbif_occ, name: "GBIF occurrences", api: true}
+  media:
+    - {id: inaturalist, name: "iNaturalist (CC media)", api: true,
+       license_filter: [CC0, CC-BY, CC-BY-NC]}
+
+ontology_anchor:
+  root: "UBERON:0000468"
+  fish_bridge: null
+  note: >
+    Anatomy ontology coverage for Cnidaria is thin compared with vertebrates;
+    several structures above have no stable ontology term, which is itself a
+    finding for the crosswalk.

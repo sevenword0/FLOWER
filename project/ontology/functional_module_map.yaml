@@ -9,6 +9,7 @@ modules:
     source_buckets:
     - taxonomy_authority
     na: false
+    na_substructures: []
   2_structural_support:
     agents:
     - A04
@@ -17,6 +18,7 @@ modules:
     - literature
     - morphometry_specimen
     na: false
+    na_substructures: []
   3_joints_linkages:
     agents:
     - A04
@@ -25,6 +27,7 @@ modules:
     - literature
     - morphometry_specimen
     na: false
+    na_substructures: []
   4_feeding_capture:
     agents:
     - A04
@@ -32,6 +35,7 @@ modules:
     source_buckets:
     - literature
     na: false
+    na_substructures: []
   5_actuation:
     agents:
     - A05
@@ -39,6 +43,7 @@ modules:
     source_buckets:
     - literature
     na: false
+    na_substructures: []
   6_locomotion_structures:
     agents:
     - A06
@@ -48,6 +53,7 @@ modules:
     - literature
     - morphometry_specimen
     na: false
+    na_substructures: []
   7_core_physiology:
     agents:
     - A03
@@ -56,6 +62,7 @@ modules:
     - literature
     - occurrence_behavior
     na: false
+    na_substructures: []
   8_surface_covering:
     agents:
     - A07
@@ -64,6 +71,7 @@ modules:
     - media
     - morphometry_specimen
     na: false
+    na_substructures: []
   9_head_sensors_silhouette:
     agents:
     - A09
@@ -71,6 +79,7 @@ modules:
     - literature
     - morphometry_specimen
     na: false
+    na_substructures: []
   10_optics_pattern:
     agents:
     - A08
@@ -78,6 +87,7 @@ modules:
     - literature
     - media
     na: false
+    na_substructures: []
   11_behavior_movement:
     agents:
     - A12
@@ -85,6 +95,7 @@ modules:
     - literature
     - occurrence_behavior
     na: false
+    na_substructures: []
   12_ecology_interactions:
     agents:
     - A13
@@ -92,6 +103,7 @@ modules:
     - literature
     - occurrence_behavior
     na: false
+    na_substructures: []
   13_variation:
     agents:
     - A06
@@ -100,3 +112,4 @@ modules:
     - morphometry_specimen
     - occurrence_behavior
     na: false
+    na_substructures: []

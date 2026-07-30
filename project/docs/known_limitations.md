@@ -63,21 +63,34 @@ scientific validation (§15).
 10. **Environment fields are coarse.** A single logistic plankton grid + scalar
    turbidity. Flow, thermal/oxygen stratification, diel/tidal cycles are modeled
    as preset envelopes but not yet as dynamic driving fields.
-11. **LOD is measured; its thresholds are not scenario-aware.**
-    The distance policy runs end to end and is benchmarked
-    (`project/tests/bench_lod.mjs`, `docs/performance_report.md`): −59.9 %
-    triangles, 1.55× frame rate at 55 agents. Two things remain open. The
-    absolute 16.6 ms budget is unverified because this environment has no GPU
-    (Chromium falls back to software rendering), so only relative comparisons
-    are meaningful. Behaviour LOD and a spatial hash are now implemented and
-    give **7.5×** at 271 agents when the tiers engage — but they are **inert in
-    the default scenario**, because `lod.py`'s standard-tier radius (40 BL ≈
-    11 m for a herring) is larger than the 16 m tank, so nothing is ever
-    demoted. The thresholds need to derive from the scenario's spatial scale
-    rather than being global constants. No Unreal/Unity binding either.
+11. **LOD works and self-gates; the absolute budget is still unverified.**
+    Mesh LOD cuts 59.9 % of triangles, and behaviour LOD gives **7.5×** at 271
+    agents once the tiers engage (`docs/performance_report.md`).
+
+    The thresholds are deliberately *not* rescaled to a small domain. They are
+    perceptual — a fish 40 body lengths away covers few pixels, so demoting it
+    is free — and squeezing the ladder to fit a 16 m tank would degrade animals
+    the viewer can plainly see, which is the one thing LOD must not do. Instead
+    the ladder measures whether it is paying: every ~3 s it probes what fraction
+    of agents actually fall below standard tier and stays enabled only above
+    10 %. In the dense 271-agent scenario only 2.2 % are demotable, so it
+    switches itself off and avoids the ~27 % overhead it would otherwise cost;
+    a viewer who pulls back re-enables it on the next probe.
+
+    Still open: the absolute 16.6 ms budget on target hardware is unverified,
+    because this environment has no GPU and Chromium falls back to software
+    rendering — only relative comparisons are meaningful. No Unreal/Unity
+    binding either.
 
 ## Portability
 
-12. **Two profiles shipped (fish, bird).** The swap is proven for these. Other
-    body plans (radial, colonial, modular) have coordinate/rig strategies
-    reserved in the schema but no authored profile yet.
+12. **Three profiles shipped (fish, bird, cnidarian).** The swap is proven
+    across a genuine body-plan change: the cnidarian profile is radially
+    symmetric with no skeleton, jaws, fins or spine, and retargets cleanly.
+    Still unauthored: **colonial and modular** plans (siphonophores, corals,
+    clonal plants), which need the slot vocabulary to describe repeated
+    sub-individuals rather than one body — the schema reserves the symmetry
+    types but nothing exercises them. Also, the profiles beyond fish are
+    module-map level only: no presets, meshes or behaviour are authored for
+    them, so portability is proven for the *contract*, not end-to-end
+    generation.

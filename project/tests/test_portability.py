@@ -28,14 +28,64 @@ def test_fish_profile(tmp_path):
     assert tp.symmetry_type == "bilateral"
 
 
+def test_radial_body_plan_swap(tmp_path):
+    """The real portability test.
+
+    fish → bird is bilateral → bilateral: it swaps the rig but never challenges
+    the coordinate system. A jellyfish is radially symmetric with no skeleton,
+    no jaws, no fins and no spine, so this is what actually shows whether the
+    functional slots are an abstraction or bilateral defaults in disguise.
+    """
+    tp = _load_with_taxon("해파리", tmp_path)
+    assert tp.profile_key == "cnidarian"
+    assert tp.symmetry_type == "radial"          # not bilateral
+    assert tp.rig_strategy == "radial_umbrella"  # neither spine nor limbs
+
+    m = tp.functional_module_map()["modules"]
+
+    # Every slot must still be realized: a jellyfish feeds, moves, has a
+    # surface and senses — it just does none of it with jaws, fins, scales or
+    # a head. Marking those slots wholly absent would be a modelling error.
+    assert not any(v["na"] for v in m.values()), \
+        [k for k, v in m.items() if v["na"]]
+
+    absent = {k: v["na_substructures"] for k, v in m.items() if v["na_substructures"]}
+    assert "jaws" in absent["4_feeding_capture"]
+    assert "fins" in absent["6_locomotion_structures"]
+    assert "scales" in absent["8_surface_covering"]
+    assert "head" in absent["9_head_sensors_silhouette"]
+
+    # source routing must have retargeted away from the fish authorities
+    ids = {r["id"] for r in tp.adaptation_map["slots"]["1_identity_lifecycle"]["source_routes"]}
+    assert "fishbase" not in ids
+
+
+def test_substructure_absence_is_not_slot_absence(tmp_path):
+    """A bird has no swim bladder, but it certainly has physiology. The two must
+    not collapse into one flag — that was a real bug the radial profile exposed."""
+    tp = _load_with_taxon("조류", tmp_path)
+    phys = tp.functional_module_map()["modules"]["7_core_physiology"]
+    assert phys["na"] is False, "the slot is re-realized, not absent"
+    assert "buoyancy" in phys["na_substructures"]
+
+
+def test_all_profiles_declare_a_distinct_rig_strategy(tmp_path):
+    """Three body plans must not silently share one rig."""
+    rigs = {t: _load_with_taxon(t, tmp_path).rig_strategy
+            for t in ("어류", "조류", "해파리")}
+    assert len(set(rigs.values())) == 3, rigs
+
+
 def test_bird_profile_swap(tmp_path):
     tp = _load_with_taxon("조류", tmp_path)
     assert tp.profile_key == "bird"
     # different rig strategy proves downstream regeneration, not a fish fallback
     assert tp.rig_strategy == "limbed_biped_with_wings"
     fmm = tp.functional_module_map()
-    # bird buoyancy slot is N/A but re-realized (규칙: 없으면 N/A + 대응)
-    assert fmm["modules"]["7_core_physiology"]["na"] is True
+    # buoyancy is absent, but the physiology slot itself is re-realized by air
+    # sacs — so the slot is present with a recorded absent sub-structure
+    assert fmm["modules"]["7_core_physiology"]["na"] is False
+    assert "buoyancy" in fmm["modules"]["7_core_physiology"]["na_substructures"]
     # source routing regenerated to bird buckets
     amap = tp.adaptation_map
     routes = amap["slots"]["1_identity_lifecycle"]["source_routes"]

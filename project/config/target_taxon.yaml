@@ -7,9 +7,13 @@
 # adaptation profile under config/adaptation_profiles/<profile>.yaml and
 # regenerates the functional module map and source routing.
 #
-# Portability test (Gate G9): set target_taxon to "조류" (birds) and rerun
+# Portability test (Gate G9): set target_taxon to "조류" (birds) or "해파리"
+# (jellyfish) and rerun
 #   `python -m biogen.cli module-map`
-# The module map + source routing must regenerate with NO code change.
+# The module map + source routing must regenerate with NO code change. The
+# jellyfish profile is the harder case: radially symmetric, no skeleton, no
+# jaws, no fins, no spine — it tests whether the functional slots really are an
+# abstraction rather than bilateral defaults in disguise.
 # =============================================================================
 
 target_taxon: "어류"          # <-- the ONE value to swap. e.g. "조류", "곤충", "두족류"
@@ -26,6 +30,10 @@ profile_aliases:
   "조류": bird
   "새": bird
   "bird": bird
+  "자포동물": cnidarian
+  "해파리": cnidarian
+  "jellyfish": cnidarian
+  "cnidarian": cnidarian
 
 # Vertical-slice scope for the first implementation (Stage 0).
 # Representative units chosen for data-richness, morphological divergence,

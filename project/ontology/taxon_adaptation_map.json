@@ -25,6 +25,7 @@
         "A01"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "taxonomy_authority",
@@ -79,6 +80,7 @@
         "A10"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "morphometry_specimen",
@@ -137,6 +139,7 @@
         "A10"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "morphometry_specimen",
@@ -193,6 +196,7 @@
         "A05"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "literature",
@@ -230,6 +234,7 @@
         "A11"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "literature",
@@ -271,6 +276,7 @@
         "A11"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "morphometry_specimen",
@@ -321,6 +327,7 @@
         "A13"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "literature",
@@ -379,6 +386,7 @@
         "A08"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "morphometry_specimen",
@@ -426,6 +434,7 @@
         "A09"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "literature",
@@ -479,6 +488,7 @@
         "A08"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "media",
@@ -527,6 +537,7 @@
         "A12"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "occurrence_behavior",
@@ -589,6 +600,7 @@
         "A13"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "occurrence_behavior",
@@ -644,6 +656,7 @@
         "A12"
       ],
       "na": false,
+      "na_substructures": [],
       "source_routes": [
         {
           "bucket": "morphometry_specimen",
