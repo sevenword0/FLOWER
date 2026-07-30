@@ -1,0 +1,39 @@
+{
+  "preset_version": "0.1.0",
+  "kind": "species_delta",
+  "taxon": {
+    "taxon_id": "hippocampus_kuda",
+    "accepted_scientific_name": "Hippocampus kuda",
+    "rank": "species",
+    "synonyms": ["Hippocampus aterrimus", "Hippocampus taeniopterus"],
+    "classification": ["Actinopterygii", "Syngnathiformes", "Syngnathidae"],
+    "source_ids": ["worms", "gbif", "fishbase"]
+  },
+  "context": {"sex": "unknown", "life_stage": "adult", "population": "generic", "reference_size_si": 0.20},
+  "parameter_hierarchy": {"clade_base_id": "actinopterygii", "morphotype_base_id": "pipefish", "species_delta_id": "hippocampus_kuda"},
+  "morphometrics": {"reference_length_m": 0.20, "body_depth_ratio": 0.16, "body_width_ratio": 0.10},
+  "locomotion": {"swim_mode": "dorsal_undulation", "cruise_speed_bl": 0.5, "burst_speed_bl": 1.2, "tailbeat_freq_cruise": 35.0, "turn_rate_rad_s": 1.0},
+  "sensory_system": {"vision_range_bl": 5.0, "vision_fov_deg": 200, "lateral_line_range_bl": 0.8},
+  "ecology": {"depth_range_m": [0, 55], "temperature_opt_c": 25, "trophic_role_hint": "grazer"},
+  "appearance": {"material_parameters": {"base_color": [0.5, 0.42, 0.3], "roughness": 0.5, "iridescence": 0.05, "subsurface": 0.2}, "pattern_rules": ["mottled_camouflage", "variable"]},
+  "anatomy": {
+    "notes": "No caudal fin; prehensile tail for station-holding (P0017/P0018).",
+    "joints": [
+      {"joint_id": "prehensile_tail_base", "parent_part_id": "spine_05", "child_part_id": "tail_tip",
+       "degrees_of_freedom": [{"type": "bend", "axis": [0, 0, 1], "min": -1.6, "max": 1.6, "neutral": 0.4, "max_speed": 3.0, "stiffness": 8.0, "damping": 1.0}],
+       "evidence_refs": ["P0017"], "confidence": 0.7}
+    ]
+  },
+  "behavior": {
+    "min_dwell_s": 3.0,
+    "ethogram": [
+      {"behavior_id": "station_hold", "label": "resting_anchored", "utility": {"fatigue": 0.6, "bias": 1.0},
+       "steer": "hold", "throttle": 0.0, "action_primitive_ids": ["station", "prehensile_grasp"], "confidence": 0.6, "evidence_refs": ["P0013", "P0017"]},
+      {"behavior_id": "forage", "label": "ambush_pipette_feeding", "utility": {"hunger": 1.2, "prey_visible": 0.8},
+       "steer": "seek", "throttle": 0.2, "action_primitive_ids": ["median_fin_hover", "pivot_suction"], "confidence": 0.5, "evidence_refs": ["P0019"]},
+      {"behavior_id": "flee", "label": "slow_retreat", "utility": {"predator_visible": 2.0, "fear": 1.5},
+       "steer": "flee", "throttle": 0.6, "action_primitive_ids": ["median_fin_hover"], "confidence": 0.4}
+    ]
+  },
+  "provenance": {"evidence_refs": ["P0012", "P0013", "P0014", "P0015", "P0016", "P0017", "P0018", "P0019", "P0020", "P0040"], "license_refs": ["fishbase", "literature_primary", "inaturalist"]}
+}

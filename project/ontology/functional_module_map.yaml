@@ -1,0 +1,115 @@
+target_taxon: 어류
+profile_key: fish
+rig_strategy: spline_spine
+symmetry_type: bilateral
+modules:
+  1_identity_lifecycle:
+    agents:
+    - A01
+    source_buckets:
+    - taxonomy_authority
+    na: false
+    na_substructures: []
+  2_structural_support:
+    agents:
+    - A04
+    - A10
+    source_buckets:
+    - literature
+    - morphometry_specimen
+    na: false
+    na_substructures: []
+  3_joints_linkages:
+    agents:
+    - A04
+    - A10
+    source_buckets:
+    - literature
+    - morphometry_specimen
+    na: false
+    na_substructures: []
+  4_feeding_capture:
+    agents:
+    - A04
+    - A05
+    source_buckets:
+    - literature
+    na: false
+    na_substructures: []
+  5_actuation:
+    agents:
+    - A05
+    - A11
+    source_buckets:
+    - literature
+    na: false
+    na_substructures: []
+  6_locomotion_structures:
+    agents:
+    - A06
+    - A10
+    - A11
+    source_buckets:
+    - literature
+    - morphometry_specimen
+    na: false
+    na_substructures: []
+  7_core_physiology:
+    agents:
+    - A03
+    - A13
+    source_buckets:
+    - literature
+    - occurrence_behavior
+    na: false
+    na_substructures: []
+  8_surface_covering:
+    agents:
+    - A07
+    - A08
+    source_buckets:
+    - media
+    - morphometry_specimen
+    na: false
+    na_substructures: []
+  9_head_sensors_silhouette:
+    agents:
+    - A09
+    source_buckets:
+    - literature
+    - morphometry_specimen
+    na: false
+    na_substructures: []
+  10_optics_pattern:
+    agents:
+    - A08
+    source_buckets:
+    - literature
+    - media
+    na: false
+    na_substructures: []
+  11_behavior_movement:
+    agents:
+    - A12
+    source_buckets:
+    - literature
+    - occurrence_behavior
+    na: false
+    na_substructures: []
+  12_ecology_interactions:
+    agents:
+    - A13
+    source_buckets:
+    - literature
+    - occurrence_behavior
+    na: false
+    na_substructures: []
+  13_variation:
+    agents:
+    - A06
+    - A12
+    source_buckets:
+    - morphometry_specimen
+    - occurrence_behavior
+    na: false
+    na_substructures: []

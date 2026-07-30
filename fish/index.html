@@ -1,0 +1,1513 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>어류 절차 생태계 관측 콘솔 · biogen</title>
+<meta name="description" content="근거 추적형 절차적 어류 생성기와 자율행동 생태 시뮬레이션을 브라우저에서 실시간 관측·검증합니다." />
+</head>
+<body>
+<!-- ==========================================================================
+  biogen — 어류 절차 생태계 관측 콘솔
+  Everything (style + markup + script) lives inside <body> so this one source
+  serves both the static site and the hosted page without a build step.
+
+  Deliberately single-theme: this is a deep-water observation instrument. The
+  viewport is always deep water, so a light chrome would fight the subject.
+  Accent #45c8e0 is derived from the anglerfish esca emission (~480 nm) that
+  the evidence ledger actually records — the palette comes from the data.
+=========================================================================== -->
+<style>
+  :root {
+    color-scheme: dark;
+
+    --abyss:   #05090e;
+    --deep:    #0a141c;
+    --slate:   #16232e;
+    --edge:    #223543;
+    --foam:    #dbe7ee;
+    --muted:   #7d94a3;
+    --dim:     #55707f;
+
+    /* accent: esca bioluminescence, ~480 nm (evidence P0035) */
+    --esca:    #45c8e0;
+    --esca-dk: #1d7f95;
+
+    /* semantic: evidence classes (§7). Separate from the accent by design. */
+    --measured: #5fd39a;
+    --derived:  #d9b45f;
+    --inferred: #e0834d;
+    --artist:   #b06fc4;
+
+    --ok:   #5fd39a;
+    --warn: #d9b45f;
+    --bad:  #e2685f;
+
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", system-ui, sans-serif;
+
+    --r: 10px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--abyss); color: var(--foam);
+    font-family: var(--sans); font-size: 13px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  canvas#view { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+  /* ---------- shared chrome ---------- */
+  .panel {
+    position: fixed; z-index: 10;
+    background: color-mix(in srgb, var(--deep) 88%, transparent);
+    backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+    border: 1px solid var(--edge); border-radius: var(--r);
+    box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  }
+  .lbl {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .13em;
+    text-transform: uppercase; color: var(--dim); font-weight: 600;
+  }
+  .num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  button, select {
+    font-family: inherit; font-size: 12px; color: var(--foam);
+    background: var(--slate); border: 1px solid var(--edge);
+    border-radius: 7px; padding: 6px 10px; cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  button:hover, select:hover { border-color: var(--esca-dk); background: #1b2b38; }
+  button:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+    outline: 2px solid var(--esca); outline-offset: 2px;
+  }
+  button[aria-pressed="true"] { border-color: var(--esca); color: var(--esca); background: #10222b; }
+
+  /* Left column: head and rail stack in flow, so the rail can never be
+     overlapped when the swap note grows (the bird profile has an extra line). */
+  #left {
+    position: fixed; top: 14px; left: 14px; z-index: 10;
+    width: 292px; max-height: calc(100vh - 84px);
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  #left .panel { position: static; }
+
+  /* ---------- title lockup + taxon swap (the project thesis) ---------- */
+  #head { padding: 13px 15px 14px; flex: none; }
+  #head h1 {
+    margin: 0; font-size: 15.5px; font-weight: 650; letter-spacing: -.015em;
+    text-wrap: balance;
+  }
+  #head .tag { margin: 3px 0 11px; font-size: 11px; color: var(--muted); }
+  .swapRow { display: flex; align-items: center; gap: 7px; }
+  .swapRow select { flex: 1; }
+  #swapNote {
+    margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--edge);
+    font-size: 10.5px; color: var(--muted); line-height: 1.45;
+  }
+  #swapNote code { font-family: var(--mono); color: var(--esca); font-size: 10px; }
+
+  /* ---------- left instrument rail ---------- */
+  #rail { padding: 13px 15px 15px; min-height: 0; overflow-y: auto; }
+  .sect + .sect { margin-top: 15px; padding-top: 14px; border-top: 1px solid var(--edge); }
+  .sect > .lbl { display: block; margin-bottom: 9px; }
+
+  .stat { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 2.5px 0; }
+  .stat .k { font-size: 11.5px; color: var(--muted); }
+  .stat .v { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 12.5px; }
+
+  /* NND validation gauge — the instrument that makes the claim falsifiable */
+  #nndWrap { margin-top: 4px; }
+  #nndHead { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
+  #nndVal { font-family: var(--mono); font-size: 21px; font-weight: 600; letter-spacing: -.02em; }
+  #nndVal .u { font-size: 11px; color: var(--muted); font-weight: 400; margin-left: 3px; }
+  #gauge { position: relative; height: 30px; }
+  #gaugeTrack {
+    position: absolute; left: 0; right: 0; top: 9px; height: 7px;
+    background: #0d1a22; border: 1px solid var(--edge); border-radius: 4px; overflow: hidden;
+  }
+  #gaugeBand {
+    position: absolute; top: 0; bottom: 0;
+    background: color-mix(in srgb, var(--measured) 22%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--measured) 55%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--measured) 55%, transparent);
+  }
+  #gaugeTarget { position: absolute; top: -3px; bottom: -3px; width: 1.5px; background: var(--measured); opacity: .85; }
+  #gaugeNeedle {
+    position: absolute; top: 4px; width: 2.5px; height: 17px; border-radius: 2px;
+    background: var(--esca); box-shadow: 0 0 9px var(--esca);
+    transform: translateX(-50%); transition: left .18s linear, background .3s;
+  }
+  #gaugeTicks { position: absolute; left: 0; right: 0; top: 21px; height: 10px; }
+  #gaugeTicks span {
+    position: absolute; transform: translateX(-50%);
+    font-family: var(--mono); font-size: 8.5px; color: var(--dim);
+  }
+  #nndVerdict { margin-top: 7px; font-size: 10.5px; color: var(--muted); line-height: 1.45; }
+  #nndVerdict b { font-weight: 600; }
+
+  /* behavior occupancy bars */
+  .occ { display: grid; grid-template-columns: 74px 1fr 38px; align-items: center; gap: 8px; padding: 2px 0; }
+  .occ .n { font-size: 10.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .occ .bar { height: 5px; background: #0d1a22; border-radius: 3px; overflow: hidden; }
+  .occ .bar i { display: block; height: 100%; background: var(--esca-dk); border-radius: 3px; transition: width .3s; }
+  .occ .p { font-family: var(--mono); font-size: 10.5px; color: var(--foam); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* ---------- right specimen catalog ---------- */
+  #cat { top: 14px; right: 14px; width: 306px; padding: 13px 14px 14px;
+         max-height: calc(100vh - 92px); overflow-y: auto; }
+  .card {
+    border: 1px solid var(--edge); border-radius: 9px; padding: 10px 11px;
+    background: #0c1721; cursor: pointer; transition: border-color .15s, background .15s;
+  }
+  .card + .card { margin-top: 8px; }
+  .card:hover { border-color: var(--esca-dk); }
+  .card[aria-expanded="true"] { border-color: var(--esca); background: #0f1e29; }
+  .card .top { display: flex; align-items: center; gap: 8px; }
+  .swatch { width: 11px; height: 11px; border-radius: 3px; flex: none; box-shadow: 0 0 0 1px rgba(255,255,255,.14) inset; }
+  .card .ko { font-size: 12.5px; font-weight: 600; }
+  .card .ct { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .card .sci { margin: 2px 0 0 19px; font-size: 10.5px; font-style: italic; color: var(--muted); }
+  .card .meta { margin: 7px 0 0 19px; display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .chip {
+    font-family: var(--mono); font-size: 9px; letter-spacing: .04em;
+    padding: 2px 5px; border-radius: 4px; border: 1px solid var(--edge); color: var(--muted);
+  }
+  .detail { margin: 9px 0 1px 19px; display: none; }
+  .card[aria-expanded="true"] .detail { display: block; }
+  .drow { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; font-size: 11px; }
+  .drow .dk { color: var(--muted); }
+  .drow .dv { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+  .evbar { display: flex; height: 5px; border-radius: 3px; overflow: hidden; margin: 8px 0 5px; background: #0d1a22; }
+  .evbar i { height: 100%; }
+  .evleg { display: flex; flex-wrap: wrap; gap: 3px 9px; }
+  .evleg span { font-family: var(--mono); font-size: 9px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .evleg span::before { content: ""; width: 6px; height: 6px; border-radius: 2px; background: currentColor; }
+  .infer { margin-top: 7px; font-size: 10px; color: var(--inferred); line-height: 1.45; }
+
+  /* ---------- bottom transport ---------- */
+  #dock {
+    bottom: 14px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 9px; padding: 9px 12px;
+  }
+  #dock .div { width: 1px; height: 20px; background: var(--edge); }
+  #dock label { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 92px; height: 3px;
+    background: var(--edge); border-radius: 2px; outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--esca); cursor: pointer; border: none; }
+  input[type=range]::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%;
+    background: var(--esca); cursor: pointer; border: none; }
+
+  #fps { position: fixed; bottom: 16px; left: 16px; z-index: 10;
+         font-family: var(--mono); font-size: 10px; color: var(--dim); font-variant-numeric: tabular-nums; }
+
+  #toggleUI { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 11; }
+
+  #err {
+    position: fixed; inset: 0; display: none; place-items: center; z-index: 50;
+    background: var(--abyss); padding: 30px; text-align: center;
+  }
+  #err div { max-width: 420px; }
+  #err h2 { font-size: 16px; margin: 0 0 8px; }
+  #err p { color: var(--muted); font-size: 12.5px; margin: 0; }
+
+  body.hideui .panel, body.hideui #fps { opacity: 0; pointer-events: none; }
+  .panel, #fps { transition: opacity .22s ease; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--edge); border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--esca-dk); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition-duration: .01ms !important; }
+  }
+  @media (max-width: 1080px) {
+    #cat { display: none; }
+  }
+  @media (max-width: 720px) {
+    #left { width: calc(100vw - 28px); max-height: calc(100vh - 150px); }
+    #dock { flex-wrap: wrap; justify-content: center; max-width: calc(100vw - 28px); }
+  }
+</style>
+
+<canvas id="view" aria-label="어류 생태 시뮬레이션 3D 뷰"></canvas>
+
+<button id="toggleUI" aria-pressed="false" title="패널 숨기기 (H)">패널 숨기기</button>
+
+<div id="left">
+<section class="panel" id="head">
+  <h1>어류 절차 생태계 관측 콘솔</h1>
+  <p class="tag">근거 추적형 프리셋 → 절차적 형상 → 자율행동 → 생태 상호작용</p>
+  <div class="swapRow">
+    <span class="lbl" style="flex:none">대상 생물군</span>
+    <select id="taxonSel" aria-label="대상 생물군 선택">
+      <option value="fish" selected>어류</option>
+      <option value="bird">조류</option>
+      <option value="cnidarian">해파리 (방사대칭)</option>
+    </select>
+  </div>
+  <p id="swapNote"></p>
+</section>
+
+<section class="panel" id="rail" aria-label="계측 패널">
+  <div class="sect">
+    <span class="lbl">무리 최근접거리 검증 · Gate G6</span>
+    <div id="nndWrap">
+      <div id="nndHead">
+        <span id="nndVal">—<span class="u">BL</span></span>
+        <span class="lbl" id="nndSrc">관측 0.3–1.2</span>
+      </div>
+      <div id="gauge">
+        <div id="gaugeTrack"><div id="gaugeBand"></div><div id="gaugeTarget"></div></div>
+        <div id="gaugeNeedle"></div>
+        <div id="gaugeTicks"></div>
+      </div>
+      <p id="nndVerdict">측정 중…</p>
+    </div>
+  </div>
+
+  <div class="sect">
+    <span class="lbl">개체군 · Gate G7</span>
+    <div id="pop"></div>
+  </div>
+
+  <div class="sect">
+    <span class="lbl">행동 상태 점유율</span>
+    <div id="occ"></div>
+  </div>
+
+  <div class="sect">
+    <span class="lbl">환경</span>
+    <div class="stat"><span class="k">플랑크톤 자원</span><span class="v" id="mRes">—</span></div>
+    <div class="stat"><span class="k">평균 에너지</span><span class="v" id="mEn">—</span></div>
+    <div class="stat"><span class="k">포식 성공</span><span class="v" id="mPred">—</span></div>
+    <div class="stat"><span class="k">경과 시간</span><span class="v" id="mT">—</span></div>
+  </div>
+</section>
+</div>
+
+<section class="panel" id="cat" aria-label="표본 카탈로그">
+  <span class="lbl" style="display:block;margin-bottom:9px">표본 카탈로그 · 수직 슬라이스</span>
+  <div id="cards"></div>
+  <p style="margin:11px 0 0;font-size:10px;color:var(--dim);line-height:1.5">
+    카드를 눌러 프리셋 파라미터와 증거 등급을 확인하세요. 모든 수치는
+    <span style="color:var(--measured)">측정</span>·<span style="color:var(--derived)">유도</span>·<span style="color:var(--inferred)">추론</span>·<span style="color:var(--artist)">보완</span>
+    으로 분류되어 있습니다.
+  </p>
+</section>
+
+<div class="panel" id="dock">
+  <button id="btnPlay" aria-pressed="true">일시정지</button>
+  <div class="div"></div>
+  <label>속도 <input type="range" id="rSpeed" min="0" max="3" step="0.1" value="1" /><span class="num" id="vSpeed" style="width:26px">1.0</span></label>
+  <div class="div"></div>
+  <label>탁도 <input type="range" id="rTurb" min="0" max="0.9" step="0.05" value="0.1" /><span class="num" id="vTurb" style="width:26px">0.10</span></label>
+  <div class="div"></div>
+  <button id="btnScenario">포식자 없음</button>
+  <button id="btnReset">재시작</button>
+</div>
+
+<div id="fps">—</div>
+
+<div id="err"><div>
+  <h2>WebGL2를 사용할 수 없습니다</h2>
+  <p>이 관측 콘솔은 WebGL2가 필요합니다. 최신 Chrome, Edge, Firefox 또는 Safari에서 열어 주세요.</p>
+</div></div>
+
+<script>
+"use strict";
+/* ===========================================================================
+   DATA — resolved presets exported from the biogen pipeline
+   (clade base + morphotype base + species delta + context + individual seed).
+   Not hand-authored here: this is the compiler's output, so the page and the
+   Python pipeline cannot drift apart.
+   =========================================================================== */
+const PRESETS = {"target_taxon":"어류","profile_key":"fish","rig_strategy":"spline_spine","symmetry":"bilateral","species":{"oncorhynchus_mykiss":{"taxon":{"taxon_id":"oncorhynchus_mykiss","accepted_scientific_name":"Oncorhynchus mykiss","rank":"species","synonyms":["Salmo gairdneri","Salmo mykiss"],"classification":["Actinopterygii","Salmoniformes","Salmonidae"],"source_ids":["worms","gbif","fishbase"]},"names":{"ko":"무지개송어","en":"Rainbow trout","family":"Salmonidae","order":"Salmoniformes"},"morphometrics":{"girth_profile":[[0.0,0.02],[0.1,0.55],[0.32,1.0],[0.62,0.6],[0.85,0.2],[1.0,0.03]],"body_width_ratio":0.12,"allometry":{"life_stage_depth_scale":{"juvenile":0.85,"adult":1.0}},"reference_length_m":0.30415,"body_depth_ratio":0.22452},"locomotion":{"turn_rate_rad_s":2.5,"swim_mode":"subcarangiform","cruise_speed_bl":1.6,"burst_speed_bl":8.0,"tailbeat_freq_cruise":3.0},"sensory_system":{"vision_range_bl":9.0,"vision_fov_deg":300,"lateral_line_range_bl":1.0},"ecology":{"depth_range_m":[0,200],"temperature_opt_c":13,"strike_range_bl":2.0,"strike_success_prob":0.35,"handling_time_s":15.0,"trophic_role_hint":"mesopredator"},"appearance":{"material_parameters":{"model":"OpenPBR-approx","base_color":[0.55,0.58,0.6],"roughness":0.28,"iridescence":0.35,"subsurface":0.25},"runtime_approximations":{"medium":"water","wet":true},"pattern_rules":["countershading","pink_lateral_stripe","fine_spotting"],"hue_jitter":-0.0214},"external_structures":{"fins":[{"name":"dorsal","kind":"median_dorsal","x_norm":0.5,"span_norm":0.14,"height_norm":0.1},{"name":"anal","kind":"median_ventral","x_norm":0.72,"span_norm":0.08,"height_norm":0.07},{"name":"caudal","kind":"caudal","x_norm":0.97,"span_norm":0.12,"height_norm":0.12},{"name":"pectoral","kind":"paired","x_norm":0.26,"span_norm":0.1,"height_norm":0.06},{"name":"pelvic","kind":"paired","x_norm":0.45,"span_norm":0.07,"height_norm":0.04}]},"behavior":{"drive_rates":{"hunger":0.02,"fatigue":0.015,"fear_decay":0.25,"reproduction":0.001},"min_dwell_s":2.0,"ethogram":[{"behavior_id":"forage","label":"foraging","utility":{"hunger":1.0,"resource_local":0.2,"bias":0.25},"steer":"wander","throttle":0.3,"action_primitive_ids":["cruise"],"confidence":0.6,"evidence_refs":["P0011"]},{"behavior_id":"hunt","label":"hunt_pursuit","utility":{"prey_visible":1.3,"hunger":0.7},"steer":"seek","throttle":0.7,"action_primitive_ids":["burst"],"confidence":0.55,"evidence_refs":["P0006"]},{"behavior_id":"flee","label":"predator_avoidance","utility":{"predator_visible":3.0,"fear":2.0},"steer":"flee","throttle":1.0,"action_primitive_ids":["burst"],"confidence":0.7},{"behavior_id":"rest","label":"resting","utility":{"fatigue":1.4,"bias":0.05},"steer":"hold","throttle":0.0,"action_primitive_ids":["station"],"confidence":0.4}]},"evidence_counts":{"Measured":9,"Derived":1,"Inferred":1,"ArtistAuthored":1},"build_hash":"b28291b3bcbc"},"hippocampus_kuda":{"taxon":{"taxon_id":"hippocampus_kuda","accepted_scientific_name":"Hippocampus kuda","rank":"species","synonyms":["Hippocampus aterrimus","Hippocampus taeniopterus"],"classification":["Actinopterygii","Syngnathiformes","Syngnathidae"],"source_ids":["worms","gbif","fishbase"]},"names":{"ko":"점해마","en":"Spotted seahorse","family":"Syngnathidae","order":"Syngnathiformes"},"morphometrics":{"girth_profile":[[0.0,0.25],[0.12,0.5],[0.28,0.7],[0.5,0.55],[0.75,0.32],[1.0,0.08]],"body_width_ratio":0.1,"centerline_curve":[[0.0,0.05],[0.2,0.12],[0.5,0.1],[0.8,-0.08],[1.0,-0.22]],"allometry":{"life_stage_depth_scale":{"juvenile":0.9,"adult":1.0}},"reference_length_m":0.20276,"body_depth_ratio":0.16329},"locomotion":{"turn_rate_rad_s":1.0,"swim_mode":"dorsal_undulation","cruise_speed_bl":0.5,"burst_speed_bl":1.2,"tailbeat_freq_cruise":35.0},"sensory_system":{"vision_range_bl":5.0,"vision_fov_deg":200,"lateral_line_range_bl":0.8},"ecology":{"depth_range_m":[0,55],"temperature_opt_c":25,"trophic_role_hint":"grazer"},"appearance":{"material_parameters":{"model":"OpenPBR-approx","base_color":[0.5,0.42,0.3],"roughness":0.5,"iridescence":0.05,"subsurface":0.2},"runtime_approximations":{"medium":"water","wet":true},"pattern_rules":["mottled_camouflage","variable"],"hue_jitter":-0.0214},"external_structures":{"fins":[{"name":"dorsal","kind":"median_dorsal","x_norm":0.45,"span_norm":0.1,"height_norm":0.06},{"name":"pectoral","kind":"paired","x_norm":0.18,"span_norm":0.05,"height_norm":0.03}]},"behavior":{"drive_rates":{"hunger":0.02,"fatigue":0.015,"fear_decay":0.25,"reproduction":0.001},"min_dwell_s":3.0,"ethogram":[{"behavior_id":"station_hold","label":"resting_anchored","utility":{"fatigue":0.6,"bias":1.0},"steer":"hold","throttle":0.0,"action_primitive_ids":["station","prehensile_grasp"],"confidence":0.6,"evidence_refs":["P0013","P0017"]},{"behavior_id":"forage","label":"ambush_pipette_feeding","utility":{"hunger":1.2,"prey_visible":0.8},"steer":"seek","throttle":0.2,"action_primitive_ids":["median_fin_hover","pivot_suction"],"confidence":0.5,"evidence_refs":["P0019"]},{"behavior_id":"flee","label":"slow_retreat","utility":{"predator_visible":2.0,"fear":1.5},"steer":"flee","throttle":0.6,"action_primitive_ids":["median_fin_hover"],"confidence":0.4}]},"evidence_counts":{"Measured":8,"Derived":1,"ArtistAuthored":1},"build_hash":"a5cb68c2d76a"},"clupea_harengus":{"taxon":{"taxon_id":"clupea_harengus","accepted_scientific_name":"Clupea harengus","rank":"species","synonyms":["Clupea harengus harengus"],"classification":["Actinopterygii","Clupeiformes","Clupeidae"],"source_ids":["worms","gbif","fishbase"]},"names":{"ko":"대서양청어","en":"Atlantic herring","family":"Clupeidae","order":"Clupeiformes"},"morphometrics":{"girth_profile":[[0.0,0.02],[0.12,0.6],[0.3,1.0],[0.6,0.62],[0.85,0.22],[1.0,0.03]],"body_width_ratio":0.09,"allometry":{"life_stage_depth_scale":{"juvenile":0.9,"adult":1.0}},"reference_length_m":0.28387,"body_depth_ratio":0.20411},"locomotion":{"turn_rate_rad_s":2.5,"swim_mode":"carangiform","cruise_speed_bl":2.0,"burst_speed_bl":10.0,"tailbeat_freq_cruise":3.5},"sensory_system":{"vision_range_bl":6.0,"vision_fov_deg":320,"lateral_line_range_bl":1.5},"ecology":{"depth_range_m":[0,360],"temperature_opt_c":10,"trophic_role_hint":"planktivore"},"appearance":{"material_parameters":{"model":"OpenPBR-approx","base_color":[0.6,0.66,0.72],"roughness":0.18,"iridescence":0.6,"subsurface":0.15},"runtime_approximations":{"medium":"water","wet":true},"pattern_rules":["silvery_countershading","blue_green_dorsum"],"hue_jitter":-0.0214},"external_structures":{"fins":[{"name":"dorsal","kind":"median_dorsal","x_norm":0.5,"span_norm":0.1,"height_norm":0.08},{"name":"anal","kind":"median_ventral","x_norm":0.78,"span_norm":0.1,"height_norm":0.06},{"name":"caudal","kind":"caudal","x_norm":0.97,"span_norm":0.14,"height_norm":0.14},{"name":"pectoral","kind":"paired","x_norm":0.24,"span_norm":0.09,"height_norm":0.05},{"name":"pelvic","kind":"paired","x_norm":0.5,"span_norm":0.06,"height_norm":0.03}]},"behavior":{"drive_rates":{"hunger":0.02,"fatigue":0.015,"fear_decay":0.25,"reproduction":0.001},"min_dwell_s":1.5,"obligate_schooler":true,"school_alignment":0.85,"ethogram":[{"behavior_id":"school","label":"schooling_cruise","utility":{"is_schooler":2.5,"neighbor_count":0.05,"bias":1.0},"steer":"school","throttle":0.08,"action_primitive_ids":["cruise"],"confidence":0.8,"evidence_refs":["P0025","P0026","P0027"]},{"behavior_id":"forage","label":"foraging","utility":{"hunger":1.0,"resource_local":0.3},"steer":"wander","throttle":0.3,"action_primitive_ids":["cruise"],"confidence":0.5},{"behavior_id":"flee","label":"predator_avoidance_flash","utility":{"predator_visible":4.0,"fear":2.5},"steer":"flee","throttle":1.0,"action_primitive_ids":["burst"],"confidence":0.75}]},"evidence_counts":{"Measured":8,"Derived":1},"build_hash":"051274921c4e"},"melanocetus_johnsonii":{"taxon":{"taxon_id":"melanocetus_johnsonii","accepted_scientific_name":"Melanocetus johnsonii","rank":"species","synonyms":["Melanocetus krechi"],"classification":["Actinopterygii","Lophiiformes","Melanocetidae"],"source_ids":["worms","gbif","obis"]},"names":{"ko":"험프백아귀","en":"Humpback anglerfish","family":"Melanocetidae","order":"Lophiiformes"},"morphometrics":{"girth_profile":[[0.0,0.05],[0.15,0.9],[0.35,1.0],[0.6,0.7],[0.85,0.3],[1.0,0.05]],"body_width_ratio":0.5,"allometry":{"life_stage_depth_scale":{"juvenile":0.8,"adult":1.0}},"reference_length_m":0.12166,"reference_length_by_sex":{"female":0.12,"male":0.028},"body_depth_ratio":0.5613,"_note":"Extreme sexual dimorphism: dwarf males (P0031). reference_length_by_sex resolved by ContextDelta."},"locomotion":{"turn_rate_rad_s":1.5,"swim_mode":"subcarangiform_slow","cruise_speed_bl":0.3,"burst_speed_bl":2.0,"tailbeat_freq_cruise":1.2,"_inference":"No direct kinematics; cruise Inferred via transfer (P0032/P0033), confidence <= 0.35."},"sensory_system":{"vision_range_bl":2.0,"vision_fov_deg":160,"lateral_line_range_bl":2.0,"_note":"Low ambient light; lure-based prey attraction dominates over vision range."},"ecology":{"depth_range_m":[1000,4000],"temperature_opt_c":3,"strike_range_bl":1.2,"strike_success_prob":0.5,"handling_time_s":45.0,"trophic_role_hint":"ambush_predator"},"appearance":{"material_parameters":{"model":"OpenPBR-approx","base_color":[0.02,0.02,0.025],"roughness":0.7,"iridescence":0.0,"subsurface":0.02,"ultra_black":true},"runtime_approximations":{"medium":"water","wet":true},"emissive":{"source":"esca","wavelength_nm":480,"evidence_class":"Inferred","confidence":0.4,"evidence_refs":["P0035"]},"pattern_rules":["ultra_black_dermis"],"hue_jitter":-0.0214},"external_structures":{"fins":[{"name":"illicium_esca","kind":"median_dorsal","x_norm":0.12,"span_norm":0.02,"height_norm":0.35},{"name":"dorsal","kind":"median_dorsal","x_norm":0.7,"span_norm":0.12,"height_norm":0.1},{"name":"anal","kind":"median_ventral","x_norm":0.75,"span_norm":0.1,"height_norm":0.08},{"name":"caudal","kind":"caudal","x_norm":0.97,"span_norm":0.08,"height_norm":0.1},{"name":"pectoral","kind":"paired","x_norm":0.4,"span_norm":0.08,"height_norm":0.05}]},"behavior":{"drive_rates":{"hunger":0.02,"fatigue":0.015,"fear_decay":0.25,"reproduction":0.001},"min_dwell_s":5.0,"ethogram":[{"behavior_id":"ambush","label":"sit_and_wait_lure","utility":{"bias":1.0,"hunger":0.3},"steer":"hold","throttle":0.0,"action_primitive_ids":["station","esca_luring"],"confidence":0.5,"evidence_refs":["P0037"]},{"behavior_id":"strike","label":"engulf_strike","utility":{"prey_adjacent":3.0,"hunger":1.0},"steer":"seek","throttle":0.9,"action_primitive_ids":["burst","suction_engulf"],"confidence":0.4},{"behavior_id":"reposition","label":"slow_reposition","utility":{"fatigue":0.4,"bias":0.2},"steer":"wander","throttle":0.2,"action_primitive_ids":["cruise"],"confidence":0.3}]},"evidence_counts":{"Measured":5,"Inferred":4},"build_hash":"b6e8edf5bbc4"}}};
+
+/* Module map for the one-word-swap demo (Gate G9). Both profiles ship in the
+   repo; swapping the config value regenerates rig strategy + source routing. */
+const PROFILES = {
+  fish: { name: "어류", rig: "spline_spine", sym: "양측대칭",
+          slots: "지느러미·부레·측선·비늘", src: "WoRMS · FishBase · OBIS",
+          na: null },
+  bird: { name: "조류", rig: "limbed_biped_with_wings", sym: "양측대칭",
+          slots: "날개·기낭·깃털·용골돌기", src: "Avibase · eBird · Macaulay",
+          na: "부력 없음 → 기낭·함기골로 기능 대체" },
+  cnidarian: { name: "해파리", rig: "radial_umbrella", sym: "방사대칭",
+          slots: "종·촉수·자포·중교층", src: "WoRMS · OBIS · iDigBio",
+          na: "턱·지느러미·비늘·머리 없음 → 촉수·종수축·표피·산재신경망으로 대체",
+          hard: true }
+};
+
+/* ===========================================================================
+   MATH
+   =========================================================================== */
+const V = {
+  add: (a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],
+  sub: (a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],
+  mul: (a,s)=>[a[0]*s,a[1]*s,a[2]*s],
+  dot: (a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],
+  len: a=>Math.hypot(a[0],a[1],a[2]),
+  norm(a){ const l=Math.hypot(a[0],a[1],a[2]); return l>1e-9?[a[0]/l,a[1]/l,a[2]/l]:[1,0,0]; },
+  cross:(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]
+};
+
+/* Deterministic PRNG (mulberry32) — same seed reproduces the same run. */
+function rng(seed){ let a=seed>>>0; return function(){
+  a|=0; a=a+0x6D2B79F5|0;
+  let t=Math.imul(a^a>>>15, 1|a); t=t+Math.imul(t^t>>>7, 61|t)^t;
+  return ((t^t>>>14)>>>0)/4294967296; }; }
+
+function mat4Persp(fov, asp, n, f){
+  const t=1/Math.tan(fov/2);
+  return [t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)/(n-f),-1, 0,0,2*f*n/(n-f),0];
+}
+function mat4LookAt(eye, ctr, up){
+  const z=V.norm(V.sub(eye,ctr)), x=V.norm(V.cross(up,z)), y=V.cross(z,x);
+  return [x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0,
+          -V.dot(x,eye),-V.dot(y,eye),-V.dot(z,eye),1];
+}
+function mat4Mul(a,b){
+  const o=new Float32Array(16);
+  for(let i=0;i<4;i++) for(let j=0;j<4;j++){
+    let s=0; for(let k=0;k<4;k++) s+=a[k*4+j]*b[i*4+k];
+    o[i*4+j]=s;
+  }
+  return o;
+}
+const lerp=(a,b,t)=>a+(b-a)*t;
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v);
+
+/* Piecewise-linear sampling of a [[x,y],...] profile — the same interpolation
+   the Python generator uses for girth and centerline curves. */
+function sampleCurve(curve, x){
+  if(!curve || !curve.length) return 0;
+  if(x<=curve[0][0]) return curve[0][1];
+  for(let i=1;i<curve.length;i++){
+    if(x<=curve[i][0]){
+      const [x0,y0]=curve[i-1], [x1,y1]=curve[i];
+      const t=(x-x0)/Math.max(x1-x0,1e-9);
+      return y0+(y1-y0)*t;
+    }
+  }
+  return curve[curve.length-1][1];
+}
+
+/* ===========================================================================
+   PROCEDURAL MESH — port of biogen/geometry.py
+   Lofts elliptical cross-sections along a normalized centerline, then attaches
+   parametric fin membranes at the recorded fin stations. Vertices carry their
+   normalized body coordinate so the vertex shader can apply the swimming wave.
+   =========================================================================== */
+/* Ring/segment budgets per tier — identical to biogen/geometry.py LOD_BUDGET,
+   so the browser build and the offline generator produce the same silhouettes. */
+const LOD_BUDGET = [ {seg:48,ring:24}, {seg:32,ring:16}, {seg:18,ring:10}, {seg:8,ring:6} ];
+
+/* Distance thresholds in body lengths, from config/performance_budget.yaml via
+   biogen/lod.py: hero ≤10 BL, standard ≤40 BL, crowd ≤150 BL, then far field.
+   These are written for an open world. */
+const LOD_BL = [10, 40, 150];
+
+/* The thresholds are perceptual: a fish 40 body lengths away really does cover
+   few pixels, so demoting it is free. That also means they must NOT be squeezed
+   to fit a small domain. In a 16 m tank viewed from 6 m every fish genuinely is
+   near and clearly visible; compressing the ladder until the tiers split would
+   degrade animals the viewer can plainly see, which is the one thing LOD must
+   not do.
+
+   So instead of rescaling, ask whether tiering can pay off at all: if the
+   furthest an agent can ever get from the viewer is still inside its own
+   standard-tier radius, nothing can ever be demoted, and the honest move is to
+   skip the per-agent tier work rather than charge for it. */
+function tierRadii(bodyLen){ return LOD_BL.map(bl => bl * bodyLen); }
+
+/* Whether tiering is worth its own per-agent cost is not predictable from the
+   domain size alone — it depends on where the viewer actually is and how the
+   population is spread. So it is measured, not guessed: every PROBE_EVERY ticks
+   the tier is evaluated for everyone, and the ladder stays enabled only while a
+   worthwhile fraction is actually being demoted. A viewer who pulls back
+   re-enables it on the next probe without a restart. */
+const PROBE_EVERY = 60;          // ticks between full re-evaluations (~3 s at 20 Hz)
+const WORTH_DEMOTING = 0.10;     // enable only if ≥10 % land below standard tier
+
+function lodFor(distM, bodyLen, radii){
+  const r = radii || tierRadii(bodyLen);
+  for(let i=0;i<r.length;i++) if(distM <= r[i]) return i;
+  return 3;
+}
+
+function buildMesh(p, lod){
+  const b = LOD_BUDGET[clamp(lod, 0, LOD_BUDGET.length-1)];
+  const nSeg=b.seg, nRing=b.ring;
+  const m = p.morphometrics;
+  const L = m.reference_length_m;
+  const depth = m.body_depth_ratio, width = m.body_width_ratio ?? depth*0.55;
+  const girth = m.girth_profile, center = m.centerline_curve;
+
+  const pos=[], nrm=[], xn=[], part=[];
+  const idx=[];
+  const ringStart=[];
+
+  for(let s=0;s<nSeg;s++){
+    const x=s/(nSeg-1);
+    const g=sampleCurve(girth,x);
+    const cy=sampleCurve(center,x)*L;
+    const cx=x*L;
+    const ry=0.5*depth*L*g, rz=0.5*width*L*g;
+    ringStart.push(pos.length/3);
+    if(g<=1e-4){ pos.push(cx,cy,0); nrm.push(x<0.5?-1:1,0,0); xn.push(x); part.push(0); continue; }
+    for(let r=0;r<nRing;r++){
+      const th=2*Math.PI*r/nRing;
+      const sy=Math.sin(th), sz=Math.cos(th);
+      pos.push(cx, cy+ry*sy, rz*sz);
+      // ellipse normal, then tilt by the girth slope so the body reads as solid
+      const gx=(sampleCurve(girth,Math.min(1,x+0.02))-sampleCurve(girth,Math.max(0,x-0.02)));
+      const n=V.norm([-gx*0.55, sy/Math.max(ry,1e-4)*0.02+sy, sz/Math.max(rz,1e-4)*0.02+sz]);
+      nrm.push(n[0],n[1],n[2]); xn.push(x); part.push(0);
+    }
+  }
+  for(let s=0;s<nSeg-1;s++){
+    const a0=ringStart[s], b0=ringStart[s+1];
+    const aPt=sampleCurve(girth,s/(nSeg-1))<=1e-4, bPt=sampleCurve(girth,(s+1)/(nSeg-1))<=1e-4;
+    if(aPt&&!bPt){ for(let r=0;r<nRing;r++) idx.push(a0, b0+(r+1)%nRing, b0+r); }
+    else if(bPt&&!aPt){ for(let r=0;r<nRing;r++) idx.push(a0+r, a0+(r+1)%nRing, b0); }
+    else if(!aPt&&!bPt){
+      for(let r=0;r<nRing;r++){
+        const a1=a0+r, a2=a0+(r+1)%nRing, b1=b0+r, b2=b0+(r+1)%nRing;
+        idx.push(a1,a2,b2, a1,b2,b1);
+      }
+    }
+  }
+
+  // fins — parametric membranes (not ray-by-ray; see known_limitations #5)
+  const fins = (p.external_structures && p.external_structures.fins) || [];
+  const quad=(a,b,c,d,x0)=>{
+    const base=pos.length/3;
+    [a,b,c,d].forEach(v=>{ pos.push(v[0],v[1],v[2]); nrm.push(0,0,1); xn.push(x0); part.push(1); });
+    idx.push(base,base+1,base+2, base,base+2,base+3);
+  };
+  for(const f of fins){
+    const x=(f.x_norm||0.5), X=x*L, span=(f.span_norm||.12)*L, h=(f.height_norm||.1)*L;
+    const cy=sampleCurve(center,x)*L;
+    const top=cy+depth*L*0.5*sampleCurve(girth,x), bot=cy-depth*L*0.5*sampleCurve(girth,x);
+    if(f.kind==="median_dorsal")
+      quad([X-span/2,top,0],[X+span/2,top,0],[X+span/2,top+h,0],[X-span/2,top+h,0],x);
+    else if(f.kind==="median_ventral")
+      quad([X-span/2,bot,0],[X-span/2,bot-h,0],[X+span/2,bot-h,0],[X+span/2,bot,0],x);
+    else if(f.kind==="caudal"){
+      quad([X,cy,0],[X+span,cy+h,0],[X+span*1.15,cy,0],[X+span,cy-h,0], 1.0);
+    } else if(f.kind==="paired"){
+      const z=width*L*0.5;
+      for(const sgn of [1,-1])
+        quad([X,cy,sgn*z],[X-span*0.35,cy+h*0.5,sgn*(z+span)],
+             [X-span,cy,sgn*(z+span*0.9)],[X-span*0.35,cy-h*0.5,sgn*(z+span*0.6)], x);
+    }
+  }
+
+  return { pos:new Float32Array(pos), nrm:new Float32Array(nrm),
+           xn:new Float32Array(xn), part:new Float32Array(part),
+           idx:new Uint16Array(idx), refLen:L };
+}
+
+/* ===========================================================================
+   LOCOMOTION — port of biogen/locomotion.py
+   Constant-stride relation: U(BL/s) ≈ stride × f, so f scales with speed
+   (Bainbridge 1958; Videler & Wardle 1991). MPF swimmers oscillate a median
+   fin at high frequency instead of bending the body.
+   =========================================================================== */
+const MPF_MODES = new Set(["labriform","dorsal_undulation","rajiform","gymnotiform","amiiform","tetraodontiform"]);
+class Loco {
+  constructor(p){
+    const l=p.locomotion;
+    this.mode=l.swim_mode; this.L=p.morphometrics.reference_length_m;
+    this.cruise=l.cruise_speed_bl; this.burst=l.burst_speed_bl;
+    this.fc=l.tailbeat_freq_cruise;
+    this.stride=this.fc>1e-6 ? this.cruise/this.fc : 0.6;
+    this.isMPF=MPF_MODES.has(this.mode);
+    this.phase=Math.random()*6.283;
+  }
+  speedBL(t){ t=clamp(t,0,1); return this.cruise+(this.burst-this.cruise)*t; }
+  freq(t){
+    if(this.isMPF) return this.fc*(0.8+0.4*clamp(t,0,1));
+    return Math.max(this.speedBL(t)/this.stride, 0.1);
+  }
+  step(dt,t,scale){
+    const f=this.freq(t);
+    this.phase=(this.phase+2*Math.PI*f*dt)%(2*Math.PI);
+    const amp = this.isMPF ? 0.02 : 0.12+0.10*clamp(t,0,1);
+    return { speed:this.speedBL(t)*this.L*scale, amp, f };
+  }
+}
+
+/* ===========================================================================
+   BEHAVIOR — port of biogen/behavior.py
+   Ethogram states scored by a utility function over normalized drives and
+   sensory features, with minimum-dwell hysteresis so occupancy and transitions
+   reflect observed distributions instead of per-frame flicker.
+   =========================================================================== */
+class Behavior {
+  constructor(p, seed){
+    this.eth=(p.behavior&&p.behavior.ethogram)||[];
+    this.rates=(p.behavior&&p.behavior.drive_rates)||{hunger:.02,fatigue:.015,fear_decay:.25};
+    this.dwellMin=(p.behavior&&p.behavior.min_dwell_s)||2;
+    this.schooler=!!(p.behavior&&p.behavior.obligate_schooler);
+    this.d={hunger:.3,fear:0,fatigue:.1,reproduction:0};
+    this.cur=null; this.dwell=0; this.rand=rng(seed);
+  }
+  update(dt, f){
+    const d=this.d;
+    d.hunger=Math.min(1, d.hunger+(this.rates.hunger??.02)*dt);
+    d.fatigue=clamp(d.fatigue+((this.rates.fatigue??.015)*(0.5+(f.effort||0))-0.02)*dt,0,1);
+    if(f.predator_visible>0.5) d.fear=Math.min(1,d.fear+2*dt);
+    else d.fear=Math.max(0,d.fear-(this.rates.fear_decay??.25)*dt);
+  }
+  select(dt, f){
+    this.update(dt,f);
+    if(!this.eth.length) return {behavior_id:"idle",throttle:0,steer:"hold"};
+    const feats=Object.assign({bias:1}, f, this.d);
+    const score=b=>{ let s=0; const u=b.utility||{}; for(const k in u) s+=u[k]*(feats[k]||0); return s; };
+    let best=this.eth[0], bs=score(best);
+    for(const b of this.eth){ const s=score(b); if(s>bs){ bs=s; best=b; } }
+    this.dwell+=dt;
+    if(this.cur!==null && this.dwell<this.dwellMin){
+      const cur=this.eth.find(b=>b.behavior_id===this.cur);
+      if(cur && !(feats.fear>0.6 && best.behavior_id!==this.cur)) best=cur;
+    }
+    if(best.behavior_id!==this.cur){ this.cur=best.behavior_id; this.dwell=0; }
+    const lab=best.label||best.behavior_id;
+    if((lab.includes("forag")||lab.includes("feed")) && f.prey_adjacent>0.5)
+      this.d.hunger=Math.max(0,this.d.hunger-0.5);
+    if(lab.includes("rest")) this.d.fatigue=Math.max(0,this.d.fatigue-0.3*dt);
+    return { behavior_id:best.behavior_id, throttle:best.throttle??0.3, steer:best.steer||"wander" };
+  }
+}
+
+/* ===========================================================================
+   ECOSYSTEM — port of biogen/ecosystem.py
+   Sensory → behavior → locomotion → physics, over a finite plankton field.
+   Predation is bounded by handling time, satiation and schooling dilution, so
+   the prey population cannot be driven to collapse (Gate G7).
+   =========================================================================== */
+const PREY_OF = { mesopredator:["planktivore"], ambush_predator:["planktivore","mesopredator"],
+                  planktivore:[], grazer:[] };
+
+/* Uniform spatial hash over agent positions. Rebuilt every step; queries return
+   the agents in the cells overlapping a radius, so neighbour lookups stop being
+   a full scan. Exact — it returns a superset of the radius and the caller still
+   does the precise distance test. */
+class SpatialHash {
+  constructor(cell){ this.cell=cell; this.m=new Map(); }
+  clear(){ this.m.clear(); }
+  _k(x,y,z){ return x+","+y+","+z; }
+  _c(v){ return Math.floor(v/this.cell); }
+  insert(a){
+    const k=this._k(this._c(a.pos[0]),this._c(a.pos[1]),this._c(a.pos[2]));
+    const b=this.m.get(k);
+    if(b) b.push(a); else this.m.set(k,[a]);
+  }
+  *query(pos, r){
+    const n=Math.max(1,Math.ceil(r/this.cell));
+    const cx=this._c(pos[0]), cy=this._c(pos[1]), cz=this._c(pos[2]);
+    for(let i=-n;i<=n;i++) for(let j=-n;j<=n;j++) for(let k=-n;k<=n;k++){
+      const b=this.m.get(this._k(cx+i,cy+j,cz+k));
+      if(b) yield* b;
+    }
+  }
+}
+
+const SCENARIO = [
+  { id:"clupea_harengus",       role:"planktivore",     n:44, nnd:0.7, cluster:true  },
+  { id:"oncorhynchus_mykiss",   role:"mesopredator",    n:5,  nnd:3.0, cluster:false },
+  { id:"melanocetus_johnsonii", role:"ambush_predator", n:2,  nnd:5.0, cluster:false },
+  { id:"hippocampus_kuda",      role:"grazer",          n:4,  nnd:4.0, cluster:false }
+];
+const SCHOOLER_ID = "clupea_harengus";
+const NND_BAND = [0.3, 1.2], NND_TARGET = 0.7;   // P0026, Pitcher & Partridge 1983
+
+class World {
+  constructor(seed, withPredators){
+    this.bounds=[16,8,16]; this.dt=0.05; this.turbidity=0.1;
+    this.rand=rng(seed); this.time=0; this.agents=[]; this.nid=0;
+    this.grid=[12,4,12]; this.resCap=1; this.regrow=0.05;
+    this.res=new Float32Array(12*4*12).fill(0.8);
+    this.occ={}; this.predations=0;
+    this.hash=new SpatialHash(2.0);       // ~ largest sensory radius in the slice
+    this.centroids={}; this.speciesCount={};
+    this.behLOD=false;                    // behaviour LOD off by default
+    this.observer=null;                   // camera position, set by the renderer
+    /* Largest viewer→agent distance this scenario can produce. Compared against
+       the standard-tier radius to decide whether tiering is worth evaluating. */
+    this.maxViewDist=Math.hypot(...this.bounds)*1.5;
+    this.behLODPays=false;         // measured every PROBE_EVERY ticks
+    this.behLODFraction=0;
+    this.behLODProbeDue=true;      // probe on the first step, and whenever re-enabled
+    this.behLODReason="not probed yet";
+    this.tick=0;
+
+    // --- recruitment (§11 번식) ---------------------------------------------
+    this.reproduction=true;
+    this.births=0;
+    this.maturityAge=25;        // s of sim time before an individual can spawn
+    this.spawnEnergy=0.72;      // surplus required — spawning costs the parent
+    this.spawnRate=0.05;        // per-second attempt rate at zero crowding
+    this.spawnRefractory=30;    // s between spawns for one individual
+    this.growthRate=0.02;       // recruit size recovery per second
+    // Carrying capacity per taxon: the density brake that stops the logistic
+    // growth from running away. Set from the scenario's starting counts.
+    this.carryingCapacity={};
+    for(const sc of SCENARIO) this.carryingCapacity[sc.id]=Math.round(sc.n*1.6);
+    for(const s of SCENARIO){
+      if(!withPredators && (s.role==="mesopredator"||s.role==="ambush_predator")) continue;
+      this.spawn(s.id, s.n, s.role, s.nnd, s.cluster);
+    }
+  }
+  cell(p){
+    const g=this.grid, b=this.bounds;
+    const x=clamp(Math.floor(p[0]/b[0]*g[0]),0,g[0]-1);
+    const y=clamp(Math.floor(p[1]/b[1]*g[1]),0,g[1]-1);
+    const z=clamp(Math.floor(p[2]/b[2]*g[2]),0,g[2]-1);
+    return (x*g[1]+y)*g[2]+z;
+  }
+  spawn(id, n, role, nndPref, cluster){
+    const p=PRESETS.species[id]; if(!p) return;
+    let cc=null, cr=0;
+    const L0=p.morphometrics.reference_length_m;
+    if(cluster){
+      cr=nndPref*L0*Math.cbrt(n)*1.2;
+      cc=[ lerp(cr,this.bounds[0]-cr,this.rand()),
+           lerp(.35*this.bounds[1],.65*this.bounds[1],this.rand()),
+           lerp(cr,this.bounds[2]-cr,this.rand()) ];
+    }
+    for(let i=0;i<n;i++){
+      const r=this.rand;
+      // bounded individual variation, same policy as the compiler's IndividualSeed
+      const lenVar=clamp(1+(r()-0.5)*0.16, 0.85, 1.15);
+      let pos;
+      if(cc) pos=[ clamp(cc[0]+(r()-.5)*cr, .3, this.bounds[0]-.3),
+                   clamp(cc[1]+(r()-.5)*cr, .3, this.bounds[1]-.3),
+                   clamp(cc[2]+(r()-.5)*cr, .3, this.bounds[2]-.3) ];
+      else pos=[ r()*this.bounds[0], lerp(.2,.8,r())*this.bounds[1], r()*this.bounds[2] ];
+      const seed=Math.floor(r()*2**31);
+      this.agents.push({
+        aid:this.nid++, id, role, preset:p, alive:true,
+        pos, fwd:V.norm([r()-.5, (r()-.5)*.3, r()-.5]),
+        loco:new Loco(p), beh:new Behavior(p, seed),
+        L:L0*lenVar, scale:lenVar, baseScale:lenVar, refLen:L0, hue:(r()-.5)*0.12,
+        energy:1, nndPref, last:"idle",
+        turn:p.locomotion.turn_rate_rad_s||2,
+        strikeR:(p.ecology&&p.ecology.strike_range_bl)||1.5,
+        strikeP:(p.ecology&&p.ecology.strike_success_prob)||0.3,
+        handling:(p.ecology&&p.ecology.handling_time_s)||20,
+        cool:0, amp:0.1, phase:0, age:0, spawnCool:0,
+        visRange:((p.sensory_system.vision_range_bl)||8)*L0,
+        visFov:((p.sensory_system.vision_fov_deg)||300)*Math.PI/180,
+        llRange:((p.sensory_system.lateral_line_range_bl)||1)*L0
+      });
+    }
+  }
+  detects(a, other){
+    const d=V.sub(other, a.pos), dist=V.len(d);
+    if(dist<=a.llRange) return true;
+    const eff=a.visRange*(1-clamp(this.turbidity,0,.95));
+    if(dist>eff||dist<1e-9) return false;
+    return Math.acos(clamp(V.dot(d,a.fwd)/dist,-1,1))<=a.visFov*0.5;
+  }
+  /* Rebuild the per-step acceleration structures.
+     Two exact optimisations (they change cost, never results):
+       * a uniform spatial hash, so a neighbour query touches nearby cells
+         instead of every agent — the O(n²) scan the benchmark flagged;
+       * a per-species shoal centroid. Cohesion membership uses a radius equal
+         to the domain diagonal, so every conspecific always qualifies and the
+         centroid is identical for every member — computing it per agent was
+         redundant work, not a modelling choice. */
+  rebuildIndex(){
+    this.hash.clear();
+    const sum={}, cnt={};
+    for(const a of this.agents){
+      if(!a.alive) continue;
+      this.hash.insert(a);
+      if(!sum[a.id]){ sum[a.id]=[0,0,0]; cnt[a.id]=0; }
+      sum[a.id][0]+=a.pos[0]; sum[a.id][1]+=a.pos[1]; sum[a.id][2]+=a.pos[2];
+      cnt[a.id]++;
+    }
+    this.centroids={}; this.speciesCount=cnt;
+    for(const id in sum) this.centroids[id]=V.mul(sum[id], 1/cnt[id]);
+
+    if(this.behLOD && this.observer
+       && (this.behLODProbeDue || (this.tick % PROBE_EVERY)===0)){
+      this.behLODProbeDue=false;
+      let n=0, demoted=0;
+      for(const a of this.agents){
+        if(!a.alive) continue;
+        n++;
+        if(lodFor(V.len(V.sub(a.pos,this.observer)), a.L) >= 2) demoted++;
+      }
+      const frac = n ? demoted/n : 0;
+      this.behLODPays = frac >= WORTH_DEMOTING;
+      this.behLODFraction = frac;
+      this.behLODReason = this.behLODPays ? ""
+        : `inert: only ${(frac*100).toFixed(1)} % of agents fall below standard `
+          + `tier, so evaluating tiers for all ${n} costs more than it saves`;
+    }
+  }
+
+  /* behaviourTier: 0 hero, 1 standard, 2 crowd, 3 far field — the same
+     body-length thresholds the render LOD uses (lod.py). Crowd drops the
+     predator/prey scan and keeps only flocking; far field stops deciding
+     altogether and coasts. */
+  behaviourTier(a){
+    // `behLODPays` is false when no agent can ever leave standard tier, so the
+    // distance computation itself is skipped instead of costing for nothing.
+    if(!this.behLOD || !this.observer || !this.behLODPays) return 0;
+    return lodFor(V.len(V.sub(a.pos, this.observer)), a.L);
+  }
+
+  perceive(a, tier){
+    let prey=null,pred=null,bestPrey=1e9,bestPred=1e9,preyNear=0;
+    const nb=[],nh=[];
+    const localR=a.nndPref*a.L*4;
+    const preyRoles=PREY_OF[a.role]||[];
+    // full sensory reach; crowd tier skips the trophic scan entirely
+    const scanTrophic = tier <= 1;
+    const senseR = Math.max(a.visRange*(1-clamp(this.turbidity,0,.95)), a.llRange);
+    const qR = scanTrophic ? Math.max(localR, senseR, 6*a.L) : localR;
+
+    for(const b of this.hash.query(a.pos, qR)){
+      if(b===a||!b.alive) continue;
+      const d=V.len(V.sub(b.pos,a.pos));
+      if(b.id===a.id && a.beh.schooler && d<localR){ nb.push(b.pos); nh.push(b.fwd); }
+      if(!scanTrophic) continue;
+      const isPrey=preyRoles.includes(b.role);
+      const isPred=(PREY_OF[b.role]||[]).includes(a.role);
+      if(!this.detects(a,b.pos)) continue;
+      if(isPrey){ if(d<bestPrey){bestPrey=d;prey=b;} if(d<6*a.L) preyNear++; }
+      if(isPred && d<bestPred){ bestPred=d; pred=b; }
+    }
+    const ci=this.cell(a.pos);
+    const centroid = a.beh.schooler ? this.centroids[a.id] : null;
+    const nSchool = a.beh.schooler ? (this.speciesCount[a.id]||0) : 0;
+    return { prey,pred,nb,nh,centroid,nSchool,preyNear,ci,
+      f:{ hunger:a.beh.d.hunger, prey_visible:prey?1:0,
+          prey_adjacent:(prey&&bestPrey<a.strikeR*a.L)?1:0,
+          predator_visible:pred?1:0, neighbor_count:nb.length,
+          resource_local:this.res[ci], effort:0,
+          is_schooler:a.beh.schooler?1:0 } };
+  }
+  boids(a,pc){
+    const pref=a.nndPref*a.L;
+    const c=pc.centroid;
+    const toC=[c[0]-a.pos[0], c[1]-a.pos[1], c[2]-a.pos[2]];
+    const dc=V.len(toC);
+    const coh=dc>1e-6?V.mul(toC,1/dc):[0,0,0];
+    let sep=[0,0,0];
+    for(const p of pc.nb){
+      const diff=V.sub(a.pos,p), d=V.len(diff);
+      if(d<1.8*pref && d>1e-6) sep=V.add(sep, V.mul(diff, Math.min((pref/d)**2,6)/d));
+    }
+    const sn=V.len(sep); if(sn>3) sep=V.mul(sep,3/sn);
+    let al=[0,0,0];
+    if(pc.nh.length){
+      for(const h of pc.nh) al=V.add(al,h);
+      al=V.norm(al);
+    }
+    const wAl=(a.preset.behavior&&a.preset.behavior.school_alignment)||0.85;
+    const wCo=1.4+Math.min(dc/(8*pref),1.5);
+    const v=V.add(V.add(V.mul(coh,wCo), sep), V.mul(al,wAl));
+    return V.len(v)>1e-9?V.norm(v):a.fwd;
+  }
+  desired(a,cmd,pc){
+    if(cmd.steer==="flee"&&pc.pred) return V.norm(V.sub(a.pos,pc.pred.pos));
+    if(cmd.steer==="seek"&&pc.prey) return V.norm(V.sub(pc.prey.pos,a.pos));
+    if(cmd.steer==="school"&&pc.centroid&&pc.nSchool>1) return this.boids(a,pc);
+    if(cmd.steer==="hold") return a.fwd;
+    const r=this.rand;
+    return V.norm(V.add(a.fwd,[(r()-.5)*.5,(r()-.5)*.25,(r()-.5)*.5]));
+  }
+  rotToward(cur,tgt,maxA){
+    cur=V.norm(cur); tgt=V.norm(tgt);
+    const ang=Math.acos(clamp(V.dot(cur,tgt),-1,1));
+    if(ang<=maxA||ang<1e-6) return tgt;
+    return V.norm(V.add(V.mul(cur,1-maxA/ang), V.mul(tgt,maxA/ang)));
+  }
+  step(){
+    const dt=this.dt;
+    for(let i=0;i<this.res.length;i++){
+      const r=this.res[i];
+      this.res[i]=clamp(r+this.regrow*r*(1-r/this.resCap)*dt,0,this.resCap);
+    }
+    this.rebuildIndex();
+    this.tick++;
+    // Behaviour-LOD tick divisors per tier (lod.py: 60/30/10/1 Hz against a
+    // 20 Hz sim). A skipped agent keeps its last command and still integrates
+    // motion, so it drifts on instead of freezing.
+    const TICK_DIV=[1,1,2,8];
+    this.behTierCount=[0,0,0,0];
+
+    for(const a of this.agents){
+      if(!a.alive) continue;
+      if(a.cool>0) a.cool=Math.max(0,a.cool-dt);
+
+      const tier=this.behaviourTier(a);
+      this.behTierCount[tier]++;
+      const decide = (this.tick % TICK_DIV[tier]) === 0;
+
+      let pc, cmd;
+      if(decide){
+        pc=this.perceive(a, tier);
+        cmd=a.beh.select(dt,pc.f);
+        a.lastCmd=cmd; a.lastPc=pc;
+      } else {
+        // reuse the previous decision; drives still advance so hunger/fatigue
+        // do not stall while an agent is off-tick
+        pc=a.lastPc || this.perceive(a, tier);
+        cmd=a.lastCmd || {behavior_id:"idle",throttle:0,steer:"hold"};
+        a.beh.update(dt, pc.f);
+      }
+      this.occ[cmd.behavior_id]=(this.occ[cmd.behavior_id]||0)+1;
+      a.last=cmd.behavior_id;
+      const des=this.desired(a,cmd,pc);
+      a.fwd=this.rotToward(a.fwd,des,a.turn*dt);
+      const kin=a.loco.step(dt,cmd.throttle,a.scale);
+      a.amp=kin.amp; a.phase=a.loco.phase;
+      a.pos=V.add(a.pos,V.mul(a.fwd,kin.speed*dt));
+      // reflect at the tank walls
+      for(let k=0;k<3;k++){
+        if(a.pos[k]<0){ a.pos[k]=-a.pos[k]; a.fwd[k]=Math.abs(a.fwd[k]); }
+        else if(a.pos[k]>this.bounds[k]){ a.pos[k]=2*this.bounds[k]-a.pos[k]; a.fwd[k]=-Math.abs(a.fwd[k]); }
+      }
+      a.energy=Math.max(0,a.energy-(0.002+0.02*cmd.throttle)*dt);
+      if(a.role==="planktivore"){
+        const take=Math.min(this.res[pc.ci],0.3*dt);
+        this.res[pc.ci]-=take;
+        a.energy=Math.min(1,a.energy+take*0.8);
+        a.beh.d.hunger=Math.max(0,a.beh.d.hunger-take*2);
+      } else if(pc.f.prey_adjacent>0.5 && pc.prey) this.strike(a,pc);
+      if(a.energy<=0) a.alive=false;
+      a.age+=dt;
+      if(a.spawnCool>0) a.spawnCool=Math.max(0,a.spawnCool-dt);
+    }
+    if(this.reproduction) this.reproduce();
+    this.time+=dt;
+  }
+
+  /* Energy-gated reproduction with a density brake.
+     Without recruitment the sim is only an observation window — every run ends
+     in monotonic decline. Spawning is gated on surplus energy, maturity and a
+     refractory period, and damped by local crowding so the population settles
+     at a carrying capacity instead of running away. Offspring cost the parent
+     the energy they carry, so nothing is created from nothing (Gate G7). */
+  reproduce(){
+    const born=[];
+    for(const a of this.agents){
+      if(!a.alive || a.spawnCool>0) continue;
+      if(a.age < this.maturityAge) continue;
+      if(a.energy < this.spawnEnergy) continue;
+
+      const n=this.speciesCount[a.id]||0;
+      const K=this.carryingCapacity[a.id] ?? 60;
+      // logistic brake: probability falls to zero as the population reaches K
+      const room=Math.max(0, 1 - n/K);
+      if(room<=0) continue;
+      if(this.rand() > this.spawnRate*room*this.dt) continue;
+
+      const cost=0.35;
+      a.energy-=cost;
+      a.spawnCool=this.spawnRefractory;
+
+      const r=this.rand;
+      const child=Object.assign(Object.create(Object.getPrototypeOf(a)), a, {
+        aid:this.nid++,
+        pos:[clamp(a.pos[0]+(r()-.5)*0.4,.1,this.bounds[0]-.1),
+             clamp(a.pos[1]+(r()-.5)*0.4,.1,this.bounds[1]-.1),
+             clamp(a.pos[2]+(r()-.5)*0.4,.1,this.bounds[2]-.1)],
+        fwd:V.norm([r()-.5,(r()-.5)*.3,r()-.5]),
+        energy:cost*0.8, age:0, spawnCool:this.spawnRefractory,
+        alive:true, last:"idle", lastCmd:null, lastPc:null,
+        // recruits enter smaller and grow toward adult size
+        scale:a.scale*0.55, L:a.L*0.55,
+        loco:new Loco(a.preset), beh:new Behavior(a.preset, this.nid),
+      });
+      born.push(child);
+      this.births++;
+    }
+    for(const c of born) this.agents.push(c);
+    // recruits grow back toward the adult reference size
+    for(const a of this.agents){
+      if(a.alive && a.scale < a.baseScale){
+        a.scale=Math.min(a.baseScale, a.scale + this.growthRate*this.dt);
+        a.L=a.scale*a.refLen;
+      }
+    }
+  }
+  strike(a,pc){
+    if(a.cool>0 || a.beh.d.hunger<0.3) return;
+    const b=pc.prey;
+    if(!b.alive) return;
+    if(V.len(V.sub(b.pos,a.pos))<a.strikeR*a.L){
+      const dilution=1/(1+0.15*pc.preyNear);   // confusion effect in dense schools
+      if(this.rand()<a.strikeP*dilution){
+        b.alive=false; a.energy=Math.min(1,a.energy+0.5);
+        a.beh.d.hunger=Math.max(0,a.beh.d.hunger-0.8);
+        this.predations++;
+      }
+      a.cool=a.handling;
+    }
+  }
+  /* Field studies measure NND *within the school* — not across individuals
+     scattered while fleeing — so the metric filters to schooling members. */
+  meanNND(id){
+    const m=this.agents.filter(a=>a.alive&&a.id===id&&(!a.beh.schooler||a.last==="school"));
+    if(m.length<2) return null;
+    let sum=0;
+    for(const a of m){
+      let best=Infinity;
+      for(const b of m){ if(a===b) continue; const d=V.len(V.sub(a.pos,b.pos)); if(d<best) best=d; }
+      sum+=best;
+    }
+    const L=m.reduce((s,a)=>s+a.L,0)/m.length;
+    return sum/m.length/L;
+  }
+  counts(){ const c={}; for(const a of this.agents) if(a.alive) c[a.id]=(c[a.id]||0)+1; return c; }
+  centroid(id){
+    const m=this.agents.filter(a=>a.alive&&a.id===id);
+    if(!m.length) return [this.bounds[0]/2,this.bounds[1]/2,this.bounds[2]/2];
+    const s=m.reduce((acc,a)=>V.add(acc,a.pos),[0,0,0]);
+    return V.mul(s,1/m.length);
+  }
+}
+
+/* ===========================================================================
+   RENDERER — WebGL2, one instanced draw call per species
+   The swimming deformation runs in the vertex shader: a traveling wave whose
+   amplitude envelope grows posteriorly for body-caudal swimmers and stays flat
+   for median-fin swimmers, matching the locomotion model exactly.
+   =========================================================================== */
+const VS = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 a_pos;
+layout(location=1) in vec3 a_nrm;
+layout(location=2) in float a_xn;
+layout(location=3) in float a_part;
+layout(location=4) in vec3 i_pos;
+layout(location=5) in vec3 i_fwd;
+layout(location=6) in vec4 i_prm;   // phase, amp, scale, hue
+
+uniform mat4 u_vp;
+uniform float u_isMPF;
+uniform float u_refLen;
+
+out vec3 v_n;
+out vec3 v_w;
+out float v_hue;
+out float v_part;
+out float v_xn;
+
+void main(){
+  float xn = a_xn;
+  float env = mix(pow(xn,1.5), 0.05, u_isMPF);
+  float k = 6.2831853 * xn;            // one wave per body length
+  float w = i_prm.y * env * sin(i_prm.x - k);
+  float dw = i_prm.y * env * cos(i_prm.x - k) * (-6.2831853) / max(u_refLen,1e-4);
+
+  vec3 p = a_pos * i_prm.z;
+  p.z += w * u_refLen * i_prm.z;
+
+  // rotate the normal by the local wave slope so lighting follows the bend
+  float c = inversesqrt(1.0 + dw*dw), s = dw * c;
+  vec3 n = vec3(a_nrm.x*c - a_nrm.z*s, a_nrm.y, a_nrm.x*s + a_nrm.z*c);
+
+  vec3 F = normalize(i_fwd);
+  vec3 R = normalize(cross(vec3(0.0,1.0,0.0), F));
+  if(!(length(cross(vec3(0.0,1.0,0.0), F)) > 1e-4)) R = vec3(1.0,0.0,0.0);
+  vec3 U = cross(F, R);
+  mat3 B = mat3(F, U, R);
+
+  vec3 world = B * p + i_pos;
+  v_w = world;
+  v_n = normalize(B * n);
+  v_hue = i_prm.w;
+  v_part = a_part;
+  v_xn = xn;
+  gl_Position = u_vp * vec4(world, 1.0);
+}`;
+
+const FS = `#version 300 es
+precision highp float;
+in vec3 v_n; in vec3 v_w; in float v_hue; in float v_part; in float v_xn;
+uniform vec3 u_base;
+uniform vec3 u_eye;
+uniform float u_irid;
+uniform float u_rough;
+uniform float u_turb;
+uniform float u_emis;      // esca / bioluminescence
+uniform float u_tankY;
+out vec4 o;
+
+vec3 hueShift(vec3 c, float h){
+  const vec3 k = vec3(0.57735);
+  float ca = cos(h*6.2831853), sa = sin(h*6.2831853);
+  return c*ca + cross(k,c)*sa + k*dot(k,c)*(1.0-ca);
+}
+
+void main(){
+  vec3 N = normalize(v_n);
+  vec3 Vd = normalize(u_eye - v_w);
+  if(dot(N,Vd) < 0.0) N = -N;                 // two-sided: fins are membranes
+
+  vec3 L = normalize(vec3(0.25, 1.0, 0.15));  // surface light from above
+  float dif = max(dot(N,L), 0.0);
+  float sky = 0.5 + 0.5*N.y;                  // hemispheric water fill
+
+  vec3 base = hueShift(u_base, v_hue);
+  // countershading: darker dorsum, brighter ventrum — near-universal in fishes
+  base *= mix(0.72, 1.22, clamp(0.5 - N.y*0.5, 0.0, 1.0));
+  if(v_part > 0.5) base *= 0.86;              // fin membranes read slightly darker
+
+  vec3 col = base * (0.14 + 0.62*dif + 0.34*sky*vec3(0.55,0.82,1.0));
+
+  // specular sheen; wet fish are glossy
+  vec3 H = normalize(L + Vd);
+  float spec = pow(max(dot(N,H),0.0), mix(90.0, 12.0, u_rough));
+  col += vec3(0.75,0.92,1.0) * spec * (1.0 - u_rough) * 0.55;
+
+  // structural iridescence from guanine platelets: angle-dependent, and it
+  // sweeps blue↔violet only — silvery fishes are not full-spectrum rainbow
+  float fres = pow(1.0 - max(dot(N,Vd),0.0), 3.0);
+  vec3 sheen = mix(vec3(0.42,0.70,0.96), vec3(0.68,0.60,0.94),
+                   0.5 + 0.5*sin(v_xn*5.0 + fres*2.0));
+  col += sheen * fres * u_irid * 0.8;
+
+  // caustic banding from the surface
+  float caus = 0.5 + 0.5*sin(v_w.x*3.1 + v_w.z*2.3);
+  col *= 1.0 + caus * 0.12 * clamp(v_w.y/max(u_tankY,1e-3), 0.0, 1.0);
+
+  col += u_emis * vec3(0.15,0.72,0.95) * (0.4 + 0.6*fres);
+
+  // water column: red absorbed first, so distance pulls everything to blue-green
+  float d = length(u_eye - v_w);
+  float fog = 1.0 - exp(-d * (0.055 + u_turb*0.22));
+  vec3 water = vec3(0.016,0.075,0.115);
+  col = mix(col, water, clamp(fog,0.0,1.0));
+
+  o = vec4(col, 1.0);
+}`;
+
+/* tank reference grid — gives the shoal a floor and a sense of scale.
+   1 m spacing, so the viewer can read fish size and school volume directly. */
+const GVS = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 a_p;
+uniform mat4 u_vp; out vec3 v_w;
+void main(){ v_w = a_p; gl_Position = u_vp * vec4(a_p,1.0); }`;
+const GFS = `#version 300 es
+precision highp float;
+in vec3 v_w; uniform vec3 u_eye; uniform float u_turb; out vec4 o;
+void main(){
+  float d = length(u_eye - v_w);
+  float a = exp(-d * (0.075 + u_turb*0.2));
+  o = vec4(vec3(0.30,0.62,0.74), a*0.30);
+}`;
+
+/* marine snow — parallax depth cue */
+const PVS = `#version 300 es
+precision highp float;
+layout(location=0) in vec3 a_p;
+uniform mat4 u_vp; uniform float u_t; uniform vec3 u_b;
+out float v_a;
+void main(){
+  vec3 p = a_p;
+  p.y = mod(p.y - u_t*0.045, u_b.y);
+  p.x += sin(u_t*0.28 + a_p.y*2.4)*0.09;
+  gl_Position = u_vp * vec4(p,1.0);
+  gl_PointSize = 2.2;
+  v_a = 0.20 + 0.30*fract(sin(a_p.x*91.7+a_p.z*13.3)*4375.5);
+}`;
+const PFS = `#version 300 es
+precision highp float;
+in float v_a; out vec4 o;
+void main(){
+  vec2 c = gl_PointCoord - 0.5;
+  if(dot(c,c) > 0.25) discard;
+  o = vec4(vec3(0.62,0.82,0.92), v_a*0.5);
+}`;
+
+function shader(gl,type,src){
+  const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+function program(gl,vs,fs){
+  const p=gl.createProgram();
+  gl.attachShader(p,shader(gl,gl.VERTEX_SHADER,vs));
+  gl.attachShader(p,shader(gl,gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  return p;
+}
+
+/* ===========================================================================
+   APP
+   =========================================================================== */
+const cv=document.getElementById("view");
+const gl=cv.getContext("webgl2",{antialias:true,alpha:false});
+if(!gl){ document.getElementById("err").style.display="grid"; }
+else main();
+
+function main(){
+  const prog=program(gl,VS,FS), pprog=program(gl,PVS,PFS);
+  const U=n=>gl.getUniformLocation(prog,n);
+  const u={vp:U("u_vp"),eye:U("u_eye"),base:U("u_base"),irid:U("u_irid"),
+           rough:U("u_rough"),turb:U("u_turb"),emis:U("u_emis"),
+           isMPF:U("u_isMPF"),refLen:U("u_refLen"),tankY:U("u_tankY")};
+  const pu={vp:gl.getUniformLocation(pprog,"u_vp"),t:gl.getUniformLocation(pprog,"u_t"),
+            b:gl.getUniformLocation(pprog,"u_b")};
+
+  /* --- per-species GPU buffers --- */
+  const species={};
+  for(const id in PRESETS.species){
+    const p=PRESETS.species[id];
+    const mp=p.appearance.material_parameters||{};
+    const lods=[]; let refLen=0;
+    for(let L=0;L<LOD_BUDGET.length;L++){
+      const m=buildMesh(p,L);
+      refLen=m.refLen;
+      const vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+      const mk=(data,loc,size)=>{
+        const b=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b);
+        gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,size,gl.FLOAT,false,0,0);
+      };
+      mk(m.pos,0,3); mk(m.nrm,1,3); mk(m.xn,2,1); mk(m.part,3,1);
+      const ib=gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,ib);
+      gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,m.idx,gl.STATIC_DRAW);
+      const inst=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,inst);
+      // interleaved per instance: pos(3) fwd(3) prm(4) = 10 floats
+      const stride=40;
+      gl.enableVertexAttribArray(4); gl.vertexAttribPointer(4,3,gl.FLOAT,false,stride,0);  gl.vertexAttribDivisor(4,1);
+      gl.enableVertexAttribArray(5); gl.vertexAttribPointer(5,3,gl.FLOAT,false,stride,12); gl.vertexAttribDivisor(5,1);
+      gl.enableVertexAttribArray(6); gl.vertexAttribPointer(6,4,gl.FLOAT,false,stride,24); gl.vertexAttribDivisor(6,1);
+      gl.bindVertexArray(null);
+      lods.push({ vao, inst, count:m.idx.length, tris:m.idx.length/3,
+                  verts:m.pos.length/3, data:new Float32Array(0) });
+    }
+    species[id]={ lods, refLen,
+      isMPF:MPF_MODES.has(p.locomotion.swim_mode)?1:0,
+      base:mp.base_color||[.5,.55,.6], irid:mp.iridescence||0, rough:mp.roughness||.35,
+      emis:(p.appearance.emissive?0.85:0.0) };
+  }
+  window.__lodTable = Object.fromEntries(Object.entries(species).map(
+    ([k,v])=>[k, v.lods.map(l=>({tris:l.tris, verts:l.verts}))]));
+
+  /* --- reference grid: floor at y=0 plus the four vertical tank edges --- */
+  const gprog=program(gl,GVS,GFS);
+  const gu={vp:gl.getUniformLocation(gprog,"u_vp"),eye:gl.getUniformLocation(gprog,"u_eye"),
+            turb:gl.getUniformLocation(gprog,"u_turb")};
+  const gl_lines=[]; const B=[16,8,16];
+  for(let i=0;i<=B[0];i++) gl_lines.push(i,0,0, i,0,B[2]);
+  for(let i=0;i<=B[2];i++) gl_lines.push(0,0,i, B[0],0,i);
+  for(const [x,z] of [[0,0],[B[0],0],[0,B[2]],[B[0],B[2]]]) gl_lines.push(x,0,z, x,B[1],z);
+  const gdat=new Float32Array(gl_lines);
+  const gvao=gl.createVertexArray(); gl.bindVertexArray(gvao);
+  const gb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,gb);
+  gl.bufferData(gl.ARRAY_BUFFER,gdat,gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+  gl.bindVertexArray(null);
+  const gCount=gdat.length/3;
+
+  /* --- marine snow --- */
+  const PN=1400, pdat=new Float32Array(PN*3), pr=rng(99);
+  for(let i=0;i<PN;i++){ pdat[i*3]=pr()*16; pdat[i*3+1]=pr()*8; pdat[i*3+2]=pr()*16; }
+  const pvao=gl.createVertexArray(); gl.bindVertexArray(pvao);
+  const pb=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,pb);
+  gl.bufferData(gl.ARRAY_BUFFER,pdat,gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+  gl.bindVertexArray(null);
+
+  /* --- state --- */
+  let world=new World(11,true);
+  let withPred=true, playing=true, speed=1, turb=0.1;
+  /* LOD_FORCE = -1 uses the distance policy; 0..3 pins a tier. Exposed so the
+     benchmark harness can measure the policy against a fixed-tier baseline. */
+  let LOD_FORCE=-1, OBS_OVERRIDE=null;
+  const STATS={tris:0, calls:0, tiers:[0,0,0,0], frameMs:0};
+  window.__biogen={
+    stats:STATS,
+    setLOD:v=>{ LOD_FORCE=v; },
+    setBehaviorLOD:on=>{ world.behLOD=!!on; world.behLODProbeDue=true; },
+    behTiers:()=>world.behTierCount||[0,0,0,0],
+    behLODStatus:()=>({pays:world.behLODPays,
+                       demotedFraction:world.behLODFraction,
+                       reason:world.behLODReason,
+                       tick:world.tick, behLOD:world.behLOD,
+                       hasObserver:!!world.observer}),
+    /* Pin the observer far away so the behaviour tiers actually engage. In the
+       16 m tank the standard-tier radius (40 BL ≈ 11 m) covers almost the whole
+       domain, so tiering is inert unless the viewer is genuinely distant. */
+    setObserverOverride:d=>{ OBS_OVERRIDE = d==null ? null : [8, 4, 8 + d];
+                             world.behLODProbeDue=true; },
+    setPop:(id,n)=>{ const s=SCENARIO.find(x=>x.id===id); if(s){ s.n=n;
+                     world=new World(11,withPred); world.turbidity=turb; target=null; } },
+    agents:()=>world.agents.filter(a=>a.alive).length,
+    lodTable:()=>window.__lodTable
+  };
+  let yaw=0.6, pitch=0.16, dist=6.0, target=null;   // target snaps to the shoal on frame 1
+  let lastEye=[8,4,14];                              // fed to the sim for behaviour tiering
+
+  /* --- camera interaction --- */
+  let drag=false,lx=0,ly=0;
+  cv.addEventListener("pointerdown",e=>{drag=true;lx=e.clientX;ly=e.clientY;cv.setPointerCapture(e.pointerId);});
+  cv.addEventListener("pointerup",e=>{drag=false;});
+  cv.addEventListener("pointermove",e=>{
+    if(!drag) return;
+    yaw-=(e.clientX-lx)*0.006; pitch=clamp(pitch+(e.clientY-ly)*0.005,-1.2,1.2);
+    lx=e.clientX; ly=e.clientY;
+  });
+  cv.addEventListener("wheel",e=>{ e.preventDefault(); dist=clamp(dist*(1+Math.sign(e.deltaY)*0.1),1.6,26); },{passive:false});
+
+  /* --- UI wiring --- */
+  const $=id=>document.getElementById(id);
+  const btnPlay=$("btnPlay"), btnScen=$("btnScenario"), btnReset=$("btnReset");
+  btnPlay.onclick=()=>{ playing=!playing; btnPlay.textContent=playing?"일시정지":"재생";
+                        btnPlay.setAttribute("aria-pressed",String(playing)); };
+  btnScen.onclick=()=>{ withPred=!withPred; btnScen.textContent=withPred?"포식자 없음":"포식자 포함";
+                        world=new World(11,withPred); world.turbidity=turb; target=null; nndEMA=null; };
+  btnReset.onclick=()=>{ world=new World(Math.floor(Math.random()*1e6),withPred);
+                         world.turbidity=turb; target=null; nndEMA=null; };
+  $("rSpeed").oninput=e=>{ speed=+e.target.value; $("vSpeed").textContent=speed.toFixed(1); };
+  $("rTurb").oninput=e=>{ turb=+e.target.value; $("vTurb").textContent=turb.toFixed(2); world.turbidity=turb; };
+  const tgl=$("toggleUI");
+  tgl.onclick=()=>{ const h=document.body.classList.toggle("hideui");
+                    tgl.textContent=h?"패널 보기":"패널 숨기기"; tgl.setAttribute("aria-pressed",String(h)); };
+  addEventListener("keydown",e=>{ if(e.key==="h"||e.key==="H") tgl.click();
+                                  if(e.key===" "){ e.preventDefault(); btnPlay.click(); } });
+
+  /* taxon swap — the one-word-swap thesis, live */
+  function renderSwap(k){
+    const p=PROFILES[k];
+    $("swapNote").innerHTML =
+      `<code>target_taxon: "${p.name}"</code> 한 값만 바꾸면 모듈 맵이 재생성됩니다.<br>` +
+      `대칭 <b>${p.sym}</b> · 리그 <code>${p.rig}</code><br>` +
+      `슬롯 ${p.slots}<br>` +
+      `소스 라우팅 ${p.src}` +
+      (p.na ? `<br><span style="color:var(--inferred)">${p.na}</span>` : "") +
+      (p.hard ? `<br><span style="color:var(--measured)">골격·척추·지느러미가 전무한 방사대칭 —
+                 좌표계가 실제로 바뀌는 유일한 케이스입니다.</span>` : "") +
+      (k!=="fish" ? `<br><span style="color:var(--dim)">이식성 검증(G9)용 프로필입니다.
+                     화면의 슬라이스는 어류 프리셋으로 계속 구동됩니다.</span>` : "");
+  }
+  $("taxonSel").onchange=e=>renderSwap(e.target.value);
+  renderSwap("fish");
+
+  /* specimen catalog */
+  const EVC={Measured:"--measured",Derived:"--derived",Inferred:"--inferred",ArtistAuthored:"--artist"};
+  const EVK={Measured:"측정",Derived:"유도",Inferred:"추론",ArtistAuthored:"보완"};
+  const cards=$("cards");
+  for(const s of SCENARIO){
+    const p=PRESETS.species[s.id]; if(!p) continue;
+    const mp=p.appearance.material_parameters||{};
+    const rgb=`rgb(${mp.base_color.map(c=>Math.round(c*255*1.5)).join(",")})`;
+    const ev=p.evidence_counts||{}, tot=Object.values(ev).reduce((a,b)=>a+b,0)||1;
+    const el=document.createElement("div");
+    el.className="card"; el.setAttribute("role","button"); el.tabIndex=0;
+    el.setAttribute("aria-expanded","false");
+    el.innerHTML=`
+      <div class="top"><span class="swatch" style="background:${rgb}"></span>
+        <span class="ko">${p.names.ko||s.id}</span>
+        <span class="ct" data-ct="${s.id}">—</span></div>
+      <div class="sci">${p.taxon.accepted_scientific_name}</div>
+      <div class="meta">
+        <span class="chip">${p.locomotion.swim_mode}</span>
+        <span class="chip">${(p.morphometrics.reference_length_m*100).toFixed(0)} cm</span>
+        <span class="chip">${s.role}</span>
+      </div>
+      <div class="detail">
+        <div class="drow"><span class="dk">순항 속도</span><span class="dv">${p.locomotion.cruise_speed_bl} BL/s</span></div>
+        <div class="drow"><span class="dk">돌진 속도</span><span class="dv">${p.locomotion.burst_speed_bl} BL/s</span></div>
+        <div class="drow"><span class="dk">순항 박동수</span><span class="dv">${p.locomotion.tailbeat_freq_cruise} Hz</span></div>
+        <div class="drow"><span class="dk">시야</span><span class="dv">${p.sensory_system.vision_fov_deg}°</span></div>
+        <div class="drow"><span class="dk">서식 수심</span><span class="dv">${(p.ecology.depth_range_m||[0,0]).join("–")} m</span></div>
+        <div class="evbar">${Object.entries(ev).map(([k,v])=>
+          `<i style="width:${v/tot*100}%;background:var(${EVC[k]||"--dim"})"></i>`).join("")}</div>
+        <div class="evleg">${Object.entries(ev).map(([k,v])=>
+          `<span style="color:var(${EVC[k]||"--dim"})">${EVK[k]||k} ${v}</span>`).join("")}</div>
+        ${ (ev.Inferred||0)>0 ? `<p class="infer">추론값 ${ev.Inferred}건 — 직접 계측 자료가 없어 근연 분류군에서 전이했습니다. 신뢰도 ≤ 0.35.</p>` : "" }
+        <div class="drow" style="margin-top:6px"><span class="dk">build_hash</span><span class="dv" style="color:var(--dim)">${p.build_hash}</span></div>
+      </div>`;
+    const tog=()=>el.setAttribute("aria-expanded", el.getAttribute("aria-expanded")==="true"?"false":"true");
+    el.onclick=tog;
+    el.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); tog(); } };
+    cards.appendChild(el);
+  }
+
+  /* NND gauge scale: 0 → 3 BL */
+  const GMAX=3;
+  (function ticks(){
+    const t=$("gaugeTicks");
+    [0,1,2,3].forEach(v=>{ const s=document.createElement("span");
+      s.style.left=(v/GMAX*100)+"%"; s.textContent=v; t.appendChild(s); });
+    $("gaugeBand").style.left=(NND_BAND[0]/GMAX*100)+"%";
+    $("gaugeBand").style.width=((NND_BAND[1]-NND_BAND[0])/GMAX*100)+"%";
+    $("gaugeTarget").style.left=(NND_TARGET/GMAX*100)+"%";
+  })();
+
+  /* --- metric refresh (UI at 5 Hz; the sim runs far faster) --- */
+  let nndEMA=null;
+  function refresh(){
+    const nnd=world.meanNND(SCHOOLER_ID);
+    if(nnd!=null) nndEMA = nndEMA==null ? nnd : nndEMA*0.82+nnd*0.18;
+    const el=$("nndVal"), nd=$("gaugeNeedle"), vd=$("nndVerdict");
+    if(nndEMA==null){ el.innerHTML='—<span class="u">BL</span>'; vd.textContent="무리 형성 대기 중…"; }
+    else {
+      el.innerHTML=nndEMA.toFixed(2)+'<span class="u">BL</span>';
+      nd.style.left=clamp(nndEMA/GMAX*100,0,100)+"%";
+      const inBand=nndEMA>=NND_BAND[0]&&nndEMA<=NND_BAND[1];
+      nd.style.background=inBand?"var(--esca)":"var(--warn)";
+      el.style.color=inBand?"var(--foam)":"var(--warn)";
+      vd.innerHTML = inBand
+        ? `<b style="color:var(--measured)">관측 범위 내</b> — 문헌 0.3–1.2 BL (P0026, Pitcher &amp; Partridge 1983). 목표 0.7.`
+        : `<b style="color:var(--warn)">범위 밖</b> — 포식자 회피로 무리가 흩어지는 중이면 정상입니다. 관측값은 교란 없는 순항 무리 기준입니다.`;
+    }
+    const c=world.counts();
+    $("pop").innerHTML=SCENARIO.filter(s=>withPred||!(s.role==="mesopredator"||s.role==="ambush_predator"))
+      .map(s=>{ const p=PRESETS.species[s.id]; const n=c[s.id]||0;
+        const col=n===0?"var(--bad)":(n<s.n*0.5?"var(--warn)":"var(--foam)");
+        return `<div class="stat"><span class="k">${p?p.names.ko:s.id}</span>
+                <span class="v" style="color:${col}">${n}<span style="color:var(--dim)"> / ${s.n}</span></span></div>`; }).join("");
+    SCENARIO.forEach(s=>{ const e=document.querySelector(`[data-ct="${s.id}"]`);
+      if(e) e.textContent=(c[s.id]||0)+"개체"; });
+
+    const tot=Object.values(world.occ).reduce((a,b)=>a+b,0)||1;
+    $("occ").innerHTML=Object.entries(world.occ).sort((a,b)=>b[1]-a[1]).slice(0,6)
+      .map(([k,v])=>`<div class="occ"><span class="n">${k}</span>
+        <span class="bar"><i style="width:${v/tot*100}%"></i></span>
+        <span class="p">${(v/tot*100).toFixed(0)}%</span></div>`).join("");
+
+    const alive=world.agents.filter(a=>a.alive);
+    let rs=0; for(let i=0;i<world.res.length;i++) rs+=world.res[i];
+    $("mRes").textContent=(rs/world.res.length).toFixed(2);
+    $("mEn").textContent=alive.length?(alive.reduce((s,a)=>s+a.energy,0)/alive.length).toFixed(2):"—";
+    $("mPred").textContent=world.predations+"건";
+    $("mT").textContent=world.time.toFixed(0)+" s";
+  }
+  setInterval(refresh,200);
+
+  /* --- frame loop --- */
+  let acc=0, last=performance.now(), fps=60, fAcc=0, fN=0;
+  function frame(now){
+    const t0=performance.now();
+    const dtReal=Math.min((now-last)/1000,0.1); last=now;
+    fAcc+=dtReal; fN++;
+    if(fAcc>0.5){ fps=fN/fAcc; fAcc=0; fN=0;
+      const t=STATS.tiers;
+      $("fps").textContent=
+        `${fps.toFixed(0)} fps · ${world.agents.filter(a=>a.alive).length} 개체 · `+
+        `LOD ${t[0]}/${t[1]}/${t[2]}/${t[3]} · ${(STATS.tris/1000).toFixed(1)}k tri · `+
+        `${STATS.calls} draw · sim 20 Hz`; }
+
+    if(playing){
+      acc+=dtReal*speed;
+      let guard=0;
+      // one-frame-old camera position is close enough to tier agents by distance
+      world.observer = OBS_OVERRIDE || lastEye;
+      while(acc>=world.dt && guard++<6){ world.step(); acc-=world.dt; }
+    }
+
+    // camera follows the shoal; snap on the first frame, then track smoothly
+    const ct=world.centroid(SCHOOLER_ID);
+    const k=0.07;
+    target = target===null ? ct
+           : [lerp(target[0],ct[0],k), lerp(target[1],ct[1],k), lerp(target[2],ct[2],k)];
+    const eye=[ target[0]+dist*Math.cos(pitch)*Math.sin(yaw),
+                target[1]+dist*Math.sin(pitch),
+                target[2]+dist*Math.cos(pitch)*Math.cos(yaw) ];
+    lastEye=eye;
+
+    const dpr=Math.min(devicePixelRatio||1,2);
+    const w=Math.floor(innerWidth*dpr), h=Math.floor(innerHeight*dpr);
+    if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+    gl.viewport(0,0,w,h);
+
+    const vp=mat4Mul(mat4Persp(1.02,w/h,0.05,90), mat4LookAt(eye,target,[0,1,0]));
+
+    // water column背景: darker with depth
+    gl.clearColor(0.012,0.045,0.068,1);
+    gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+    gl.enable(gl.DEPTH_TEST);
+    gl.disable(gl.CULL_FACE);        // membranes are two-sided
+
+    gl.useProgram(prog);
+    gl.uniformMatrix4fv(u.vp,false,vp);
+    gl.uniform3fv(u.eye,eye);
+    gl.uniform1f(u.turb,turb);
+    gl.uniform1f(u.tankY,world.bounds[1]);
+
+    // Bucket every agent by (species, LOD tier). Tier comes from distance in
+    // body lengths, so a 12 cm anglerfish drops tier closer than a 30 cm trout —
+    // the budget is perceptual, not metric.
+    const buckets={}; let drawTris=0, drawCalls=0;
+    const tierCount=[0,0,0,0];
+    for(const a of world.agents){
+      if(!a.alive) continue;
+      const L = LOD_FORCE>=0 ? LOD_FORCE
+              : lodFor(V.len(V.sub(a.pos,eye)), a.L);
+      tierCount[L]++;
+      ((buckets[a.id]||(buckets[a.id]={}))[L] ||= []).push(a);
+    }
+    for(const id in buckets){
+      const sp=species[id]; if(!sp) continue;
+      gl.uniform3fv(u.base,sp.base);
+      gl.uniform1f(u.irid,sp.irid);
+      gl.uniform1f(u.rough,sp.rough);
+      gl.uniform1f(u.isMPF,sp.isMPF);
+      gl.uniform1f(u.refLen,sp.refLen);
+      // the anglerfish esca pulses; everything else is non-emissive
+      gl.uniform1f(u.emis, sp.emis*(0.55+0.45*Math.sin(world.time*1.7)));
+      for(const Lk in buckets[id]){
+        const lod=sp.lods[Lk], list=buckets[id][Lk];
+        if(lod.data.length<list.length*10) lod.data=new Float32Array(list.length*10);
+        const d=lod.data;
+        for(let i=0;i<list.length;i++){
+          const a=list[i], o=i*10;
+          d[o]=a.pos[0]; d[o+1]=a.pos[1]; d[o+2]=a.pos[2];
+          d[o+3]=a.fwd[0]; d[o+4]=a.fwd[1]; d[o+5]=a.fwd[2];
+          d[o+6]=a.phase; d[o+7]=a.amp; d[o+8]=a.scale; d[o+9]=a.hue;
+        }
+        gl.bindVertexArray(lod.vao);
+        gl.bindBuffer(gl.ARRAY_BUFFER,lod.inst);
+        gl.bufferData(gl.ARRAY_BUFFER,d.subarray(0,list.length*10),gl.DYNAMIC_DRAW);
+        gl.drawElementsInstanced(gl.TRIANGLES,lod.count,gl.UNSIGNED_SHORT,0,list.length);
+        drawTris += lod.tris*list.length; drawCalls++;
+      }
+    }
+    STATS.tris=drawTris; STATS.calls=drawCalls; STATS.tiers=tierCount;
+
+    gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+    gl.depthMask(false);
+
+    gl.useProgram(gprog);
+    gl.uniformMatrix4fv(gu.vp,false,vp);
+    gl.uniform3fv(gu.eye,eye);
+    gl.uniform1f(gu.turb,turb);
+    gl.bindVertexArray(gvao);
+    gl.drawArrays(gl.LINES,0,gCount);
+
+    gl.useProgram(pprog);
+    gl.uniformMatrix4fv(pu.vp,false,vp);
+    gl.uniform1f(pu.t,world.time);
+    gl.uniform3fv(pu.b,world.bounds);
+    gl.bindVertexArray(pvao);
+    gl.drawArrays(gl.POINTS,0,PN);
+    gl.depthMask(true); gl.disable(gl.BLEND);
+    gl.bindVertexArray(null);
+
+    STATS.frameMs = performance.now()-t0;
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+}
+</script>
+</body>
+</html>

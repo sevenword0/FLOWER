@@ -1,0 +1,179 @@
+{
+  "generated_at": "2026-07-28T10:19:42Z",
+  "network_reachable": false,
+  "licenses": {
+    "gbif": "CC-BY 4.0",
+    "worms": "CC-BY 4.0"
+  },
+  "verdict_counts": {
+    "unresolved_network": 4
+  },
+  "requires_review": [],
+  "entries": {
+    "oncorhynchus_mykiss": {
+      "expected_name": "Oncorhynchus mykiss",
+      "verdict": "unresolved_network",
+      "authority_names": [],
+      "identifiers": [],
+      "sources": [
+        {
+          "source_id": "gbif",
+          "query": "Oncorhynchus mykiss",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://api.gbif.org/v1/species/match?name=Oncorhynchus%20mykiss",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:39Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        },
+        {
+          "source_id": "worms",
+          "query": "Oncorhynchus mykiss",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://www.marinespecies.org/rest/AphiaRecordsByName/Oncorhynchus%20mykiss?like=false&marine_only=false",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:40Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        }
+      ],
+      "requires_review": false
+    },
+    "hippocampus_kuda": {
+      "expected_name": "Hippocampus kuda",
+      "verdict": "unresolved_network",
+      "authority_names": [],
+      "identifiers": [],
+      "sources": [
+        {
+          "source_id": "gbif",
+          "query": "Hippocampus kuda",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://api.gbif.org/v1/species/match?name=Hippocampus%20kuda",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:40Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        },
+        {
+          "source_id": "worms",
+          "query": "Hippocampus kuda",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://www.marinespecies.org/rest/AphiaRecordsByName/Hippocampus%20kuda?like=false&marine_only=false",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:41Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        }
+      ],
+      "requires_review": false
+    },
+    "clupea_harengus": {
+      "expected_name": "Clupea harengus",
+      "verdict": "unresolved_network",
+      "authority_names": [],
+      "identifiers": [],
+      "sources": [
+        {
+          "source_id": "gbif",
+          "query": "Clupea harengus",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://api.gbif.org/v1/species/match?name=Clupea%20harengus",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:41Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        },
+        {
+          "source_id": "worms",
+          "query": "Clupea harengus",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://www.marinespecies.org/rest/AphiaRecordsByName/Clupea%20harengus?like=false&marine_only=false",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:42Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        }
+      ],
+      "requires_review": false
+    },
+    "melanocetus_johnsonii": {
+      "expected_name": "Melanocetus johnsonii",
+      "verdict": "unresolved_network",
+      "authority_names": [],
+      "identifiers": [],
+      "sources": [
+        {
+          "source_id": "gbif",
+          "query": "Melanocetus johnsonii",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://api.gbif.org/v1/species/match?name=Melanocetus%20johnsonii",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:42Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        },
+        {
+          "source_id": "worms",
+          "query": "Melanocetus johnsonii",
+          "status": "unreachable",
+          "accepted_name": null,
+          "rank": null,
+          "identifier": null,
+          "taxonomic_status": null,
+          "match_confidence": null,
+          "classification": {},
+          "endpoint": "https://www.marinespecies.org/rest/AphiaRecordsByName/Melanocetus%20johnsonii?like=false&marine_only=false",
+          "http_status": null,
+          "retrieved_at": "2026-07-28T10:19:42Z",
+          "from_cache": false,
+          "note": "URLError: <urlopen error Tunnel connection failed: 403 Forbidden>"
+        }
+      ],
+      "requires_review": false
+    }
+  },
+  "note": "No authority was reachable from this environment, so no name was verified. Nothing in the taxon index was changed. This is a blocked run, not a clean one — do not read it as confirmation."
+}

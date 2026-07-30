@@ -1,0 +1,23 @@
+# Gate G6 schooling-NND validation scenario.
+# The observed nearest-neighbour distance for herring (P0026: 0.7 BL, band
+# 0.3-1.2) was measured in UNDISTURBED CRUISING schools. A parameter must be
+# validated in the context it was measured in, so this scenario is a cruising
+# shoal with no predators. (Predator-disturbed NND is exercised separately in
+# vertical_slice.yaml, where the school is repeatedly scattered and re-forms.)
+name: schooling_cruise_validation
+description: Undisturbed cruising herring shoal for NND validation against P0026.
+world:
+  bounds_m: [16.0, 8.0, 16.0]
+  turbidity: 0.1
+  dt: 0.1
+  seed: 11
+  resource_regrow: 0.05
+populations:
+  - taxon_id: clupea_harengus
+    role: planktivore
+    count: 40
+    nnd_pref_bl: 0.7
+    cluster: true
+metrics:
+  schooler_taxon_id: clupea_harengus
+  steps: 600

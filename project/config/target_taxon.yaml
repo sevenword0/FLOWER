@@ -1,0 +1,52 @@
+# =============================================================================
+# SINGLE POINT OF TAXON CONFIGURATION  (규칙 17: 리터럴 명칭은 이 파일 한 곳에만)
+# -----------------------------------------------------------------------------
+# Change ONLY `target_taxon` to retarget the entire pipeline to a different
+# biological group. No literal taxon name may appear in code, schemas, or
+# templates. The loader (src/biogen/taxon_profile.py) resolves this value to an
+# adaptation profile under config/adaptation_profiles/<profile>.yaml and
+# regenerates the functional module map and source routing.
+#
+# Portability test (Gate G9): set target_taxon to "조류" (birds) or "해파리"
+# (jellyfish) and rerun
+#   `python -m biogen.cli module-map`
+# The module map + source routing must regenerate with NO code change. The
+# jellyfish profile is the harder case: radially symmetric, no skeleton, no
+# jaws, no fins, no spine — it tests whether the functional slots really are an
+# abstraction rather than bilateral defaults in disguise.
+# =============================================================================
+
+target_taxon: "어류"          # <-- the ONE value to swap. e.g. "조류", "곤충", "두족류"
+
+# Optional explicit override. If null, the loader normalizes `target_taxon`
+# (localized name -> profile key) via the alias table below.
+adaptation_profile: null
+
+# Localized/alias -> profile-key resolution. Keeps code free of literals.
+profile_aliases:
+  "어류": fish
+  "물고기": fish
+  "fish": fish
+  "조류": bird
+  "새": bird
+  "bird": bird
+  "자포동물": cnidarian
+  "해파리": cnidarian
+  "jellyfish": cnidarian
+  "cnidarian": cnidarian
+
+# Vertical-slice scope for the first implementation (Stage 0).
+# Representative units chosen for data-richness, morphological divergence,
+# behavioral divergence, and a data-poor inference stress test.
+vertical_slice:
+  - oncorhynchus_mykiss   # data-rich fusiform baseline (rainbow trout)
+  - hippocampus_kuda      # morphologically extreme (seahorse)
+  - clupea_harengus       # behaviorally divergent obligate schooler (herring)
+  - melanocetus_johnsonii # data-poor deep-sea inference test (humpback anglerfish)
+
+units:
+  length: m
+  mass: kg
+  time: s
+  angle: rad
+  temperature: degC

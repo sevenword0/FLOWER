@@ -1,0 +1,19 @@
+{
+  "kind": "morphotype_base",
+  "parameter_hierarchy": {"morphotype_base_id": "fusiform_pelagic"},
+  "morphometrics": {
+    "girth_profile": [[0.0, 0.02], [0.12, 0.6], [0.3, 1.0], [0.6, 0.62], [0.85, 0.22], [1.0, 0.03]],
+    "body_width_ratio": 0.09,
+    "allometry": {"life_stage_depth_scale": {"juvenile": 0.9, "adult": 1.0}}
+  },
+  "locomotion": {"swim_mode": "carangiform", "cruise_speed_bl": 2.0, "burst_speed_bl": 10.0, "tailbeat_freq_cruise": 3.5},
+  "external_structures": {
+    "fins": [
+      {"name": "dorsal", "kind": "median_dorsal", "x_norm": 0.5, "span_norm": 0.1, "height_norm": 0.08},
+      {"name": "anal", "kind": "median_ventral", "x_norm": 0.78, "span_norm": 0.1, "height_norm": 0.06},
+      {"name": "caudal", "kind": "caudal", "x_norm": 0.97, "span_norm": 0.14, "height_norm": 0.14},
+      {"name": "pectoral", "kind": "paired", "x_norm": 0.24, "span_norm": 0.09, "height_norm": 0.05},
+      {"name": "pelvic", "kind": "paired", "x_norm": 0.5, "span_norm": 0.06, "height_norm": 0.03}
+    ]
+  }
+}

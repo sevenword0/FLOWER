@@ -1,0 +1,33 @@
+{
+  "preset_version": "0.1.0",
+  "kind": "species_delta",
+  "taxon": {
+    "taxon_id": "clupea_harengus",
+    "accepted_scientific_name": "Clupea harengus",
+    "rank": "species",
+    "synonyms": ["Clupea harengus harengus"],
+    "classification": ["Actinopterygii", "Clupeiformes", "Clupeidae"],
+    "source_ids": ["worms", "gbif", "fishbase"]
+  },
+  "context": {"sex": "unknown", "life_stage": "adult", "population": "northeast_atlantic", "reference_size_si": 0.28},
+  "parameter_hierarchy": {"clade_base_id": "actinopterygii", "morphotype_base_id": "fusiform_pelagic", "species_delta_id": "clupea_harengus"},
+  "morphometrics": {"reference_length_m": 0.28, "body_depth_ratio": 0.20, "body_width_ratio": 0.09},
+  "locomotion": {"swim_mode": "carangiform", "cruise_speed_bl": 2.0, "burst_speed_bl": 10.0, "tailbeat_freq_cruise": 3.5},
+  "sensory_system": {"vision_range_bl": 6.0, "vision_fov_deg": 320, "lateral_line_range_bl": 1.5},
+  "ecology": {"depth_range_m": [0, 360], "temperature_opt_c": 10, "trophic_role_hint": "planktivore"},
+  "appearance": {"material_parameters": {"base_color": [0.6, 0.66, 0.72], "roughness": 0.18, "iridescence": 0.6, "subsurface": 0.15}, "pattern_rules": ["silvery_countershading", "blue_green_dorsum"]},
+  "behavior": {
+    "min_dwell_s": 1.5,
+    "obligate_schooler": true,
+    "school_alignment": 0.85,
+    "ethogram": [
+      {"behavior_id": "school", "label": "schooling_cruise", "utility": {"is_schooler": 2.5, "neighbor_count": 0.05, "bias": 1.0},
+       "steer": "school", "throttle": 0.08, "action_primitive_ids": ["cruise"], "confidence": 0.8, "evidence_refs": ["P0025", "P0026", "P0027"]},
+      {"behavior_id": "forage", "label": "foraging", "utility": {"hunger": 1.0, "resource_local": 0.3},
+       "steer": "wander", "throttle": 0.3, "action_primitive_ids": ["cruise"], "confidence": 0.5},
+      {"behavior_id": "flee", "label": "predator_avoidance_flash", "utility": {"predator_visible": 4.0, "fear": 2.5},
+       "steer": "flee", "throttle": 1.0, "action_primitive_ids": ["burst"], "confidence": 0.75}
+    ]
+  },
+  "provenance": {"evidence_refs": ["P0021", "P0022", "P0023", "P0024", "P0025", "P0026", "P0027", "P0028", "P0029"], "license_refs": ["fishbase", "literature_primary"]}
+}

@@ -1,0 +1,86 @@
+{
+ "oncorhynchus_mykiss": {
+  "lod_silhouette_iou": {
+   "0": 1.0,
+   "1": 0.999042451324609,
+   "2": 0.9599201596806387,
+   "3": 0.8770459081836327
+  },
+  "proportions": {
+   "length_m_measured": 0.30415,
+   "length_rel_error": 0.0,
+   "depth_ratio_measured": 0.22412915280464216,
+   "depth_rel_error": 0.001740812379110283,
+   "width_ratio_measured": 0.11979110251450677,
+   "width_rel_error": 0.0017408123791102376
+  },
+  "landmarks": {
+   "stations": 6,
+   "mean_rel_error": 0.006354486190076129,
+   "max_rel_error": 0.0237383506242306
+  }
+ },
+ "clupea_harengus": {
+  "lod_silhouette_iou": {
+   "0": 1.0,
+   "1": 0.999285997619992,
+   "2": 0.9625485995397921,
+   "3": 0.8894707609299373
+  },
+  "proportions": {
+   "length_m_measured": 0.28387,
+   "length_rel_error": 0.0,
+   "depth_ratio_measured": 0.20314494089834517,
+   "depth_rel_error": 0.004728132387706832,
+   "width_ratio_measured": 0.08957446808510637,
+   "width_rel_error": 0.004728132387706955
+  },
+  "landmarks": {
+   "stations": 6,
+   "mean_rel_error": 0.007985945014085031,
+   "max_rel_error": 0.028368794326241228
+  }
+ },
+ "hippocampus_kuda": {
+  "lod_silhouette_iou": {
+   "0": 1.0,
+   "1": 0.9984214680347278,
+   "2": 0.9488878371982963,
+   "3": 0.8506483361974692
+  },
+  "proportions": {
+   "length_m_measured": 0.20276,
+   "length_rel_error": 0.0,
+   "depth_ratio_measured": 0.1633987339965,
+   "depth_rel_error": 0.0006658950119420732,
+   "width_ratio_measured": 0.09939209726443772,
+   "width_rel_error": 0.006079027355622851
+  },
+  "landmarks": {
+   "stations": 6,
+   "mean_rel_error": 0.0629614325275591,
+   "max_rel_error": 0.2280215585311608
+  }
+ },
+ "melanocetus_johnsonii": {
+  "lod_silhouette_iou": {
+   "0": 1.0,
+   "1": 0.9989056087551299,
+   "2": 0.9525959367945824,
+   "3": 0.8692797044941515
+  },
+  "proportions": {
+   "length_m_measured": 0.12166,
+   "length_rel_error": 0.0,
+   "depth_ratio_measured": 0.5586129255319149,
+   "depth_rel_error": 0.004787234042553247,
+   "width_ratio_measured": 0.49760638297872345,
+   "width_rel_error": 0.004787234042553101
+  },
+  "landmarks": {
+   "stations": 6,
+   "mean_rel_error": 0.004115069983864342,
+   "max_rel_error": 0.007294832826747827
+  }
+ }
+}

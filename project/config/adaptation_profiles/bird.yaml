@@ -1,0 +1,102 @@
+# =============================================================================
+# ADAPTATION PROFILE: bird  (조류 / Aves) -- PORTABILITY TEST PROFILE (Gate G9)
+# -----------------------------------------------------------------------------
+# Exists to prove the "one-word swap": set target_taxon: "조류" and the same
+# code regenerates the module map + source routing against these bird slots,
+# with NO code change and NO fish literal leaking through.
+# =============================================================================
+profile_key: bird
+display_name: "조류"
+clade_scope:
+  primary: "Aves"
+  broader: ["Theropoda(extinct)"]
+
+body_plan:
+  symmetry_type: bilateral
+  primary_axis: rostro_caudal
+  dorsoventral_axis: +Y
+  lateral_axis: +Z
+  rig_strategy: limbed_biped_with_wings   # different rig strategy than fish
+  normalized_scale_definition: >
+    Normalized by body length (bill tip to tail tip). Wing spans in fraction of
+    body length.
+
+functional_slots:
+  1_identity_lifecycle:
+    structures: [species, population, sex, life_stage, size_class]
+    lifecycle: [egg, hatchling, juvenile, adult, senescent]
+  2_structural_support:
+    kind: endoskeleton
+    structures: [skull, pneumatized_vertebrae, furcula, keeled_sternum, wing_bones, leg_bones]
+    material_model: pneumatized_bone
+  3_joints_linkages:
+    structures: [shoulder, elbow, wrist_manus, hip, knee, intertarsal, cranial_kinesis]
+    linkage_types: [rotation, bend, wing_fold_linkage]
+  4_feeding_capture:
+    structures: [beak_upper_lower, tongue, no_teeth]
+    mechanism: peck_grasp_filter
+  5_actuation:
+    kind: striated_muscle
+    structures: [pectoralis, supracoracoideus, leg_muscles, syrinx_muscles]
+    proxy: contractile_segments
+  6_locomotion_structures:
+    structures: [wings_primaries_secondaries, tail_rectrices, legs, feet]
+    stabilizers: [tail_fan, alula]
+  7_core_physiology:
+    respiration: flow_through_air_sacs      # not gills -> slot re-realized, not N/A
+    buoyancy: N/A                            # 규칙: 없으면 N/A + 대응기능
+    weight_management: pneumatic_skeleton_air_sacs
+    osmoregulation: kidney_salt_gland
+  8_surface_covering:
+    structures: [feathers_contour_flight_down, scales_on_feet, beak_keratin]
+    microstructure: [barb_barbule_hook, feather_vane]
+  9_head_sensors_silhouette:
+    head: skull_beak
+    eyes: paired_camera_eyes_large
+    other_sensors: [ears_no_pinna, olfaction_variable, magnetoreception, uv_vision]
+  10_optics_pattern:
+    mechanisms: [pigment_melanin_carotenoid, structural_feather_barbule, iridescence]
+    angle_dependent: iridescence
+  11_behavior_movement:
+    modes: [foraging, flocking, predator_avoidance, roosting, territorial, courtship, migration]
+  12_ecology_interactions:
+    axes: [altitude, temperature, wind, habitat, cover, food_density]
+    roles: [predator, prey, competitor, pollinator_seed_disperser]
+  13_variation:
+    axes: [sex, life_stage, season, population, condition, size]
+
+morphotypes:
+  passerine:   {locomotion_mode: flap_bound, aspect: small_perching, example: passer_generic}
+  raptor:      {locomotion_mode: soar_flap,  aspect: broad_wing,     example: buteo_generic}
+  waterfowl:   {locomotion_mode: flap_paddle,aspect: heavy_bodied,   example: anas_generic}
+
+locomotion_families:
+  flight: [flap, bound, glide, soar, hover]
+  ground: [walk, run, hop]
+  water:  [paddle, dive]
+
+source_routing:
+  taxonomy_authority:
+    - {id: gbif,   name: "GBIF Backbone", api: true, scope: all}
+    - {id: itis,   name: "ITIS", api: true, scope: all}
+    - {id: col,    name: "Catalogue of Life", api: true, scope: all}
+    - {id: avibase,name: "Avibase / IOC World Bird List", api: true, scope: birds}
+  morphometry_specimen:
+    - {id: morphosource, name: "MorphoSource CT/3D", api: true}
+    - {id: vertnet,      name: "VertNet specimens", api: true}
+  literature:
+    - {id: crossref, name: "Crossref", api: true}
+    - {id: openalex, name: "OpenAlex", api: true}
+  ontology:
+    - {id: uberon,   name: "Uberon", api: true}
+  occurrence_behavior:
+    - {id: ebird,    name: "eBird", api: true}
+    - {id: gbif_occ, name: "GBIF occurrences", api: true}
+    - {id: movebank, name: "Movebank telemetry", api: true}
+  media:
+    - {id: macaulay,   name: "Macaulay Library", api: true}
+    - {id: inaturalist,name: "iNaturalist (CC media)", api: true, license_filter: [CC0, CC-BY, CC-BY-NC]}
+
+ontology_anchor:
+  root: "UBERON:0000468"
+  fish_bridge: null

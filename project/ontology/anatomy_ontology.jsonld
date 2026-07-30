@@ -1,0 +1,26 @@
+{
+  "@context": {
+    "uberon": "http://purl.obolibrary.org/obo/UBERON_",
+    "slot": "https://biogen.local/functional_slot#",
+    "partOf": {"@id": "http://purl.obolibrary.org/obo/BFO_0000050", "@type": "@id"},
+    "actsOn": {"@id": "https://biogen.local/rel#actsOn", "@type": "@id"},
+    "label": "http://www.w3.org/2000/01/rdf-schema#label"
+  },
+  "@graph": [
+    {"@id": "biogen:organism", "uberon": "0000468", "label": "multicellular organism", "slot": "1_identity_lifecycle"},
+    {"@id": "biogen:vertebral_column", "uberon": "0002415", "label": "vertebral column", "slot": "2_structural_support"},
+    {"@id": "biogen:neurocranium", "uberon": "0001703", "label": "neurocranium", "slot": "2_structural_support"},
+    {"@id": "biogen:caudal_fin", "uberon": "4000165", "label": "caudal fin", "slot": "6_locomotion_structures", "partOf": "biogen:organism"},
+    {"@id": "biogen:pectoral_fin", "uberon": "0000151", "label": "pectoral fin", "slot": "6_locomotion_structures"},
+    {"@id": "biogen:pelvic_fin", "uberon": "0000152", "label": "pelvic fin", "slot": "6_locomotion_structures"},
+    {"@id": "biogen:dorsal_fin", "uberon": "4000164", "label": "dorsal fin", "slot": "6_locomotion_structures"},
+    {"@id": "biogen:anal_fin", "uberon": "4000163", "label": "anal fin", "slot": "6_locomotion_structures"},
+    {"@id": "biogen:gill", "uberon": "0000161", "label": "gill", "slot": "7_core_physiology"},
+    {"@id": "biogen:swim_bladder", "uberon": "0006860", "label": "swim bladder", "slot": "7_core_physiology"},
+    {"@id": "biogen:scale", "uberon": "0007380", "label": "dermal scale", "slot": "8_surface_covering"},
+    {"@id": "biogen:lateral_line", "uberon": "0008897", "label": "lateral line system", "slot": "9_head_sensors_silhouette"},
+    {"@id": "biogen:eye", "uberon": "0000970", "label": "eye", "slot": "9_head_sensors_silhouette"},
+    {"@id": "biogen:oral_jaw", "uberon": "0001709", "label": "jaw region", "slot": "4_feeding_capture", "actsOn": "biogen:organism"},
+    {"@id": "biogen:myomere", "uberon": "0011906", "label": "myotome/myomere", "slot": "5_actuation", "actsOn": "biogen:vertebral_column"}
+  ]
+}

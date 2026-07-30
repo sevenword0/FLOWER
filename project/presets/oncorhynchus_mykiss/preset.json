@@ -1,0 +1,33 @@
+{
+  "preset_version": "0.1.0",
+  "kind": "species_delta",
+  "taxon": {
+    "taxon_id": "oncorhynchus_mykiss",
+    "accepted_scientific_name": "Oncorhynchus mykiss",
+    "rank": "species",
+    "synonyms": ["Salmo gairdneri", "Salmo mykiss"],
+    "classification": ["Actinopterygii", "Salmoniformes", "Salmonidae"],
+    "source_ids": ["worms", "gbif", "fishbase"]
+  },
+  "context": {"sex": "unknown", "life_stage": "adult", "population": "generic", "reference_size_si": 0.30},
+  "parameter_hierarchy": {"clade_base_id": "actinopterygii", "morphotype_base_id": "fusiform", "species_delta_id": "oncorhynchus_mykiss"},
+  "morphometrics": {"reference_length_m": 0.30, "body_depth_ratio": 0.22, "body_width_ratio": 0.12},
+  "locomotion": {"swim_mode": "subcarangiform", "cruise_speed_bl": 1.6, "burst_speed_bl": 8.0, "tailbeat_freq_cruise": 3.0},
+  "sensory_system": {"vision_range_bl": 9.0, "vision_fov_deg": 300, "lateral_line_range_bl": 1.0},
+  "ecology": {"depth_range_m": [0, 200], "temperature_opt_c": 13, "strike_range_bl": 2.0, "strike_success_prob": 0.35, "handling_time_s": 15.0, "trophic_role_hint": "mesopredator"},
+  "appearance": {"material_parameters": {"base_color": [0.55, 0.58, 0.6], "roughness": 0.28, "iridescence": 0.35, "subsurface": 0.25}, "pattern_rules": ["countershading", "pink_lateral_stripe", "fine_spotting"]},
+  "behavior": {
+    "min_dwell_s": 2.0,
+    "ethogram": [
+      {"behavior_id": "forage", "label": "foraging", "utility": {"hunger": 1.0, "resource_local": 0.2, "bias": 0.25},
+       "steer": "wander", "throttle": 0.3, "action_primitive_ids": ["cruise"], "confidence": 0.6, "evidence_refs": ["P0011"]},
+      {"behavior_id": "hunt", "label": "hunt_pursuit", "utility": {"prey_visible": 1.3, "hunger": 0.7},
+       "steer": "seek", "throttle": 0.7, "action_primitive_ids": ["burst"], "confidence": 0.55, "evidence_refs": ["P0006"]},
+      {"behavior_id": "flee", "label": "predator_avoidance", "utility": {"predator_visible": 3.0, "fear": 2.0},
+       "steer": "flee", "throttle": 1.0, "action_primitive_ids": ["burst"], "confidence": 0.7},
+      {"behavior_id": "rest", "label": "resting", "utility": {"fatigue": 1.4, "bias": 0.05},
+       "steer": "hold", "throttle": 0.0, "action_primitive_ids": ["station"], "confidence": 0.4}
+    ]
+  },
+  "provenance": {"evidence_refs": ["P0001", "P0002", "P0003", "P0004", "P0005", "P0006", "P0007", "P0008", "P0009", "P0010", "P0039"], "license_refs": ["fishbase", "literature_primary", "inaturalist"]}
+}

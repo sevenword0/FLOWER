@@ -1,0 +1,10 @@
+source_id,license,derivative_use_allowed,redistribution_allowed,attribution_required,commercial_use,notes
+fishbase,CC-BY-NC 3.0,true,conditional,true,false,Non-commercial; attribute Froese & Pauly
+worms,CC-BY 4.0,true,true,true,true,Attribute WoRMS Editorial Board
+gbif,CC-BY 4.0,true,true,true,true,Per-record licenses vary; verify before redistribution
+morphosource,per-media,conditional,conditional,true,conditional,Check each media license + contributing institution
+obis,CC-BY 4.0,true,true,true,true,Attribute OBIS
+openalex,CC0,true,true,false,true,Public domain metadata
+literature_primary,per-publisher,parameters_only,false,true,false,Cite DOI; do not redistribute full text; parameters only
+inaturalist,CC0/CC-BY/CC-BY-NC,conditional,conditional,true,conditional,Filter by per-observation license
+artist_authored,project-internal,true,true,false,true,Lowest evidence tier

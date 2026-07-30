@@ -1,0 +1,115 @@
+# =============================================================================
+# ADAPTATION PROFILE: fish  (어류 / Actinopterygii-centric, extensible)
+# -----------------------------------------------------------------------------
+# Realizes the 13 functional slots (프롬프트 §2) for the fish clade. This file
+# is DATA, not code. The pipeline consumes it to build TAXON_ADAPTATION_MAP,
+# the functional module map, and source routing. No taxon literal lives in code.
+# =============================================================================
+profile_key: fish
+display_name: "어류"
+clade_scope:
+  primary: "Actinopterygii"          # ray-finned fishes (vertical-slice focus)
+  broader: ["Chondrichthyes", "Agnatha", "Sarcopterygii(aquatic)"]
+  note: >
+    Slice targets teleosts. Slots are written so cartilaginous/jawless taxa can
+    be added as morphotype/clade bases without schema change.
+
+# --- Coordinate system / rig strategy auto-selection --------------------------
+body_plan:
+  symmetry_type: bilateral
+  primary_axis: rostro_caudal          # +X snout->tail
+  dorsoventral_axis: +Y                # +Y dorsal
+  lateral_axis: +Z                     # +Z left (right-handed)
+  rig_strategy: spline_spine           # segmented body-axis spine + fin rays
+  normalized_scale_definition: >
+    Normalized by standard length (SL, snout to caudal peduncle end).
+    x in [0,1] rostro-caudal; y,z as fraction of SL.
+
+# --- 13 functional slots -> real fish structures (규칙: N/A allowed) ----------
+functional_slots:
+  1_identity_lifecycle:
+    structures: [species, population, sex, life_stage, size_class]
+    lifecycle: [egg, larva, juvenile, adult, senescent]
+  2_structural_support:
+    kind: endoskeleton
+    structures: [neurocranium, vertebral_column, ribs, fin_ray_supports_pterygiophores]
+    material_model: bone_cartilage
+  3_joints_linkages:
+    structures: [intervertebral_joints, cranial_kinesis, jaw_four_bar_linkage, fin_ray_base_joints]
+    linkage_types: [bend, rotation, four_bar_protrusion]
+  4_feeding_capture:
+    structures: [oral_jaws, premaxilla, maxilla, hyoid, opercular_suction, pharyngeal_jaws]
+    mechanism: suction_and_ram
+  5_actuation:
+    kind: striated_muscle
+    structures: [myomeres_red_white, epaxial_hypaxial, jaw_adductors, fin_ray_muscles]
+    proxy: contractile_segments
+  6_locomotion_structures:
+    structures: [caudal_fin, body_axis, paired_pectoral, paired_pelvic, dorsal_fin, anal_fin]
+    stabilizers: [median_fins]
+  7_core_physiology:
+    respiration: gills_opercular_pump
+    buoyancy: swim_bladder            # N/A for physoclist-lacking taxa -> density_control
+    osmoregulation: gill_kidney
+  8_surface_covering:
+    structures: [scales, mucus_layer, lateral_line_pores, dermal_denticles_NA]
+    microstructure: [scale_overlap, ctenii, circuli]
+  9_head_sensors_silhouette:
+    head: neurocranium_snout
+    eyes: paired_camera_eyes
+    other_sensors: [lateral_line, olfactory_rosette, inner_ear, taste_barbels]
+  10_optics_pattern:
+    mechanisms: [pigment_chromatophores, structural_iridophores, guanine_platelets, countershading]
+    angle_dependent: iridescence
+  11_behavior_movement:
+    modes: [foraging, schooling, predator_avoidance, resting, territorial, courtship, migration]
+  12_ecology_interactions:
+    axes: [depth, temperature, salinity, oxygen, flow, turbidity, substrate, cover]
+    roles: [predator, prey, competitor, cleaner_symbiont]
+  13_variation:
+    axes: [sex, life_stage, season, population, condition, size]
+
+# --- Morphotype registry (형태형; clusters for base reuse) --------------------
+morphotypes:
+  fusiform:       {swim_mode: subcarangiform, aspect: streamlined,  example: oncorhynchus_mykiss}
+  compressiform:  {swim_mode: labriform,      aspect: laterally_flat, example: reef_generic}
+  anguilliform:   {swim_mode: anguilliform,   aspect: elongate,     example: anguilla_generic}
+  fusiform_pelagic: {swim_mode: carangiform,   aspect: streamlined_schooling, example: clupea_harengus}
+  pipefish:       {swim_mode: dorsal_undulation, aspect: armored_elongate, example: hippocampus_kuda}
+  globiform_bathy: {swim_mode: lie_in_wait,    aspect: rounded_soft, example: melanocetus_johnsonii}
+
+# --- Locomotion vocabulary (BCF/MPF families) --------------------------------
+locomotion_families:
+  BCF: [anguilliform, subcarangiform, carangiform, thunniform, ostraciiform]  # body/caudal fin
+  MPF: [labriform, rajiform, diodontiform, amiiform, gymnotiform, tetraodontiform, dorsal_undulation]  # median/paired fin
+
+# --- Source routing (탐색 우선순위 §6). API/download > scraping (규칙 9) ------
+source_routing:
+  taxonomy_authority:
+    - {id: worms,     name: "WoRMS",            api: true,  scope: marine}
+    - {id: fishbase,  name: "FishBase",         api: true,  scope: fishes}
+    - {id: gbif,      name: "GBIF Backbone",    api: true,  scope: all}
+    - {id: itis,      name: "ITIS",             api: true,  scope: all}
+    - {id: col,       name: "Catalogue of Life",api: true,  scope: all}
+  morphometry_specimen:
+    - {id: morphosource, name: "MorphoSource CT/3D", api: true}
+    - {id: phenoscape,   name: "Phenoscape (anatomy ontology)", api: true}
+    - {id: idigbio,      name: "iDigBio specimens", api: true}
+  literature:
+    - {id: crossref,   name: "Crossref",  api: true}
+    - {id: openalex,   name: "OpenAlex",  api: true}
+    - {id: biodivlib,  name: "Biodiversity Heritage Library", api: true}
+  ontology:
+    - {id: uberon,     name: "Uberon (with fish/AAO bridges)", api: true}
+    - {id: aao,        name: "Amphibian/Anatomy ontologies bridge", api: true}
+  occurrence_behavior:
+    - {id: obis,       name: "OBIS occurrence", api: true}
+    - {id: gbif_occ,   name: "GBIF occurrences", api: true}
+    - {id: movebank,   name: "Movebank telemetry", api: true}
+  media:
+    - {id: inaturalist, name: "iNaturalist (CC media)", api: true, license_filter: [CC0, CC-BY, CC-BY-NC]}
+
+# --- Anatomy ontology anchor (crosswalk root) --------------------------------
+ontology_anchor:
+  root: "UBERON:0000468"   # multicellular organism
+  fish_bridge: "phenoscape/anatomy"

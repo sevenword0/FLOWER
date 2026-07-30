@@ -1,0 +1,5 @@
+taxon_id,accepted_scientific_name,rank,common_name_ko,common_name_en,class,order,family,worms_or_gbif_id,synonyms,morphotype,source_ids
+oncorhynchus_mykiss,Oncorhynchus mykiss,species,무지개송어,Rainbow trout,Actinopteri,Salmoniformes,Salmonidae,gbif:5204019,Salmo gairdneri;Salmo mykiss,fusiform,worms;gbif;fishbase
+hippocampus_kuda,Hippocampus kuda,species,점해마,Spotted seahorse,Actinopteri,Syngnathiformes,Syngnathidae,worms:212235,Hippocampus aterrimus;Hippocampus taeniopterus,pipefish,worms;gbif;fishbase
+clupea_harengus,Clupea harengus,species,대서양청어,Atlantic herring,Actinopteri,Clupeiformes,Clupeidae,worms:126417,Clupea harengus harengus,fusiform_pelagic,worms;gbif;fishbase
+melanocetus_johnsonii,Melanocetus johnsonii,species,험프백아귀,Humpback anglerfish,Actinopteri,Lophiiformes,Melanocetidae,worms:217744,Melanocetus krechi,globiform_bathy,worms;gbif;fishbase

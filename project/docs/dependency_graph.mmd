@@ -1,0 +1,37 @@
+%% Multi-agent dependency graph (프롬프트 A00). Render with any Mermaid viewer.
+graph TD
+    CFG[config/target_taxon.yaml<br/>ONE literal] --> PROF[adaptation_profiles/*.yaml<br/>TAXON_ADAPTATION_MAP]
+    PROF --> TP[taxon_profile.py]
+    TP --> MM[functional_module_map.yaml]
+    TP --> ROUTE[source routing]
+
+    A01[A01 taxonomy] --> LEDGER
+    A02[A02 literature] --> LEDGER[evidence_ledger.csv]
+    LEDGER --> PRESET
+    PROF --> BASES[clade + morphotype bases]
+    BASES --> PRESET[species presets]
+
+    PRESET --> COMPILE[preset_compiler.py<br/>Clade+Morpho+Delta+Context+Seed]
+    COMPILE --> GEO[geometry.py<br/>mesh/rig/material]
+    COMPILE --> LOCO[locomotion.py]
+    COMPILE --> BEH[behavior.py]
+    COMPILE --> SENS[sensory.py]
+
+    SENS --> ECO[ecosystem.py]
+    BEH --> ECO
+    LOCO --> ECO
+    GEO --> LODM[lod.py<br/>Hero/Standard/Crowd/Far]
+    ECO --> LODM
+
+    SCHEMA[schemas/*.json] --> VAL[validate.py]
+    COMPILE --> VAL
+    LEDGER --> VAL
+    VAL --> TESTS[pytest gates G2..G9]
+    ECO --> TESTS
+    GEO --> TESTS
+    TP --> TESTS
+
+    classDef contract fill:#e3f2fd,stroke:#1565c0;
+    classDef code fill:#e8f5e9,stroke:#2e7d32;
+    class CFG,PROF,SCHEMA,LEDGER contract;
+    class TP,COMPILE,GEO,LOCO,BEH,SENS,ECO,LODM,VAL code;

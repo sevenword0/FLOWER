@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://biogen.local/schemas/joint.schema.json",
+  "title": "Joint",
+  "description": "Joint / linkage DOF object (프롬프트 §8). Angles in rad, speeds in rad/s.",
+  "type": "object",
+  "required": ["joint_id", "parent_part_id", "child_part_id", "degrees_of_freedom"],
+  "additionalProperties": true,
+  "properties": {
+    "joint_id": {"type": "string"},
+    "parent_part_id": {"type": "string"},
+    "child_part_id": {"type": "string"},
+    "origin_normalized": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+    "local_frame": {"type": "object"},
+    "degrees_of_freedom": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "axis", "min", "max", "neutral"],
+        "properties": {
+          "type": {"enum": ["rotation", "translation", "bend", "stretch", "other"]},
+          "axis": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3},
+          "min": {"type": "number"},
+          "max": {"type": "number"},
+          "neutral": {"type": "number"},
+          "max_speed": {"type": "number", "minimum": 0},
+          "stiffness": {"type": "number", "minimum": 0},
+          "damping": {"type": "number", "minimum": 0}
+        }
+      }
+    },
+    "coupled_joint_ids": {"type": "array", "items": {"type": "string"}},
+    "collision_limits": {"type": "array"},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  }
+}
