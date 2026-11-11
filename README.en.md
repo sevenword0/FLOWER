@@ -44,11 +44,11 @@ Each preset follows the structure and opening behaviour of the real flower.
 
 | Preset | Structure | How it opens |
 | --- | --- | --- |
-| Rose | About 30 petals in an overlapping spiral, 5 sepals | Outer petals reflex first while the core stays cupped |
+| Rose | Several whorls of petals in an overlapping spiral, 5 sepals | Outer petals reflex first while the core stays cupped |
 | Daisy | One whorl of 21 narrow ray florets around a disc of disc florets | Spreads flat |
 | Sunflower | Pointed ray florets around a large golden-angle spiral disc | From the rim inward |
 | Tulip | 6 tepals in two whorls of 3, 6 stamens | Stays cup-shaped and opens only slightly |
-| Lily | 6 tepals in two whorls of 3, long stamens and pistil | Tips reflex strongly backward |
+| Lily | 6 tepals in two whorls of 3, long stamens and pistil | Spreads wide with the tips reflexed back |
 | Lotus | Several whorls of broad petals around a central seed pod ringed by stamens | Whorl by whorl from the outside |
 | Cherry blossom | 5 notched petals, many slender stamens | All together, wide open |
 | Dahlia | Dense spiral of petals, quilled into tubes | From the outside inward |
