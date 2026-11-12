@@ -225,7 +225,7 @@
 
 <div id="err"><div class="box">
   <h2>WebGPU를 사용할 수 없습니다</h2>
-  <p id="errMsg">이 브라우저는 WebGPU를 지원하지 않습니다. <b>Chrome / Edge 113+</b> 또는 <b>Safari 18+</b>에서 열어주세요. (<code>navigator.gpu</code> 필요)</p>
+  <p id="errMsg">이 브라우저는 WebGPU를 지원하지 않습니다. <b>Chrome / Edge 113+</b>, <b>Safari 26+</b>, <b>Firefox 141+ (Windows)</b>에서 열어주세요. (<code>navigator.gpu</code> 필요)</p>
 </div></div>
 
 <script type="module">
@@ -305,7 +305,7 @@ function P(o) {
     hue: 330, sat: 0.7, light: 0.62, hueTipShift: 18, tipLight: 0.18,
     notch: 0, quill: 0, tipRound: 0.6, sizeBias: 0.45, petalShape: 0.5,  // tip/size + widest-point (ovate↔obovate)
     rotX: 0, rotY: 0, rotZ: 0, heightBias: 0, openBias: 0.45, petalLayer: 0.2,  // rotation + vertical/spread deviation + depth shingle
-    sepals: 0, sepalLen: 0.55, sepalWidth: 0.42, sepalOpen: 1.95, sepalHue: 125, sepalSat: 0.55, sepalLight: 0.36,  // calyx
+    budBelly: 1, budWidth: 0.62, budLen: 0.5, stamenWid: 0.05, pistilWid: 0.07, sepals: 0, sepalLen: 0.55, sepalWidth: 0.42, sepalOpen: 1.95, sepalHue: 125, sepalSat: 0.55, sepalLight: 0.36,  // calyx
     floret: 0, floretCount: 0, floretRadius: 0.12, floretDome: 0.06, discRing: 0,
     floretHue: 48, floretSat: 0.8, floretLight: 0.45,
     // reproductive whorls (stamens + pistil) — distinct per species
@@ -331,28 +331,28 @@ function P(o) {
 const PRESETS = {
   // Rose: heteroclamydeous, many petals in a tight quincuncial SPIRAL; opens
   // outer-first by adaxial (inner-surface) growth → outer petals reflex while core stays cupped.
-  '장미 (Rose)':        P({ petalCount: 30, whorls: 6, petalLength: 1.0, petalWidth: 0.85, cup: 1.5, recurve: 0.3, openAngle: 1.0, widthPow: 1.2, petalShape: 0.63, hue: 348, sat: 0.78, light: 0.55, spiral: 1, bloomStagger: 0.5, ruffle: 0.18, stamens: 18, stamenLen: 0.22, stamenRadius: 0.04, antherHue: 48, pistil: 1, pistilLen: 0.16, sepals: 5, sepalLen: 0.7 }),
+  '장미 (Rose)':        P({ petalLayer: 0.25, sizeBias: 0.9, openBias: 1.2, petalCount: 6, whorls: 6, petalLength: 1.0, petalWidth: 0.95, cup: 1.5, recurve: 0.2, openAngle: 0.95, widthPow: 0.95, tipRound: 1.0, petalShape: 0.63, budLen: 0.55,  hue: 348, sat: 0.78, light: 0.55, spiral: 1, bloomStagger: 0.5, ruffle: 0.07, stamens: 18, stamenLen: 0.22, stamenRadius: 0.04, antherHue: 48, pistil: 1, pistilLen: 0.16, sepals: 5, sepalLen: 0.75 }),
   // Daisy (Asteraceae capitulum): ONE whorl of ~21 ligulate ray florets (flat, notched
   // tip) around a disc of hundreds of tiny disc florets opening outer→inward.
-  '데이지 (Daisy)':     P({ petalCount: 21, whorls: 1, petalLength: 1.25, petalWidth: 0.32, cup: 0.2, recurve: 0.4, openAngle: 1.5, widthPow: 1.7, petalShape: 0.56, notch: 0.18, hue: 52, sat: 0.05, light: 0.97, tipLight: 0.0, floret: 1, floretCount: 260, floretRadius: 0.34, floretDome: 0.1, floretHue: 46, floretSat: 0.95, floretLight: 0.5, bloomStagger: 0.22, jitter: 0.02 }),
+  '데이지 (Daisy)':     P({ petalCount: 21, whorls: 1, petalLength: 1.25, petalWidth: 0.32, cup: 0.2, recurve: 0.2, openAngle: 1.45, openBias: 0, widthPow: 1.7, petalShape: 0.56, notch: 0.18, budBelly: 0.3, budWidth: 0.8, budLen: 0.6, hue: 52, sat: 0.05, light: 0.97, tipLight: 0.0, floret: 1, floretCount: 260, floretRadius: 0.34, floretDome: 0.1, floretHue: 46, floretSat: 0.95, floretLight: 0.5, bloomStagger: 0.22, jitter: 0.02 }),
   // Sunflower: huge capitulum, ~21 pointed ray florets + Fermat-spiral disc
   // (golden angle, 34/55 parastichy) maturing from the rim inward.
-  '해바라기 (Sunflower)':P({ petalCount: 34, whorls: 2, petalLength: 1.35, petalWidth: 0.4, cup: 0.3, recurve: 0.35, openAngle: 1.35, widthPow: 1.7, petalShape: 0.52, hue: 44, sat: 0.95, light: 0.6, floret: 1, floretCount: 620, floretRadius: 0.62, floretDome: 0.16, discRing: 0.4, floretHue: 28, floretSat: 0.7, floretLight: 0.28, baseRadius: 0.55, bloomStagger: 0.3, stemLen: 2.8 }),
+  '해바라기 (Sunflower)':P({ sizeBias: 0, petalCount: 32, whorls: 1, petalLength: 1.0, petalWidth: 0.4, cup: 0.3, recurve: 0.25, openAngle: 1.4, openBias: 0, widthPow: 1.7, petalShape: 0.52, budBelly: 0.3, budWidth: 0.8, budLen: 0.6, hue: 44, sat: 0.95, light: 0.52, floret: 1, floretCount: 520, floretRadius: 0.48, floretDome: 0.16, discRing: 0.4, floretHue: 24, floretSat: 0.65, floretLight: 0.16, baseRadius: 0.42, bloomStagger: 0.3, stemLen: 2.8 }),
   // Tulip: monocot, 6 tepals in 2 trimerous whorls (3+3), nyctinastic CUP that
   // opens only slightly; 6 stamens + 3-lobed pistil inside.
-  '튤립 (Tulip)':       P({ petalCount: 3, whorls: 2, petalLength: 1.15, petalWidth: 0.82, cup: 1.7, recurve: -0.15, openAngle: 0.62, widthPow: 1.1, petalShape: 0.44, hue: 350, sat: 0.82, light: 0.55, spiral: 0, bloomStagger: 0.25, jitter: 0, ruffle: 0.03, leaves: 2, stamens: 6, stamenLen: 0.34, stamenSpread: 0.18, antherHue: 50, antherLight: 0.35, pistil: 1, pistilLen: 0.4, pistilHue: 80 }),
+  '튤립 (Tulip)':       P({ sizeBias: 0.05, openBias: 0.05, petalCount: 3, whorls: 2, petalLength: 1.15, petalWidth: 0.82, cup: 1.0, recurve: -0.1, openAngle: 0.42, budWidth: 0.95, budLen: 0.7, widthPow: 1.1, petalShape: 0.44, hue: 350, sat: 0.82, light: 0.55, spiral: 0, bloomStagger: 0.25, jitter: 0, ruffle: 0.03, leaves: 2, stamens: 6, stamenLen: 0.34, stamenSpread: 0.18, antherHue: 50, antherLight: 0.35, pistil: 1, pistilLen: 0.4, pistilHue: 80 }),
   // Lily: monocot, 6 tepals (3+3); edges WRINKLE and tepals strongly REFLEX as it
   // opens (differential growth); 6 prominent stamens + long 3-lobed pistil.
-  '백합 (Lily)':        P({ petalCount: 3, whorls: 2, petalLength: 1.7, petalWidth: 0.5, cup: 0.55, baseCurl: 0.4, tipCurl: 2.45, openAngle: 1.6, widthPow: 1.3, petalShape: 0.4, hue: 16, sat: 0.55, light: 0.78, tipLight: -0.15, spiral: 0, bloomStagger: 0.18, jitter: 0.01, ruffle: 0.18, stamens: 6, stamenLen: 0.6, stamenSpread: 0.7, antherHue: 24, antherSat: 0.85, antherLight: 0.32, pistil: 1, pistilLen: 0.7, pistilHue: 70 }),
+  '백합 (Lily)':        P({ pistilWid: 0.12, stamenWid: 0.1, petalCount: 3, whorls: 2, petalLength: 1.45, petalWidth: 0.5, cup: 0.55, baseCurl: 0.1, midCurl: 0.4, tipCurl: 1.5, openAngle: 0.9, budBelly: 0.5, budWidth: 0.85, budLen: 0.75, widthPow: 1.3, petalShape: 0.4, hue: 26, sat: 0.9, light: 0.46, tipLight: 0.17, spiral: 0, bloomStagger: 0.18, jitter: 0.01, ruffle: 0.18, stamens: 6, stamenLen: 0.55, stamenSpread: 0.7, antherHue: 24, antherSat: 0.85, antherLight: 0.32, pistil: 1, pistilLen: 0.65, pistilHue: 70 }),
   // Lotus: many broad pointed petals in several whorls around a flat central
   // RECEPTACLE (seed pod) ringed by stamens.
-  '연꽃 (Lotus)':       P({ petalCount: 18, whorls: 4, petalLength: 1.3, petalWidth: 0.78, cup: 1.0, recurve: 0.55, openAngle: 1.15, widthPow: 1.25, petalShape: 0.58, hue: 338, sat: 0.42, light: 0.82, tipLight: -0.22, floret: 1, floretCount: 80, floretRadius: 0.2, floretDome: -0.05, discRing: 1.0, floretHue: 70, floretSat: 0.5, floretLight: 0.55, stamens: 40, stamenLen: 0.26, stamenRadius: 0.26, stamenSpread: 0.2, antherHue: 50, bloomStagger: 0.45, sepals: 4, sepalLen: 0.6, sepalHue: 135 }),
+  '연꽃 (Lotus)':       P({ budLen: 0.6, budBelly: 0.55, spiral: 0, baseRadius: 0.4, petalCount: 8, whorls: 3, petalLength: 0.95, petalWidth: 0.85, cup: 1.0, recurve: 0.1, openAngle: 0.9, openBias: 0.85, sizeBias: 0.8, widthPow: 1.25, tipRound: 0.3, petalShape: 0.58, hue: 338, sat: 0.42, light: 0.82, tipLight: -0.22, floret: 1, floretCount: 80, floretRadius: 0.2, floretDome: -0.05, discRing: 1.0, floretHue: 70, floretSat: 0.5, floretLight: 0.55, stamens: 40, stamenLen: 0.26, stamenRadius: 0.26, stamenSpread: 0.2, antherHue: 50, bloomStagger: 0.45, sepals: 4, sepalLen: 0.6, sepalHue: 135 }),
   // Cherry blossom: pentamerous, 5 obovate petals with a NOTCHED (bilobed) tip;
   // many slender stamens with yellow anthers + single pistil.
-  '벚꽃 (Cherry)':      P({ petalCount: 5, whorls: 1, petalLength: 1.0, petalWidth: 0.85, cup: 0.7, recurve: 0.35, openAngle: 1.3, widthPow: 0.8, petalShape: 0.64, notch: 0.5, hue: 342, sat: 0.32, light: 0.92, tipLight: 0.06, spiral: 0, bloomStagger: 0.18, jitter: 0.03, stamens: 32, stamenLen: 0.4, stamenRadius: 0.06, stamenSpread: 0.6, antherHue: 50, antherLight: 0.5, pistil: 1, pistilLen: 0.42, leaves: 2, sepals: 5, sepalLen: 0.5, sepalHue: 110 }),
+  '벚꽃 (Cherry)':      P({ petalCount: 5, whorls: 1, petalLength: 1.0, petalWidth: 0.85, cup: 0.7, recurve: 0.1, openAngle: 1.15, widthPow: 0.8, petalShape: 0.64, notch: 0.5, hue: 342, sat: 0.66, light: 0.84, tipLight: 0.06, spiral: 0, bloomStagger: 0.18, jitter: 0.03, stamens: 32, stamenLen: 0.4, stamenRadius: 0.06, stamenSpread: 0.6, antherHue: 50, antherLight: 0.5, pistil: 1, pistilLen: 0.42, leaves: 2, sepals: 5, sepalLen: 0.5, sepalHue: 110 }),
   // Dahlia: dense spiral of ray florets, the outer ones often QUILLED (rolled
   // into tubes, "cactus" form); blooms outer→in.
-  '달리아 (Dahlia)':    P({ petalCount: 44, whorls: 7, petalLength: 0.95, petalWidth: 0.42, cup: 1.2, recurve: 0.2, openAngle: 1.05, widthPow: 1.9, petalShape: 0.6, quill: 1.4, hue: 300, sat: 0.7, light: 0.55, spiral: 1, bloomStagger: 0.55, ruffle: 0.06, jitter: 0.04 }),
+  '달리아 (Dahlia)':    P({ petalCount: 44, whorls: 7, petalLength: 0.95, petalWidth: 0.42, cup: 1.2, recurve: 0.1, openAngle: 0.9, openBias: 1.0, widthPow: 1.9, petalShape: 0.6, quill: 1.4, hue: 300, sat: 0.7, light: 0.55, spiral: 1, bloomStagger: 0.55, ruffle: 0.06, jitter: 0.04 }),
 };
 const PRESET_NAMES = Object.keys(PRESETS);
 
@@ -415,6 +415,7 @@ struct Petal {
   f : vec4<f32>,  // ruffleAmt, ruffleN, twist, petalShape (widest-point)
   g : vec4<f32>,  // notch (bilobed tip), quill (rolled tube), tipCurl, tipRound
   h : vec4<f32>,  // midCurl, rotX, rotY, rotZ
+  i : vec4<f32>,  // budWidth, budLen, _, _ (closed-state shape of petals)
 };
 @group(0) @binding(0) var<uniform> U : Globals;
 @group(0) @binding(1) var<storage, read> petals : array<Petal>;
@@ -458,7 +459,12 @@ fn deform(Pp : Petal, u : f32, v : f32) -> vec3<f32> {
   let roundedPow = select(r1, r2, tipRound > 1.0);
   let effPow = mix(widthPow, roundedPow, smoothstep(0.62, 1.0, v));
   let prof = pow(sin(PI * clamp(vr, 0.0, 1.0)), effPow);
-  let hw = prof * widS * 0.5;
+  // kind 0 = petal, 0.25 = sepal (both 'petal-like'); others keep the legacy closed shape
+  let isPetal = Pp.d.w < 0.5;
+  let isSepal = isPetal && Pp.d.w > 0.1;
+  // closed (bud) width: petals are narrower so they wrap into an ovoid; grow to 1x when open
+  let widF = select(1.0, mix(select(Pp.i.x, 0.8, isSepal), 1.0, bloom), isPetal);
+  let hw = prof * widS * 0.5 * widF;
   let cup = mix(cupC, cupO, bloom);
 
   var lx : f32; var lz : f32;
@@ -473,9 +479,10 @@ fn deform(Pp : Petal, u : f32, v : f32) -> vec3<f32> {
     lz = 0.0;                                   // cup is applied last (see below)
   }
   // petal edges wrinkle/ruffle more as the flower opens (differential growth)
-  lz = lz + ruffA * sin(u * PI * ruffN) * v * mix(0.4, 1.0, bloom);
+  lz = lz + ruffA * sin(u * PI * ruffN) * v * mix(0.15, 1.0, bloom);
 
-  var ly = v * lenS * mix(0.16, 1.0, bloom);
+  // closed length: legacy 0.16x (pancake) for non-petals, ~0.5x (sepal 0.9x) for a real bud
+  var ly = v * lenS * mix(select(0.16, select(Pp.i.y, 0.9, isSepal), isPetal), 1.0, bloom);
   // bilobed / notched tip (e.g. cherry blossom)
   ly = ly - notch * smoothstep(0.72, 1.0, v) * (1.0 - min(abs(su) * 2.0, 1.0)) * 0.45 * lenS;
 
@@ -486,34 +493,63 @@ fn deform(Pp : Petal, u : f32, v : f32) -> vec3<f32> {
   let tz2 = lx * stw + lz * ctw;
   lx = tx; lz = tz2;
 
-  // lengthwise bend: strong inward curl when closed; at full bloom bend(v) is the
-  // integral of a curvature defined by a 3-point curve — base / mid / tip angles.
+  // lengthwise bend (3-point curve at full bloom: base / mid / tip angles)
   let bendOpen = baseCurl * (0.6666667 * v * v * v - 1.5 * v * v + v)
                + midCurl  * (2.0 * v * v - 1.3333333 * v * v * v)
                + tipCurl  * (0.6666667 * v * v * v - 0.5 * v * v);
-  let bend = mix(2.7 * v, bendOpen, bloom);
-  let cb = cos(bend); let sb = sin(bend);
-  let by = ly * cb - lz * sb;
-  let bz = ly * sb + lz * cb;
-  ly = by; lz = bz;
-
-  // tilt (pitch about X): length axis swings from up(+Y) toward out(+Z)
-  let tilt = mix(tiltC, tiltO, bloom);
-  let ct = cos(tilt); let st = sin(tilt);
-  var py = ly * ct - lz * st;
-  var pz = ly * st + lz * ct;
-
-  // cup (말림) applied LAST — a clean transverse fold along the petal's tilt normal,
-  // after width / notch / lengthwise curl / tilt, so the curl no longer distorts it.
-  // cupAxis rotates the fold coordinate between width (0) and length (π/2).
   let cupAxis = U.petalG.x;
   let sv = v - 0.5;
   let cax = cos(cupAxis); let sax = sin(cupAxis);
   let coord = su * cax + sv * sax;
   let widthFac = mix(prof, 0.6, sax * sax);          // keep base thin for the width fold
-  let cupDisp = cup * (coord * coord) * widthFac * mix(0.22, 1.0, bloom);
-  py = py - cupDisp * st;
-  pz = pz + cupDisp * ct;
+
+  var py : f32; var pz : f32;
+  if (isPetal) {
+    // Polar placement in the (y,z) plane, frame: +Y up, +Z radially outward.
+    // angle theta is measured from +Y toward +Z (0 = vertical, pi/2 = horizontal,
+    // >pi/2 = reflexed downward). tilt + bend are merged into one per-vertex angle.
+    // CLOSED: rises from the receptacle, bellies outward (theta0 = tiltC) then curves
+    // INWARD so tips converge near the axis -> ovoid bud. Tip angle from the closed
+    // petal length Lc and base radius R:  -asin(0.85 R / Lc).
+    let Lc = max(lenS * select(Pp.i.y, 0.9, isSepal), 0.05);
+    let R = Pp.a.y;
+    let thTip = -asin(clamp(0.85 * R / Lc, 0.0, 0.95));
+    let thClosed = mix(tiltC, thTip, smoothstep(0.12, 0.98, v));
+    let thOpen = tiltO + bendOpen;
+    // OPEN shape: polar placement + transverse cup fold toward the ADAXIAL (inner) face
+    // (+sin th, -cos th): edges curl up / toward the axis.
+    let cO = cos(thOpen); let sO = sin(thOpen);
+    let cupDisp = cup * (coord * coord) * widthFac;
+    let oy = ly * cO - lz * sO + cupDisp * sO;
+    let oz = ly * sO + lz * cO - cupDisp * cO;
+    // CLOSED shape: true cylindrical wrap about the flower axis. Rl = distance of the
+    // petal centreline from the axis at this v; lateral offset lx becomes an arc angle,
+    // so buds are clean ovoids and edges never cross the axis.
+    let cC = cos(thClosed); let sC = sin(thClosed);
+    let cy0 = ly * cC;
+    let cz0 = ly * sC;
+    let Rl = max(R + cz0 + lz, 0.02 + 0.25 * R);
+    let phi = clamp(lx / Rl, -2.6, 2.6);
+    let wx = Rl * sin(phi);
+    let wz = Rl * cos(phi) - R;
+    py = mix(cy0, oy, bloom);
+    pz = mix(wz, oz, bloom);
+    lx = mix(wx, lx, bloom);
+  } else {
+    // legacy behaviour for florets / leaves / stamens / pistil
+    let bend = mix(2.7 * v, bendOpen, bloom);
+    let cb = cos(bend); let sb = sin(bend);
+    let by = ly * cb - lz * sb;
+    let bz = ly * sb + lz * cb;
+    ly = by; lz = bz;
+    let tilt = mix(tiltC, tiltO, bloom);
+    let ct = cos(tilt); let st = sin(tilt);
+    py = ly * ct - lz * st;
+    pz = ly * st + lz * ct;
+    let cupDisp = cup * (coord * coord) * widthFac * mix(0.22, 1.0, bloom);
+    py = py - cupDisp * st;
+    pz = pz + cupDisp * ct;
+  }
 
   return vec3<f32>(lx, py, pz);   // shape only (base offset added by caller)
 }
@@ -551,10 +587,9 @@ fn vs(@location(0) uv : vec2<f32>, @builtin(instance_index) inst : u32) -> VSOut
   let rp = rot3(p0, Pp.h.y, Pp.h.z, Pp.h.w);
   let rn = rot3(nLocal, Pp.h.y, Pp.h.z, Pp.h.w);
 
-  // petals (kind 0) bloom Y-inverted by default so buds close upward and open
-  // petals flare downward-out; other parts keep their orientation. User flip on top.
-  let isPetal = Pp.d.w < 0.5;
-  let fy = select(fl.y, -fl.y, isPetal);
+  // no default Y inversion any more: all kinds use the unflipped frame; the flip
+  // buttons are plain user toggles.
+  let fy = fl.y;
 
   // mirror about the base/local axes, re-anchor at the base, then azimuth-rotate.
   let base = vec3<f32>(0.0, Pp.a.z, Pp.a.y);   // (0, heightBase, radius)
@@ -606,18 +641,24 @@ fn fs(in : VSOut) -> GOut {
   // subsurface back-light glow (thin translucent petals)
   let trans = pow(max(dot(-N, L), 0.0), 2.5) * 0.45;
 
-  var col = albedo * (amb * (0.45 + U.lightDir.w) + NoL * 0.95 + trans);
+  // neutral fill independent of the background so shaded faces keep colour on dark
+  // backgrounds; faded out on bright backgrounds so they do not blow out.
+  let ambL = dot(amb, vec3<f32>(0.3, 0.55, 0.15));
+  let fill = vec3<f32>(0.20, 0.20, 0.22) * (0.6 + 0.4 * (N.y * 0.5 + 0.5)) * (1.0 - clamp(ambL * 1.8, 0.0, 0.8));
+  var col = albedo * (amb * (0.45 + U.lightDir.w) + fill + NoL * 0.95 + trans);
 
   // GGX microfacet specular
   let specAmt = U.params.w;
-  let rough = clamp(1.0 - specAmt, 0.06, 1.0);
+  // slider -> roughness: broad soft sheen at mid values, tight highlight at 1
+  let rough = mix(0.7, 0.16, pow(specAmt, 0.7));
   let a2 = rough * rough * rough * rough;
   let dd = NoH * NoH * (a2 - 1.0) + 1.0;
   let D = a2 / (PI * dd * dd);
   let Fr = 0.04 + 0.96 * pow(1.0 - VoH, 5.0);
   let Vis = 0.5 / max(NoL + NoV, 1e-3);
   let spec = D * Fr * Vis * NoL;
-  col = col + vec3<f32>(spec) * (0.5 + 1.5 * specAmt);
+  let sheen = pow(NoH, mix(3.0, 30.0, specAmt)) * max(NoL, 0.15) * 1.3;   // broad lobe (not plastic-sharp)
+  col = col + vec3<f32>(spec * 5.0 + sheen) * specAmt * (0.7 + 0.8 * specAmt);
 
   // fresnel rim picks up sky colour
   let rim = pow(1.0 - NoV, 4.0) * 0.25;
@@ -670,7 +711,9 @@ fn fs(in : VSOut) -> GOut {
   let L = normalize(U.lightDir.xyz);
   let diff = max(dot(n, L), 0.0);
   let amb = mix(U.bgBot.rgb, U.bgTop.rgb, n.y * 0.5 + 0.5);
-  var col = SU.rgb * (amb * (0.4 + U.lightDir.w) + diff * 0.85);
+  let ambL = dot(amb, vec3<f32>(0.3, 0.55, 0.15));
+  let fill = vec3<f32>(0.20, 0.20, 0.22) * (0.6 + 0.4 * (n.y * 0.5 + 0.5)) * (1.0 - clamp(ambL * 1.8, 0.0, 0.8));
+  var col = SU.rgb * (amb * (0.4 + U.lightDir.w) + fill + diff * 0.85);
   var o : GOut;
   o.color  = vec4<f32>(col, 1.0);
   o.normal = vec4<f32>(n, 1.0);
@@ -874,7 +917,7 @@ async function main() {
   device.queue.writeBuffer(stemIB, 0, stemMesh.idx);
   const stemIdxCount = stemMesh.idx.length;
 
-  const FLOATS_PER_INST = 32;          // 8 vec4
+  const FLOATS_PER_INST = 36;          // 9 vec4
   const MAX_INST = 4096;
   const instData = new Float32Array(MAX_INST * FLOATS_PER_INST);
   const instBuf = device.createBuffer({ size: instData.byteLength, usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST });
@@ -979,7 +1022,7 @@ async function main() {
   window.addEventListener('resize', resize);
 
   /* --- scene / camera state --- */
-  const cam = { yaw: 0.6, pitch: 0.18, dist: 6.2, tx: 0, ty: -0.2 };
+  const cam = { yaw: 0.6, pitch: 0.4, dist: 6.8, tx: 0, ty: 0.1 };
   const BGS = [
     [[0.04,0.05,0.10],[0.01,0.01,0.03]],   // midnight
     [[0.55,0.45,0.55],[0.16,0.12,0.22]],   // dawn
@@ -1005,7 +1048,11 @@ async function main() {
   function buildInstances() {
     const p = cur;
     let n = 0;
-    const set = (i, arr) => instData.set(arr, i * FLOATS_PER_INST);
+    const set = (i, arr) => {
+      instData.set(arr, i * FLOATS_PER_INST);
+      instData[i * FLOATS_PER_INST + 32] = p.budWidth; instData[i * FLOATS_PER_INST + 33] = p.budLen;
+      instData[i * FLOATS_PER_INST + 34] = 0;   instData[i * FLOATS_PER_INST + 35] = 0;
+    };
     const colBase = hsl2rgb(p.hue, p.sat, p.light);
     const colTip = hsl2rgb(p.hue + p.hueTipShift, p.sat * 0.9, clamp(p.light + p.tipLight, 0.05, 1));
 
@@ -1023,13 +1070,15 @@ async function main() {
         // center↔outer vertical position deviation: + raises the center (dome/cone)
         // petalLayer: continuous depth ramp per petal (w + i/perW) so overlapping
         // petals shingle in depth instead of intersecting in the same plane.
-        const hBase = 0.02 + wf * 0.04 + p.heightBias * (0.5 - wf) * 0.7
-                    + p.petalLayer * (w + i / perW) * 0.18;
+        // outer whorls attach LOWER than inner ones (upward-opening flower): the old
+        // stacking raised outer whorls (it suited the Y-flipped look).
+        const hBase = 0.02 + (1 - wf) * 0.04 + p.heightBias * (0.5 - wf) * 0.7
+                    + p.petalLayer * (whorls - w - i / perW) * 0.18;
         // center↔outer size deviation: + outer larger, − inner larger, 0 uniform
         const sizeF = 1 + p.sizeBias * (wf - 0.5);
         const lenS = p.petalLength * sizeF * sizeJ;
         const widS = p.petalWidth * (1 + p.sizeBias * (wf - 0.5) * 0.6);
-        const tiltC = 0.12 + 0.10 * (1 - wf);
+        const tiltC = (0.22 + 0.5 * wf) * p.budBelly;   // closed base angle: belly of the bud
         // center↔outer spread deviation: + outer opens more, − center opens more
         const tiltO = p.openAngle * (0.925 + p.openBias * (wf - 0.5));
         const cupC = clamp(p.cup * 1.15, 0, 5);
@@ -1089,7 +1138,7 @@ async function main() {
         const delay = clamp(0.22 + 0.16 * hash(i, seed + 5), 0, 0.8);
         set(n++, [
           a, radius, 0.04, 0.05,
-          p.stamenSpread, p.stamenLen, 0.05, 0.25,
+          p.stamenSpread, p.stamenLen, p.stamenWid, 0.25,
           0.05, 0.02, delay, clamp(1 - delay, 0.2, 1),
           fil[0], fil[1], fil[2], 3,
           ant[0], ant[1], ant[2], 1.6,
@@ -1106,7 +1155,7 @@ async function main() {
       const pt = hsl2rgb(p.pistilHue, p.pistilSat * 0.8, clamp(p.pistilLight + 0.12, 0, 1));
       set(n++, [
         0, 0.0, 0.04, 0.0,
-        0.0, p.pistilLen, 0.07, 0.1,
+        0.0, p.pistilLen, p.pistilWid, 0.1,
         0.05, 0.02, 0.2, 0.8,
         pc[0], pc[1], pc[2], 4,
         pt[0], pt[1], pt[2], 1.3,
@@ -1153,10 +1202,10 @@ async function main() {
       for (let i = 0; i < sc && n < MAX_INST; i++) {
         const az = (i / sc) * Math.PI * 2 + 0.3;
         set(n++, [
-          az, p.baseRadius * 1.1, -0.012, 0.18,
+          az, p.baseRadius * 1.1, -0.012, 0.55 * p.budBelly,
           p.sepalOpen, p.sepalLen, p.sepalWidth, 0.5,
           0.5, 0.18, 0.0, 0.6,
-          sb[0], sb[1], sb[2], 0,
+          sb[0], sb[1], sb[2], 0.25,
           st[0], st[1], st[2], 1.7,
           0.05, 5, 0, 0.4,
           0, 0, 0.7, 0.3,
@@ -1170,15 +1219,25 @@ async function main() {
   }
 
   /* --- uniforms --- */
+  let viewShift = 0;
   const viewProj = new Float32Array(16);
   const proj = new Float32Array(16), view = new Float32Array(16);
   const uboF32 = new Float32Array(uboSize / 4);
   function updateUniforms(bloom, time) {
     const aspect = canvas.width / Math.max(1, canvas.height);
     M.perspective(proj, 0.8, aspect, 0.05, 100);
+    // when the side panel is open on a wide viewport, shift the view right so the flower
+    // is centred in the free area (panel + margins = 324 px). Goes into the projection
+    // (ndc.x += shift) so the G-buffer, the composite reprojection and the shadow march
+    // all share the same viewProj.
+    const wantShift = (!$('panel').classList.contains('collapsed') && window.innerWidth >= 720) ? 324 / Math.max(1, canvas.clientWidth) : 0;
+    viewShift += (wantShift - viewShift) * 0.25;
+    if (Math.abs(wantShift - viewShift) < 1e-4) viewShift = wantShift;
+    proj[8] = -viewShift;
     const cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
     const cy = Math.cos(cam.yaw), sy = Math.sin(cam.yaw);
-    const eye = [cam.tx + cam.dist * cp * sy, cam.ty + cam.dist * sp, cam.dist * cp * cy];
+    const dd = cam.dist * Math.max(1, 0.9 / aspect);   // pull back on portrait screens so the bloom fits the width
+    const eye = [cam.tx + dd * cp * sy, cam.ty + dd * sp, dd * cp * cy];
     M.lookAt(view, eye, [cam.tx, cam.ty, 0], [0, 1, 0]);
     M.mul(viewProj, proj, view);
     uboF32.set(viewProj, 0);
@@ -1401,8 +1460,12 @@ async function main() {
 
   // panel collapse (mobile)
   $('toggle').addEventListener('click', () => $('panel').classList.remove('collapsed'));
-  // (collapse button shown via CSS sibling; add a long-press / double tap to hide on small screens)
-  if (window.matchMedia('(max-width: 640px)').matches) {
+  // close button (the panel could not be collapsed again once opened)
+  { const cb = document.createElement('button'); cb.id = 'closePanel'; cb.textContent = '✕'; cb.title = 'close';
+    cb.style.cssText = 'position:absolute;top:8px;right:8px;width:28px;height:28px;padding:0;border-radius:8px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#e7e9f2;cursor:pointer;font-size:14px';
+    cb.addEventListener('click', () => $('panel').classList.add('collapsed'));
+    $('panel').insertBefore(cb, $('panel').firstChild); }
+  if (window.matchMedia('(max-width: 720px)').matches) {
     $('panel').classList.add('collapsed');
   }
 
