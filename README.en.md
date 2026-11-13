@@ -33,10 +33,12 @@ Open it in a current version of one of the browsers above.
 | --- | --- |
 | **생성** (Create) | Flower type (8 presets), random flower, replay, auto showcase, copy current settings. Bloom amount, speed, centre↔outer deviation, easing |
 | **형태** (Shape) | Petal count, whorls, length, width, widest point, tip roundness, cup, base/mid/tip curvature, opening angle, ruffle, sepals, colour |
-| **조명** (Lighting) | Specular gloss, main light azimuth and elevation, AO / SSGI / soft shadow toggles and strengths, petal subdivision |
+| **조명** (Lighting) | Specular gloss, main light azimuth and elevation, AO / SSGI / soft shadow toggles and strengths, polygon budget (four triangle-count caps) |
 | **장면** (Scene) | Stem and leaves, auto-rotate, 5 backgrounds |
 
-> To scrub through the bloom by hand, turn off "자동 개화" (auto bloom) in the Create tab and move the "개화 정도" (bloom amount) slider.
+> To scrub through the bloom by hand, move the "개화 정도" (bloom amount) slider in the Create tab; moving it turns auto bloom off.
+>
+> The readout at the bottom of the screen shows frames per second, the number of parts and the current triangle count.
 
 ## The 8 presets
 
@@ -45,21 +47,54 @@ Each preset follows the structure and opening behaviour of the real flower.
 | Preset | Structure | How it opens |
 | --- | --- | --- |
 | Rose | Several whorls of petals in an overlapping spiral, 5 sepals | Outer petals reflex first while the core stays cupped |
-| Daisy | One whorl of 21 narrow ray florets around a disc of disc florets | Spreads flat |
-| Sunflower | Pointed ray florets around a large golden-angle spiral disc | From the rim inward |
-| Tulip | 6 tepals in two whorls of 3, 6 stamens | Stays cup-shaped and opens only slightly |
+| Daisy | One whorl of 26 narrow ray florets around a disc of disc florets | Spreads flat, each ray slightly out of step with its neighbours |
+| Sunflower | One whorl of 30 ray florets around a large golden-angle spiral disc, with an involucre | Rays folded over the disc stand up and spread |
+| Tulip | 6 tepals in two whorls of 3, 6 stamens | Opens from an overlapping wrapped bud into a goblet |
 | Lily | 6 tepals in two whorls of 3, long stamens and pistil | Spreads wide with the tips reflexed back |
 | Lotus | Several whorls of broad petals around a central seed pod ringed by stamens | Whorl by whorl from the outside |
-| Cherry blossom | 5 notched petals, many slender stamens | All together, wide open |
-| Dahlia | Dense spiral of petals, quilled into tubes | From the outside inward |
+| Cherry blossom | 5 notched petals, many slender stamens; 4 blossoms on one twig | All together, wide open |
+| Dahlia | Dense spiral of petals, quilled into tubes | Row by row from the outside inward |
+
+## Petal interaction
+
+Petals are aware of each other. Each petal's base-to-tip curve (its spine) is reduced to 8 points and the whole flower is solved together.
+
+- **Holding and release**: closed sepals and outer petals hold the inner petals in, and the layers release one after another from the outside. Stamens spread only once the innermost petals have opened.
+- **Layering**: inner and outer petals rest on each other with a gap and push apart instead of passing through one another.
+- **Overlap within a whorl**: neighbouring petals of the same whorl sit with one margin over and the other margin under.
+- **Springiness**: a released petal overshoots slightly and settles. The same position of the "개화 정도" (bloom amount) slider still always gives the same shape.
+
+Limits: this is a reduced model in which each petal hinges as a whole about its base. Local dents at the point of contact are not modelled. Some overlap can remain in the bud state of flowers with very many petals and in randomly generated flowers. With "Z 반전" (flip Z) or the petal rotation sliders (X, Y, Z), interaction is switched off and each petal moves independently.
+
+## Polygon budget
+
+The whole flower has a triangle cap, and the detail of each part is divided automatically within it.
+
+| Level | Triangle cap |
+| --- | --- |
+| 낮음 (Low) | about 40,000 |
+| 보통 (Medium, default) | about 100,000 |
+| 높음 (High) | about 200,000 |
+| 최고 (Ultra) | about 400,000 |
+
+- Flowers with few petals (rose, tulip, lily) get a dense mesh per petal; flowers with many petals (dahlia) get a coarse one.
+- Fine detail such as veins, spots and grooves is drawn by surface shading, not triangles.
+- When the page runs slowly (average frame time above 33 ms) it first lowers the internal resolution and then, if still slow, the polygon budget one level at a time. Quality that has been lowered is not raised again automatically.
 
 ## Rendering
 
-- **Two-pass deferred rendering**: pass 1 writes colour, normal and position to a G-buffer (multiple render targets, 4× MSAA); pass 2 composites.
-- **PBR lighting**: GGX microfacet specular with Fresnel, hemispheric sky/ground ambient, back-light transmission through thin petals.
-- **AO** (ambient occlusion), **SSGI** (one-bounce screen-space global illumination), **soft shadows** (screen-space ray march toward the light).
-- **ACES tone mapping**.
-- Petals, stamens and florets are drawn with instancing; blooming, cupping and reflexing are computed in the vertex shader.
+- **Deferred rendering**: shadow map → G-buffer (direct light, normal, position, ambient; multiple render targets, 4× MSAA) → half-resolution AO / SSGI → blur → glow → composite.
+- **PBR lighting**: GGX microfacet specular with Fresnel, per-part materials (gloss, velvet sheen, back-light transmission through thin petals), key light, hemispheric ambient and rim light.
+- **Soft shadows**: a shadow map from the light's point of view (2048², penumbra widening with distance).
+- **AO** (ambient occlusion) and **SSGI** (one-bounce screen-space global illumination) are applied to ambient light.
+- **ACES tone mapping**, glow and dithering.
+- **Procedural surfaces**: petal colour gradients, venation and species marks (lily spots, tulip basal blotch and so on) and leaf veins are computed in the shader.
+- Petals, stamens and florets are drawn with instancing. Petal poses are solved on the CPU, and the vertex shader deforms each surface from the result.
+- The internal render resolution is capped at about 2.3 megapixels (to protect memory on high-resolution phones).
+
+## Environments not verified
+
+Automated checks ran only on a software renderer (Chromium) on a server without a graphics card. Appearance and speed on a real graphics card, in Safari, in Firefox and on a real phone have not been verified.
 
 ## Run locally
 
