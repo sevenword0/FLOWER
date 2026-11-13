@@ -344,6 +344,11 @@ function P(o) {
     accDH: 0, accS: 0.8, accL: 0.3,                                                           // accent colour (spots, blotch, deep veins) as hue offset / sat / light
     leafRough: 0.42, leafVeinS: 0.5, leafVeinD: 9, leafPar: 0, leafTrans: 0.30,               // leaves, sepals, bracts
     frameDist: 6.8, frameY: 0.1,                                                              // default camera framing
+    // ---- stage-4: attachment / bending ----
+    baseFlare: 0, baseZone: 0.22, baseHold: 1, // attachment angle = surface normal + flare; length fraction over which the clamped base blends into the pose
+    baseW: -1,                                 // base width as a fraction of the receptacle circle (-1: auto from the count)
+    unfurl: 0.35, sepalUnfurl: -0.4, sepalCurl: 1, sepalOpen0: -1,  // + base opens first, - tip opens first; sepal arch curvature; sepal open tangent at the base (-1: derived)
+    sepalClose: 0.35, ringRoll: 1, stamenBudL: 0.5, anchorMode: 0,                             // 0: radius-driven anchoring on the receptacle top; 1: rim
   }, o);
   // centre<->outer bloom deviation: + = outer-first, - = centre-first, 0 = together.
   if (m.bloomBias === undefined) m.bloomBias = m.bloomStagger;
@@ -369,10 +374,11 @@ const PRESETS = {
     mat: 1, veinS: 0.15, veinD: 7, rough: 0.8, trans: 0.1, sheen: 0.12, accDH: 0, accS: 0.9, accL: 0.26, leafRough: 0.38, leafVeinS: 0.3, leafVeinD: 7, leafTrans: 0.3,
     petalCount: 6, whorls: 6, spiral: 1, petalLength: 1.05, petalWidth: 1.0, sizeBias: 0.95, widthPow: 0.9, petalShape: 0.64, tipRound: 0.9,
     claw: 0.9, clawLen: 0.3, acu: 0.35, roll: 1.7, rollZone: 0.32, rollV0: 0.4, margRuff: 0.045, ruffle: 0.03, margN: 3,
-    cup: 1.7, openAngle: 0.82, openBias: 0.7, baseCurl: 0.1, midCurl: 0.3, tipCurl: 0.5, innerCurl: -1.3, droop: 0.15,
+    cup: 1.7, openAngle: 0.82, openBias: 0.7, baseCurl: 0.1, midCurl: 0.3, tipCurl: 1.1, innerCurl: -1.3, droop: 0.15,
     petalLayer: 0.2, baseRadius: 0.16, radIn: 0.3, radOut: 1.1, budBelly: 1, budClose: 0.75, budWidth: 0.72, budLen: 0.58,
-    bloomBias: 0.3, bloomDur: 0.78, hold: 0.0, jitter: 0.1, hue: 352, sat: 0.78, light: 0.34, hueTipShift: 8, tipLight: 0.07,
-    sepals: 5, sepalLen: 0.85, sepalWidth: 0.22, sepalOpen: 2.5, sepalHue: 122, sepalSat: 0.5, sepalLight: 0.3,
+    bloomBias: 0.42, bloomDur: 0.9, hold: 0.0, jitter: 0.1, hue: 352, sat: 0.78, light: 0.34, hueTipShift: 8, tipLight: 0.07,
+    sepals: 5, sepalLen: 0.85, sepalWidth: 0.22, sepalOpen: 1.15, sepalCurl: 3.0, sepalUnfurl: -0.45, sepalHue: 122, sepalSat: 0.5, sepalLight: 0.3,
+    unfurl: -0.55, baseZone: 0.2, baseW: 0.42,
     stamens: 40, stamenLen: 0.2, stamenRadius: 0.1, stamenSpread: 0.45, antherHue: 48, antherSat: 0.95, antherLight: 0.5, filHue: 52, filSat: 0.6, filLight: 0.7,
     pistil: 1, pistilLen: 0.16, pistilHue: 80, pistilSat: 0.4, pistilLight: 0.6, stigmaR: 0.03,
     recType: 1, recH: 0.52, recR: 0.2, recHue: 112, recSat: 0.5, recLight: 0.3, recHue2: 105, recSat2: 0.55, recLight2: 0.36,
@@ -383,8 +389,8 @@ const PRESETS = {
   // disc (Fibonacci spirals); two rows of green phyllaries; leafless scape with low spatulate leaves.
   '데이지 (Daisy)': P({
     mat: 2, veinS: 0.3, veinD: 2, rough: 0.6, trans: 0.4, sheen: 0.15, accL: 0.5, leafRough: 0.55, leafPar: 1, leafVeinD: 4, leafVeinS: 0.4,
-    petalCount: 26, whorls: 1, spiral: 0, rayStagger: 0.14, petalLength: 1.25, petalWidth: 0.18, sizeBias: -0.05, widthPow: 1.4, petalShape: 0.6, tipRound: 1.1,
-    teeth: 1.6, pleat: 0.35, pleatN: 2, keel: -0.1, cup: 0.15, openAngle: 1.5, openBias: 0, baseCurl: 0.05, midCurl: 0.2, tipCurl: 0.4, droop: 0.3,
+    petalCount: 26, whorls: 1, spiral: 0, rayStagger: 0.1, petalLength: 1.25, petalWidth: 0.23, sizeBias: -0.05, widthPow: 0.6, petalShape: 0.55, tipRound: 1.0,
+    teeth: 1.0, pleat: 0.03, pleatN: 2, keel: 0, cup: 0.02, ruffle: 0, ringRoll: 0, baseFlare: -0.85, baseZone: 0.18, openAngle: 1.5, openBias: 0, baseCurl: 0.05, midCurl: 0.2, tipCurl: 0.4, droop: 0.3,
     radIn: 1, radOut: 1, baseRadius: 0.34, petalLayer: 0.1, budBelly: 0.3, budWidth: 0.85, budLen: 0.62, heightBias: 0,
     hue: 52, sat: 0.05, light: 0.97, tipLight: 0.0, hueTipShift: 0, bloomStagger: 0.22, jitter: 0.07,
     floret: 1, floretCount: 300, floretRadius: 0.32, floretDome: 0.12, discY: 0.03, floretHue: 46, floretSat: 0.92, floretLight: 0.5, antherHue: 50,
@@ -397,11 +403,11 @@ const PRESETS = {
   // several rows of big green long-pointed bracts; thick stem; large heart-shaped petiolate leaves.
   '해바라기 (Sunflower)': P({
     mat: 3, veinS: 0.45, veinD: 6, rough: 0.55, trans: 0.38, sheen: 0.1, accDH: -22, accS: 0.95, accL: 0.5, leafRough: 0.5, leafVeinS: 0.65, leafVeinD: 8, leafTrans: 0.3,
-    sizeBias: 0, petalCount: 30, whorls: 1, spiral: 0, rayStagger: 0.22, budClose: 0.45, petalLength: 0.8, petalWidth: 0.42, widthPow: 1.1, petalShape: 0.45, tipRound: 0.95,
+    sizeBias: 0, petalCount: 30, whorls: 1, spiral: 0, rayStagger: 0.07, budClose: 0.12, baseFlare: -0.8, baseZone: 0.18, petalLength: 0.8, petalWidth: 0.42, widthPow: 1.1, petalShape: 0.45, tipRound: 0.95,
     acu: 0.22, pleat: 0.3, pleatN: 3, keel: 0.15, cup: 0.2, openAngle: 1.4, openBias: 0, baseCurl: 0.05, midCurl: 0.25, tipCurl: 0.6, droop: 0.4,
     radIn: 1, radOut: 1, budBelly: 0.3, budWidth: 0.8, budLen: 0.8, baseRadius: 0.64, hue: 44, sat: 0.97, light: 0.52, hueTipShift: -2, tipLight: 0.04,
     floret: 1, floretCount: 1100, floretRadius: 0.66, floretDome: 0.1, discRing: 0.25, discY: 0.03, floretHue: 22, floretSat: 0.6, floretLight: 0.12, antherHue: 46, discSlope: 1.0,
-    bloomStagger: 0.3, jitter: 0.012, stemLen: 2.8,
+    bloomStagger: 0.3, jitter: 0.045, stemLen: 2.8,
     recType: 2, recH: 0.45, recR: 0.67, recHue: 105, recSat: 0.5, recLight: 0.3,
     bractRows: 3, bractN: 12, bractLen: 0.6, bractWid: 0.3, bractOpen: 2.2, bractAcu: 1.0, bractRad: 0.6, bractLight: 0.28,
     leaves: 4, leafLen: 1.35, leafWid: 1.0, leafShape: 0.3, leafAcu: 0.9, leafSerr: 0.08, leafSerrN: 12, leafT0: 0.25, leafT1: 0.75, leafAngle: 1.0, leafCurl: 1.0, leafClaw: 1.0, leafClawLen: 0.3,
@@ -414,11 +420,11 @@ const PRESETS = {
     mat: 4, veinS: 0.18, veinD: 6, rough: 0.30, trans: 0.55, sheen: 0, accDH: -40, accS: 0.5, accL: 0.1, leafRough: 0.62, leafPar: 1, leafVeinD: 7, leafVeinS: 0.4,
     sizeBias: 0.1, openBias: 0.05, budClose: 0.6, petalCount: 3, whorls: 2, spiral: 0, petalLength: 1.15, petalWidth: 0.88, cup: 1.6, openAngle: 0.36,
     baseCurl: 0.5, midCurl: 0.1, tipCurl: 0.2, budWidth: 0.95, budLen: 0.7, widthPow: 1.05, petalShape: 0.42, tipRound: 1.0, acu: 0.12,
-    keel: 0.1, ruffle: 0.01, margRuff: 0.01, baseRadius: 0.13, radIn: 0.85, radOut: 1.15, petalLayer: 0.05, budBelly: 1.0,
+    keel: 0.1, ruffle: 0.01, margRuff: 0.01, baseRadius: 0.13, radIn: 0.85, radOut: 1.15, petalLayer: 0.05, budBelly: 1.0, baseZone: 0.34, baseFlare: 0.15, baseW: 0.85, stamenBudL: 0.22,
     hue: 350, sat: 0.82, light: 0.52, hueTipShift: 6, tipLight: 0.06, bloomBias: 0.25, jitter: 0.02, bloomStagger: 0.25,
-    stamens: 6, stamenLen: 0.34, stamenRadius: 0.075, stamenSpread: 0.08, stamenArch: 0.1, antherHue: 262, antherSat: 0.35, antherLight: 0.14, antherLen: 0.3, antherRad: 0.02, filHue: 60, filSat: 0.2, filLight: 0.8, filRad: 0.01,
+    stamens: 6, stamenLen: 0.34, stamenRadius: 0.04, stamenSpread: 0.08, stamenArch: 0.1, antherHue: 262, antherSat: 0.35, antherLight: 0.14, antherLen: 0.3, antherRad: 0.02, filHue: 60, filSat: 0.2, filLight: 0.8, filRad: 0.01,
     pistil: 1, pistilLen: 0.4, pistilWid: 0.04, pistilHue: 88, pistilSat: 0.4, pistilLight: 0.55, stigmaLobes: 3, stigmaR: 0.07, ovaryR: 0.075, ovaryFrac: 0.5, ovHue: 100, ovSat: 0.5, ovLight: 0.42,
-    recType: 4, recH: 0.3, recR: 0.09, recHue: 100, recSat: 0.45, recLight: 0.36,
+    recType: 4, recH: 0.3, recR: 0.16, recHue: 100, recSat: 0.45, recLight: 0.36,
     leaves: 3, leafLen: 1.7, leafWid: 0.62, leafShape: 0.38, leafAcu: 0.55, leafT0: 0.5, leafT1: 0.82, leafAngle: 0.05, leafCurl: 0.18, leafWave: 0.04, leafKeel: 0.3,
     leafHue: 140, leafSat: 0.3, leafLight: 0.36, stemRad: 0.03, stemRadBot: 0.045, stemHue: 118, stemSat: 0.35, stemLight: 0.42, stemBend: 0.35,
   }),
@@ -428,11 +434,11 @@ const PRESETS = {
     mat: 5, veinS: 0.22, veinD: 4, rough: 0.34, trans: 0.55, sheen: 0.1, accDH: -22, accS: 0.75, accL: 0.2, leafRough: 0.42, leafPar: 1, leafVeinD: 5, leafVeinS: 0.4,
     petalCount: 3, whorls: 2, spiral: 0, petalLength: 1.45, petalWidth: 0.55, sizeBias: -0.15, cup: 0.3, baseCurl: 0.2, midCurl: 0.5, tipCurl: 2.0, openAngle: 1.0, openBias: 0,
     budBelly: 0.5, budWidth: 0.85, budLen: 0.8, widthPow: 1.1, petalShape: 0.42, tipRound: 0.6, acu: 0.45, keel: -0.35, claw: 0.3, clawLen: 0.2,
-    ruffle: 0.02, margRuff: 0.05, margN: 3, baseRadius: 0.07, radIn: 1, radOut: 1, petalLayer: 0.0, hue: 26, sat: 0.92, light: 0.5, tipLight: 0.0, hueTipShift: 8,
+    ruffle: 0.02, margRuff: 0.05, margN: 3, baseRadius: 0.07, radIn: 1, radOut: 1, petalLayer: 0.0, baseZone: 0.3, baseFlare: -0.7, baseHold: 0.9, baseW: 0.5, stamenBudL: 0.22, hue: 26, sat: 0.92, light: 0.5, tipLight: 0.0, hueTipShift: 8,
     bloomBias: 0.2, bloomStagger: 0.18, jitter: 0.04,
-    stamens: 6, stamenLen: 0.62, stamenRadius: 0.05, stamenSpread: 0.7, stamenArch: 1.5, antherHue: 14, antherSat: 0.75, antherLight: 0.26, antherLen: 0.2, antherRad: 0.03, filHue: 80, filSat: 0.3, filLight: 0.7, filRad: 0.011,
+    stamens: 6, stamenLen: 0.62, stamenRadius: 0.022, stamenSpread: 0.7, stamenArch: 1.5, antherHue: 14, antherSat: 0.75, antherLight: 0.26, antherLen: 0.2, antherRad: 0.03, filHue: 80, filSat: 0.3, filLight: 0.7, filRad: 0.011,
     pistil: 1, pistilLen: 0.78, pistilWid: 0.045, pistilHue: 80, pistilSat: 0.35, pistilLight: 0.66, stigmaLobes: 3, stigmaR: 0.06, ovaryR: 0,
-    recType: 4, recH: 0.3, recR: 0.075, recHue: 100, recSat: 0.5, recLight: 0.36,
+    recType: 4, recH: 0.3, recR: 0.1, recHue: 100, recSat: 0.5, recLight: 0.36,
     leaves: 13, leafLen: 0.95, leafWid: 0.15, leafShape: 0.4, leafAcu: 0.9, leafT0: 0.12, leafT1: 0.95, leafAngle: 0.75, leafCurl: 0.9, leafKeel: 0.25,
     leafHue: 122, leafSat: 0.55, leafLight: 0.26, stemRad: 0.026, stemRadBot: 0.04, stemHue: 112, stemSat: 0.45, stemLight: 0.32, stemBend: 0.3, stemLen: 2.6,
   }),
@@ -442,25 +448,25 @@ const PRESETS = {
     frameDist: 6.4,
     mat: 6, veinS: 0.55, veinD: 5, rough: 0.45, trans: 0.5, sheen: 0.15, accDH: -6, accS: 0.7, accL: 0.55, leafRough: 0.5,
     petalCount: 11, whorls: 2, spiral: 1, petalLength: 1.0, petalWidth: 0.86, sizeBias: 0.7, widthPow: 0.9, petalShape: 0.55, tipRound: 0.7, acu: 0.35,
-    cup: 2.3, openAngle: 0.42, openBias: 1.0, budClose: 0.5, baseCurl: 0.2, midCurl: 0.5, tipCurl: 1.1, innerCurl: -0.5, keel: 0, margRuff: 0, ruffle: 0, jitter: 0.04,
-    baseRadius: 0.38, radIn: 0.9, radOut: 1.15, petalLayer: 0.12, budBelly: 0.6, budWidth: 0.78, budLen: 0.62, hue: 338, sat: 0.45, light: 0.84, tipLight: -0.22, hueTipShift: 8,
+    cup: 2.3, openAngle: 0.42, openBias: 1.0, budClose: 0.25, baseCurl: 0.2, midCurl: 0.5, tipCurl: 1.1, innerCurl: -0.5, keel: 0, margRuff: 0, ruffle: 0, jitter: 0.04,
+    baseW: 0.3, baseRadius: 0.36, radIn: 0.8, radOut: 1.15, petalLayer: 0.12, baseFlare: -0.6, budBelly: 0.6, budWidth: 0.78, budLen: 0.62, hue: 338, sat: 0.45, light: 0.84, tipLight: -0.22, hueTipShift: 8,
     bloomBias: 0.3, bloomDur: 0.78, bloomStagger: 0.45,
-    floret: 1, floretCount: 90, floretRadius: 0.24, floretDome: 0, discY: 0.09, floretHue: 70, floretSat: 0.45, floretLight: 0.3, discSlope: 0.3,
-    stamens: 200, stamenLen: 0.26, stamenRadius: 0.3, stamenSpread: 0.2, stamenArch: 0.2, antherHue: 52, antherSat: 0.95, antherLight: 0.55, antherLen: 0.22, antherRad: 0.012, filHue: 48, filSat: 0.7, filLight: 0.7, filRad: 0.006,
+    floret: 1, floretCount: 90, floretRadius: 0.34, floretDome: 0, discY: 0.09, floretHue: 70, floretSat: 0.45, floretLight: 0.3, discSlope: 0.3,
+    stamens: 200, stamenLen: 0.26, stamenRadius: 0.28, stamenBudL: 0.2, stamenSpread: 0.2, stamenArch: 0.2, antherHue: 52, antherSat: 0.95, antherLight: 0.55, antherLen: 0.22, antherRad: 0.012, filHue: 48, filSat: 0.7, filLight: 0.7, filRad: 0.006,
     sepals: 4, sepalLen: 0.6, sepalWidth: 0.3, sepalHue: 120, sepalOpen: 2.2, sepalSat: 0.35, sepalLight: 0.5,
-    recType: 3, recH: 0.6, recR: 0.26, recHue: 82, recSat: 0.6, recLight: 0.45, recHue2: 56, recSat2: 0.7, recLight2: 0.52,
+    recType: 3, recH: 0.6, recR: 0.4, anchorMode: 1, recHue: 82, recSat: 0.6, recLight: 0.45, recHue2: 56, recSat2: 0.7, recLight2: 0.52,
     leaves: 0, stemRad: 0.065, stemRadBot: 0.08, stemHue: 100, stemSat: 0.4, stemLight: 0.38, stemBend: 0.3, stemLen: 2.6,
   }),
   // CHERRY BLOSSOM (Somei-yoshino): 5 notched obovate petals, almost flat; 5 small sepals on a reddish calyx tube;
   // ~32 long stamens with pale filaments + yellow anthers; one pistil; clusters of blossoms on thin pedicels.
   '벚꽃 (Cherry)': P({
     mat: 7, veinS: 0.3, veinD: 4, rough: 0.5, trans: 0.8, sheen: 0.2, accDH: 0, accS: 0.75, accL: 0.6, leafRough: 0.5, frameDist: 4.7, frameY: 0.5,
-    petalCount: 5, whorls: 1, spiral: 0, budClose: 0.6, petalLength: 1.0, petalWidth: 0.85, widthPow: 0.8, petalShape: 0.62, tipRound: 0.9, notch: 0.55, claw: 0.6, clawLen: 0.22,
+    petalCount: 5, whorls: 1, spiral: 0, budClose: 0.6, petalLength: 1.0, petalWidth: 0.85, widthPow: 0.8, petalShape: 0.62, tipRound: 0.9, notch: 0.55, claw: 0.6, clawLen: 0.22, baseZone: 0.15, baseHold: 0.25,
     cup: 0.45, openAngle: 1.25, baseCurl: 0.1, midCurl: 0.0, tipCurl: -0.1, budWidth: 0.7, budLen: 0.55, margRuff: 0.015,
     baseRadius: 0.085, radIn: 1, radOut: 1, hue: 346, sat: 0.62, light: 0.88, tipLight: 0.04, hueTipShift: 4, bloomBias: 0.18, bloomStagger: 0.18, jitter: 0.05,
     stamens: 32, stamenLen: 0.42, stamenRadius: 0.05, stamenSpread: 0.4, stamenArch: 0.9, antherHue: 50, antherSat: 0.95, antherLight: 0.5, antherLen: 0.1, antherRad: 0.016, filHue: 340, filSat: 0.35, filLight: 0.9, filRad: 0.005,
     pistil: 1, pistilLen: 0.46, pistilWid: 0.03, pistilHue: 90, pistilSat: 0.4, pistilLight: 0.75, stigmaR: 0.03,
-    sepals: 5, sepalLen: 0.24, sepalWidth: 0.17, sepalOpen: 2.1, sepalHue: 8, sepalSat: 0.55, sepalLight: 0.34,
+    sepals: 5, sepalLen: 0.24, sepalWidth: 0.17, sepalOpen: 2.1, sepalClose: -1.0, sepalHue: 8, sepalSat: 0.55, sepalLight: 0.34,
     recType: 5, recH: 0.34, recR: 0.1, recHue: 8, recSat: 0.5, recLight: 0.3, recHue2: 358, recSat2: 0.5, recLight2: 0.36,
     cluster: 4, pedLen: 0.85, ruffle: 0.02, leaves: 0, stemRad: 0.03, stemRadBot: 0.05, stemHue: 22, stemSat: 0.35, stemLight: 0.2, stemTop: -0.62, stemBend: 0.5, stemLen: 2.4,
   }),
@@ -472,7 +478,7 @@ const PRESETS = {
     petalCount: 44, whorls: 7, spiral: 1, petalLength: 0.85, petalWidth: 0.5, sizeBias: 0.55, widthPow: 1.3, petalShape: 0.62, tipRound: 1.3,
     roll: -2.0, rollZone: 0.5, rollV0: 0.05, cup: 0.5, openAngle: 1.0, openBias: 0, baseCurl: 0.4, midCurl: 1.0, tipCurl: 1.3, droop: 0.0,
     domeR: 0.42, domeMax: 2.25, budClose: 0.12, baseRadius: 0.05, radIn: 1, radOut: 1, petalLayer: 0, budBelly: 0.6, budWidth: 0.7, budLen: 0.5,
-    hold: 0.1, hue: 300, sat: 0.42, light: 0.54, hueTipShift: 14, tipLight: 0.05, bloomBias: 0.6, bloomStagger: 0.6, jitter: 0.04,
+    hold: 0.1, baseHold: 0.2, baseZone: 0.15, hue: 300, sat: 0.42, light: 0.54, hueTipShift: 14, tipLight: 0.05, bloomBias: 0.6, bloomStagger: 0.6, jitter: 0.04,
     recType: 2, recH: 0.3, recR: 0.2, recHue: 108, recSat: 0.5, recLight: 0.3,
     bractRows: 2, bractN: 8, bractLen: 0.5, bractWid: 0.26, bractOpen: 2.4, bractAcu: 0.5, bractRad: 0.2,
     leaves: 4, pinnate: 1, leafOpp: 1, leafLen: 0.55, leafWid: 0.4, leafShape: 0.4, leafAcu: 0.6, leafSerr: 0.14, leafSerrN: 12, leafT0: 0.35, leafT1: 0.8, leafAngle: 0.8, leafCurl: 0.9,
@@ -704,7 +710,7 @@ struct Petal {
   j : vec4<f32>,  // petal: keel, roll, claw, clawLen | tube: antherFrac, antherRad, lobeN, lobeAmt
   k : vec4<f32>,  // petal: acuminate, teeth, pleat, pleatN | tube: bulbR, bulbFrac, tipTaper, -
   l : vec4<f32>,  // petal: marginRuffle, marginN, rollZone, rollV0 | tube: -
-  m : vec4<f32>,  // accent / mid colour rgb, -
+  m : vec4<f32>,  // accent / mid colour rgb, base width fraction (petal-class)
   n : vec4<f32>,  // world offset xyz, scale
   o : vec4<f32>,  // head yaw, head tilt, serration, serrationN
   s0 : vec4<f32>, // material id, vein strength, vein density, roughness
@@ -1115,28 +1121,32 @@ fn spineYZ(v : f32, S : Spine) -> vec2<f32> {
   return vec2<f32>(y, z);
 }
 
-// Piecewise spine from 8 CPU-solved tangent-angle nodes (s = k/7). theta is linear inside a segment, so the polyline
-// integral has a closed form. Returns (y, z) per unit arc length and the tangent angle at v.
+// Piecewise spine from 8 CPU-solved tangent-angle nodes at the NON-UNIFORM arc positions SNODE (denser near the clamped base).
+// theta is linear inside a segment, so the polyline integral has a closed form. Returns (y, z) per unit arc length and the tangent angle at v.
 fn spineEval(v : f32, a : vec4<f32>, b : vec4<f32>) -> vec3<f32> {
   var t = array<f32, 8>(a.x, a.y, a.z, a.w, b.x, b.y, b.z, b.w);
-  let x = clamp(v, 0.0, 1.0) * 7.0;
-  let k = min(i32(floor(x)), 6);
-  let fr = x - f32(k);
+  var sn = array<f32, 8>(0.0, 0.06, 0.14, 0.25, 0.39, 0.56, 0.77, 1.0);
+  let vv = clamp(v, 0.0, 1.0);
+  var k = 0;
+  for (var i = 1; i < 7; i = i + 1) { if (vv >= sn[i]) { k = i; } }
   var y = 0.0; var z = 0.0;
   for (var i = 0; i < 6; i = i + 1) {
     if (i >= k) { break; }
+    let hh = sn[i + 1] - sn[i];
     let d = t[i + 1] - t[i];
     let m = t[i] + 0.5 * d;
     let h2 = 0.25 * d * d;
     let sc = 1.0 - h2 / 6.0 + h2 * h2 / 120.0;
-    y = y + cos(m) * sc; z = z + sin(m) * sc;
+    y = y + hh * cos(m) * sc; z = z + hh * sin(m) * sc;
   }
+  let h0 = sn[k + 1] - sn[k];
+  let fr = (vv - sn[k]) / h0;
   let d = t[k + 1] - t[k];
   let m = t[k] + 0.5 * d * fr;
   let h2 = 0.25 * d * d * fr * fr;
   let sc = 1.0 - h2 / 6.0 + h2 * h2 / 120.0;
-  y = y + fr * cos(m) * sc; z = z + fr * sin(m) * sc;
-  return vec3<f32>(y / 7.0, z / 7.0, t[k] + d * fr);
+  y = y + fr * h0 * cos(m) * sc; z = z + fr * h0 * sin(m) * sc;
+  return vec3<f32>(y, z, t[k] + d * fr);
 }
 
 // petal / sepal / bract / leaf blade.  sc = (length, effective bloom, roll, normal offset), sp = spineEval(v)
@@ -1175,6 +1185,9 @@ fn deformPetal(Pp : Petal, sc : vec4<f32>, u : f32, v : f32, sp : vec3<f32>) -> 
     let cw = pow(1.0 - smoothstep(0.0, max(clawLen, 0.05), v), 1.5);
     prof = prof * (1.0 - 0.9 * claw * cw);
   }
+  // contiguous base: the base edge is as wide as its share of the receptacle circumference (bwf = fraction of the full width)
+  let bwf = Pp.m.w;
+  if (bwf > 0.0) { prof = max(prof, bwf * pow(1.0 - smoothstep(0.0, 0.3, v), 1.5)); }
   if (serr > 0.001) {
     let saw = abs(2.0 * fract(v * serrN) - 1.0) - 0.5;
     prof = prof * (1.0 + serr * 2.0 * saw * smoothstep(0.2, 0.5, v) * (1.0 - smoothstep(0.92, 1.0, v)));
@@ -1245,7 +1258,7 @@ fn deformPetal(Pp : Petal, sc : vec4<f32>, u : f32, v : f32, sp : vec3<f32>) -> 
   let cax = cos(cupAxis); let sax = sin(cupAxis);
   let coord = su * cax + sv * sax;
   let widthFac = mix(prof, 0.6, sax * sax);
-  let cupDisp = cup * (coord * coord) * widthFac;
+  let cupDisp = cup * (coord * coord) * widthFac * mix(1.0, smoothstep(0.0, 0.25, v), clamp(bwf * 3.0, 0.0, 1.0));   // the contiguous base stays on the receptacle circle
   let nOff = lz - cupDisp;
   let ty = spp.x + Nn.x * nOff - Tn.x * off;
   let tz = spp.y + Nn.y * nOff - Tn.y * off;
@@ -1257,8 +1270,11 @@ fn deformPetal(Pp : Petal, sc : vec4<f32>, u : f32, v : f32, sp : vec3<f32>) -> 
   let wx = Rs * sin(phi);
   let wz = Rs * cos(phi) - Rs;
   let isLeaf = kind > 1.5;
-  let px = select(mix(wx, lx, bloom), lx, isLeaf);
-  let pz = tz + select(mix(wz, 0.0, bloom), 0.0, isLeaf);
+  // the base edge always follows the receptacle circle (wrap fades out over the first ~22% of the length when open)
+  let wrapW = max(1.0 - bloom, 1.0 - smoothstep(0.0, 0.22, v));
+  let px = select(mix(lx, wx, wrapW), lx, isLeaf);
+  let fzs = select(1.0, sign(U.flip.z), U.flip.z != 0.0);   // placePos mirrors z about the base: pre-compensate so the wrapped base edge stays on the receptacle circle
+  let pz = tz + select(wz * wrapW * fzs, 0.0, isLeaf);
   return vec3<f32>(px, ty, pz);
 }
 
@@ -1904,21 +1920,22 @@ async function main() {
   const X = { az:0, rad:1, h:2, tiltC:3, tiltO:4, len:5, wid:6, bc:7, cupC:8, cupO:9, delay:10, dur:11, c0:12, kind:15, c1:16, wpow:19,
     ruff:20, ruffN:21, twist:22, shape:23, notch:24, quill:25, tc:26, tipR:27, mc:28, rx:29, ry:30, rz:31, budW:32, budL:33, thEnd:34, phase:35,
     j0:36, j1:37, j2:38, j3:39, k0:40, k1:41, k2:42, k3:43, margA:44, margN:45, rollZ:46, rollV:47, cm:48, throat:51, ox:52, oy:53, oz:54, scale:55,
-    yaw:56, tilt:57, serr:58, serrN:59,
+    yaw:56, tilt:57, serr:58, serrN:59, thA:71,
     m0:60, m1:64, m2:68 };   // stage-2: [mat, veinS, veinD, rough] [trans, sheen, markS, wf] [relief, leafPar, -, -]
   let instCount = 0, nGroupA = 0, nGroupB = 0, nGroupC = 0;
 
   // closed-bud tip tangent: the angle at which the closed centreline just reaches ~0.15 R from the axis
-  const ceMemo = new Float64Array(MAX_INST * 5 + 5); let ceIdx = 0;
-  function closedEnd(R, Lc, tiltC, frac) {
-    const mo = ceIdx++ * 5;
-    if (ceMemo[mo] === R && ceMemo[mo + 1] === Lc && ceMemo[mo + 2] === tiltC && ceMemo[mo + 3] === frac) return ceMemo[mo + 4];
-    const res = closedEnd0(R, Lc, tiltC, frac);
-    ceMemo[mo] = R; ceMemo[mo + 1] = Lc; ceMemo[mo + 2] = tiltC; ceMemo[mo + 3] = frac; ceMemo[mo + 4] = res;
+  const ceMemo = new Float64Array(MAX_INST * 7 + 7); let ceIdx = 0;
+  function closedEnd(R, Lc, tiltC, frac, thA, zone) {
+    const mo = ceIdx++ * 7;
+    if (ceMemo[mo] === R && ceMemo[mo + 1] === Lc && ceMemo[mo + 2] === tiltC && ceMemo[mo + 3] === frac && ceMemo[mo + 5] === thA && ceMemo[mo + 6] === zone) return ceMemo[mo + 4];
+    const res = closedEnd0(R, Lc, tiltC, frac, thA, zone);
+    ceMemo[mo] = R; ceMemo[mo + 1] = Lc; ceMemo[mo + 2] = tiltC; ceMemo[mo + 3] = frac; ceMemo[mo + 4] = res; ceMemo[mo + 5] = thA; ceMemo[mo + 6] = zone;
     return res;
   }
-  function closedEnd0(R, Lc, tiltC, frac) {
+  function closedEnd0(R, Lc, tiltC, frac, thA, zone) {
     const target = -(frac === undefined ? 0.85 : frac) * R;
+    const useBase = zone > 0 && thA !== undefined;
     let lo = -2.9, hi = 0.4;
     for (let it = 0; it < 12; it++) {
       const mid = 0.5 * (lo + hi);
@@ -1926,7 +1943,9 @@ async function main() {
       for (let s = 0; s < 10; s++) {
         const t = (s + 0.5) / 10;
         const sm = smooth01((t - 0.12) / 0.86);
-        z += Math.sin(tiltC + (mid - tiltC) * sm) * 0.1;
+        let th = tiltC + (mid - tiltC) * sm;
+        if (useBase) th = thA + (th - thA) * smooth01(t / zone);
+        z += Math.sin(th) * 0.1;
       }
       if (z * Lc > target) hi = mid; else lo = mid;
     }
@@ -2011,19 +2030,26 @@ async function main() {
         const r1 = hash(hid, seed), r2 = hash(hid + 7777, seed), r3 = hash(hid + 3331, seed), r4 = hash(hid + 5113, seed), r5 = hash(hid + 9001, seed);
         const sizeF = 1 + p.sizeBias * (wf - 0.5);
         let radius = p.baseRadius * (p.radIn + (p.radOut - p.radIn) * wf);
-        let hBase = 0.02 + (1 - wf) * 0.04 + p.heightBias * (0.5 - wf) * 0.7 + p.petalLayer * ramp * 0.18;
         let tiltO = p.openAngle * (0.925 + p.openBias * (wf - 0.5));
+        // anchor ON the receptacle surface (single source of truth: recSurf / anchorOn); dome flowers sit on their sphere
+        let hBase, thN;
         if (domeMode) {
           const cmax = Math.cos(p.domeMax), cphi = 1 - (1 - cmax) * Math.pow(wf, 0.9), phi = Math.acos(clamp(cphi, -1, 1));
-          radius = p.domeR * Math.sin(phi) + p.baseRadius;
+          radius = p.domeR * Math.sin(phi) + p.baseRadius * (phi > 1e-3 ? 1 : 0);
           hBase = 0.02 + p.domeR * (cphi - cmax) * 0.9;
-          tiltO = phi * p.openAngle;
+          tiltO = phi * p.openAngle; thN = phi;
+        } else {
+          const an = anchorOn(p, radius, p.anchorMode ? 1 : 0); radius = an.r; hBase = an.y; thN = an.th;
         }
         tiltO += (r1 - 0.5) * 2 * J * 1.2;
         const lenS = p.petalLength * sizeF * (1 + (r2 - 0.5) * 2 * J * 1.3);
         const widS = p.petalWidth * (1 + p.sizeBias * (wf - 0.5) * 0.6) * (1 + (r4 - 0.5) * 2 * J);
         const tiltC = (0.22 + 0.5 * wf) * p.budBelly;
         const inner = 1 - wf;
+        const thA = Math.max(0.05, tiltC + (clamp(thN, 0, 1.55) + p.baseFlare - tiltC) * p.baseHold);       // attachment direction (clamped base tangent)
+        const sinkP = 0.015 * lenS;
+        radius -= sinkP * Math.sin(thN); hBase -= sinkP * Math.cos(thN);
+        const bwFrac = p.baseW >= 0 ? p.baseW : (p.spiral ? 0.35 : Math.min(1, 1.05 / perW));
         const bc = p.baseCurl + (r5 - 0.5) * J * 3;
         const mc = p.midCurl + p.innerCurl * inner + (r5 - 0.5) * J * 3;
         const tc = p.tipCurl + p.innerCurl * inner + p.droop * wf * wf * (0.6 + 0.8 * r2) + (r3 - 0.5) * J * 4;
@@ -2037,7 +2063,8 @@ async function main() {
         I[X.ruff] = p.ruffle; I[X.ruffN] = p.ruffN; I[X.twist] = (r3 - 0.5) * J * 3.0 * (0.5 + wf); I[X.shape] = p.petalShape;
         I[X.notch] = p.notch; I[X.quill] = p.quill * (0.5 + 0.5 * wf); I[X.tc] = tc; I[X.tipR] = p.tipRound;
         I[X.mc] = mc; I[X.rx] = p.rotX; I[X.ry] = p.rotY; I[X.rz] = p.rotZ;
-        I[X.budW] = p.budWidth; I[X.budL] = p.budLen; I[X.thEnd] = closedEnd(radius, lenS * p.budLen, tiltC, p.budClose); I[X.phase] = r1 * 6.2832;
+        I[X.budW] = p.budWidth; I[X.budL] = p.budLen; I[X.thEnd] = closedEnd(radius, lenS * p.budLen, tiltC, p.budClose, thA, p.baseZone); I[X.phase] = r1 * 6.2832;
+        I[X.thA] = thA; I[X.throat] = Math.min(1, bwFrac * 6.2832 * radius / Math.max(0.05, widS * Math.min(1, p.budWidth)));
         const rollAmt = p.roll > 0 ? p.roll * smooth01((wf - 0.1) / 0.9) : p.roll;
         I[X.j0] = p.keel * (0.8 + 0.4 * r3); I[X.j1] = rollAmt * (0.85 + 0.3 * r4); I[X.j2] = p.claw; I[X.j3] = p.clawLen;
         I[X.k0] = p.acu; I[X.k1] = p.teeth; I[X.k2] = p.pleat; I[X.k3] = p.pleatN;
@@ -2050,16 +2077,22 @@ async function main() {
     }
 
     /* ---- calyx sepals + involucre bracts (green, part and fold back ahead of the petals) ---- */
-    const greenPart = (az, rad, hgt, tiltC, tiltO, len, wid, acu, hue, sat, lig, hid, h, curl, rowDelay) => {
+    const greenPart = (az, rad, branch, tiltC, tiltO, len, wid, acu, hue, sat, lig, hid, h, curl, rowDelay, sepal) => {
       const r1 = hash(hid, seed + 11), r2 = hash(hid + 5, seed + 11);
       const I = newInst(0.25);
       const sb = hsl2rgb(hue, sat, lig), st = hsl2rgb(hue + 6, sat * 0.9, clamp(lig + 0.12, 0, 1));
       const L = len * (1 + (r1 - 0.5) * 0.2);
+      const an = anchorOn(p, rad, branch);                       // on the receptacle rim / underside
+      const thA = tiltC + (clamp(an.th, 0.1, 1.4) - tiltC) * 0.35;
+      const sk = 0.015 * L;
+      rad = an.r - sk * Math.sin(an.th); const hgt = an.y - sk * Math.cos(an.th);
       I[X.az] = az; I[X.rad] = rad; I[X.h] = hgt; I[X.tiltC] = tiltC; I[X.tiltO] = tiltO + (r2 - 0.5) * 0.2; I[X.len] = L; I[X.wid] = wid;
+      I[X.thA] = thA; I[X.throat] = clamp(1.1 * 6.2832 * Math.max(rad, 0.03) / (Math.max(1, sepal ? Math.round(p.sepals) : Math.round(p.bractN)) * wid), 0, 0.9);
+      // sepals / bracts bend progressively along their length (mid-blade curvature dominates) instead of pivoting as sticks
       I[X.bc] = 0.2; I[X.mc] = 0.35 * curl; I[X.tc] = 0.8 * curl;
       I[X.cupC] = 0.4; I[X.cupO] = 0.25; I[X.delay] = rowDelay + h.dly * 0.5; I[X.dur] = 0.5;
       putCol(I, X.c0, sb); putCol(I, X.c1, st); I[X.wpow] = 1.7; I[X.ruff] = 0.02; I[X.shape] = 0.4; I[X.tipR] = 0.3;
-      I[X.budW] = 0.8; I[X.budL] = 0.92; I[X.thEnd] = closedEnd(rad, L * 0.92, tiltC, 0.35); I[X.phase] = r1 * 6.28;
+      I[X.budW] = 0.8; I[X.budL] = 0.92; I[X.thEnd] = closedEnd(rad, L * 0.92, tiltC, sepal ? p.sepalClose : -0.05, thA, p.baseZone); I[X.phase] = r1 * 6.28;
       I[X.k0] = acu; I[X.j0] = 0.3; I[X.margA] = 0.01;
       putMat(I, p.mat, p.leafVeinS * 0.6, 5, p.leafRough, 0.2, 0, 0, 1, 1, 0);
       putHead(I, h); commit();
@@ -2068,15 +2101,15 @@ async function main() {
       const sc = Math.round(p.sepals);
       gpLayer = 2;
       for (let i = 0; i < sc; i++)
-        greenPart((i / sc) * Math.PI * 2 + 0.3, p.recR * 0.92, -0.012, 0.55 * p.budBelly, p.sepalOpen, p.sepalLen, p.sepalWidth, 0.8,
-          p.sepalHue, p.sepalSat, p.sepalLight, i + 500 * h.id, h, 1, 0.0);
+        greenPart((i / sc) * Math.PI * 2 + 0.3, p.anchorMode ? p.recR * 0.8 : 9, p.anchorMode ? 1 : 0, 0.55 * p.budBelly, p.sepalOpen, p.sepalLen, p.sepalWidth, 0.8,
+          p.sepalHue, p.sepalSat, p.sepalLight, i + 500 * h.id, h, p.sepalCurl, 0.0, true);
       const rows = Math.round(p.bractRows);
       for (let r = 0; r < rows; r++) {
         const bn = Math.max(3, Math.round(p.bractN));
         gpLayer = 3 - 0.1 * r;
         for (let i = 0; i < bn; i++)
-          greenPart((i / bn) * Math.PI * 2 + r * 0.45 + 0.2, p.bractRad * (1 - 0.07 * r), -0.05 - 0.025 * r, 0.35 + 0.1 * r, p.bractOpen * (1 - 0.1 * r) + 0.1 * r,
-            p.bractLen * (1 - 0.12 * r), p.bractWid, p.bractAcu, p.bractHue, p.bractSat, p.bractLight + 0.02 * r, 2000 + r * 100 + i + 500 * h.id, h, 1.2, 0.02 * r);
+          greenPart((i / bn) * Math.PI * 2 + r * 0.45 + 0.2, p.bractRad * (1 + 0.09 * r), 1, 0.35 + 0.1 * r, p.bractOpen * (1 - 0.1 * r) + 0.1 * r,
+            p.bractLen * (1 - 0.12 * r), p.bractWid, p.bractAcu, p.bractHue, p.bractSat, p.bractLight + 0.02 * r, 2000 + r * 100 + i + 500 * h.id, h, 1.2, 0.02 * r, false);
       }
     }
 
@@ -2140,11 +2173,12 @@ async function main() {
         const rr = Math.sqrt((i + 0.5) / sc);
         const delay = clamp(0.3 + 0.25 * r1 + h.dly, 0, 0.7);
         const I = newInst(3);
-        I[X.az] = i * GOLDEN + 0.6; I[X.rad] = p.stamenRadius * (0.45 + 0.55 * rr); I[X.h] = p.stamenH; I[X.tiltC] = 0.03;
+        const anS = anchorOn(p, p.stamenRadius * (0.45 + 0.55 * rr), 0);
+        I[X.az] = i * GOLDEN + 0.6; I[X.rad] = anS.r; I[X.h] = anS.y - 0.012; I[X.tiltC] = 0.03;
         I[X.tiltO] = p.stamenSpread * (0.7 + 0.6 * r2); I[X.len] = p.stamenLen * (0.85 + 0.3 * r3); I[X.wid] = p.filRad;
         I[X.bc] = 0.0; I[X.mc] = p.stamenArch * 0.5; I[X.tc] = p.stamenArch;
         I[X.delay] = delay; I[X.dur] = clamp(1 - delay, 0.2, 1);
-        putCol(I, X.c0, filC); putCol(I, X.c1, antC); I[X.budL] = 0.5;
+        putCol(I, X.c0, filC); putCol(I, X.c1, antC); I[X.budL] = p.stamenBudL;
         I[X.j0] = p.antherLen; I[X.j1] = p.antherRad * (0.9 + 0.2 * r1); I[X.k2] = 0.75;
         putHead(I, h); commit();
       }
@@ -2152,7 +2186,8 @@ async function main() {
         const pc = hsl2rgb(p.pistilHue, p.pistilSat, p.pistilLight), pt = hsl2rgb(p.pistilHue + 6, p.pistilSat * 0.9, clamp(p.pistilLight + 0.1, 0, 1));
         const ov = hsl2rgb(p.ovHue, p.ovSat, p.ovLight);
         const I = newInst(4);
-        I[X.h] = 0.0; I[X.tiltC] = 0.0; I[X.tiltO] = 0.0; I[X.len] = p.pistilLen; I[X.wid] = p.pistilWid * 0.5;
+        const anP = anchorOn(p, 0, 0);
+        I[X.h] = anP.y - 0.012; I[X.tiltC] = 0.0; I[X.tiltO] = 0.0; I[X.len] = p.pistilLen; I[X.wid] = p.pistilWid * 0.5;
         I[X.mc] = 0.05; I[X.tc] = 0.1; I[X.delay] = 0.15 + h.dly; I[X.dur] = clamp(0.85 - h.dly, 0.3, 1);
         putCol(I, X.c0, pc); putCol(I, X.c1, pt); putCol(I, X.cm, ov); I[X.budL] = 0.5;
         I[X.j0] = p.stigmaR > 0 ? 0.13 : 0; I[X.j1] = p.stigmaR; I[X.j2] = p.stigmaLobes; I[X.j3] = p.stigmaLobes > 0 ? 0.35 : 0;
@@ -2177,7 +2212,9 @@ async function main() {
           const slope = Math.atan(2 * p.floretDome * rr / Math.max(p.floretRadius, 0.05));
           const delay = clamp(0.3 + (1 - rr) * p.discSlope, 0, 1.4);
           const I = newInst(1);
-          I[X.az] = i * GOLDEN; I[X.rad] = p.floretRadius * rr; I[X.h] = p.discY + dome; I[X.tiltC] = slope * 0.8; I[X.tiltO] = slope;
+          const anF = anchorOn(p, p.floretRadius * rr, 0);
+          const slopeS = clamp(anF.th, 0, 1.2);
+          I[X.az] = i * GOLDEN; I[X.rad] = anF.r; I[X.h] = anF.y - Math.max(0.01, 0.15 * sp * 1.9); I[X.tiltC] = slopeS * 0.8; I[X.tiltO] = slopeS;
           I[X.len] = sp * 1.9; I[X.wid] = sp * 0.55; I[X.delay] = delay; I[X.dur] = 0.28; I[X.budL] = 0.55;
           putCol(I, X.c0, fa); putCol(I, X.c1, fb); putCol(I, X.cm, fm);
           putHead(I, h); commit();
@@ -2286,11 +2323,20 @@ async function main() {
     const fsf = 0.3 * g + 8.4 * ((g - 0.5) * (g - 0.5) * (g - 0.5) / 3 + 0.0416667);
     return sm + (fsf - sm) * bloomEase;
   }
-  function thetaAtJS(s, thC, thE, tiltO, bc, mc, tc, b, lam) {
+  // Non-uniform node positions along the arc (denser near the clamped base; mirrored by SNODE in WGSL spineEval).
+  const NODE_S = [0, 0.06, 0.14, 0.25, 0.39, 0.56, 0.77, 1.0];
+  const HJ = 4;                                                   // hinge pivot node: bending weight reaches 1 here (s = 0.39)
+  const HW = NODE_S.map((v) => sstep(0, NODE_S[HJ], v));           // bending weight per node: 0 at the clamped base, 1 beyond the hinge zone
+  const WM = []; for (let i = 0; i < 7; i++) WM.push(0.5 * (HW[i] + HW[i + 1]));
+  // tangent angle at arc parameter s. thA/zone: the clamped base tangent blends into the pose over the base zone.
+  // lam > 0: base opens first (tip lags); lam < 0: TIP opens first (rose margins).
+  function thetaAtJS(s, thC, thE, tiltO, bc, mc, tc, b, lam, thA, zone) {
     const thc = thC + (thE - thC) * sstep(0.12, 0.98, s);
     const tho = tiltO + bc * (0.6666667 * s * s * s - 1.5 * s * s + s) + mc * (2 * s * s - 1.3333333 * s * s * s) + tc * (0.6666667 * s * s * s - 0.5 * s * s);
-    const bs = clamp((b - lam * s) / Math.max(1 - lam, 0.01), 0, 1);
-    return thc + (tho - thc) * bs;
+    const d = lam >= 0 ? lam * s : -lam * (1 - s);
+    const bs = clamp((b - d) / Math.max(1 - Math.abs(lam), 0.01), 0, 1);
+    const th = thc + (tho - thc) * bs;
+    return zone > 0 ? thA + (th - thA) * sstep(0, zone, s) : th;
   }
   const NOSOLVE = new URLSearchParams(location.search).has('nosolve');
   const NOSPRING = new URLSearchParams(location.search).has('nospring');
@@ -2311,11 +2357,12 @@ async function main() {
       fL[q] = (Lc + (lenS - Lc) * b) * (1 + 0.03 * sw);
       const thC = instOut[o + X.tiltC] + 0.1 * sw, thE = instOut[o + X.thEnd], tiltO = instOut[o + X.tiltO], bc = instOut[o + X.bc], mc = instOut[o + X.mc], tc = instOut[o + X.tc];
       const base = q * NK;
+      const lam = kind < 0.1 ? cur.unfurl : (kind < 1 ? cur.sepalUnfurl : 0.35), thA = instOut[o + X.thA], zone = kind > 1.5 ? 0 : cur.baseZone;
       for (let k = 0; k < NK; k++) {
-        const sk = k / (NK - 1);
-        fTh[base + k] = thetaAtJS(sk, thC, thE, tiltO, bc, mc, tc, b, 0.35);
-        fThC[base + k] = thetaAtJS(sk, instOut[o + X.tiltC], thE, tiltO, bc, mc, tc, 0, 0.35);
-        fThO[base + k] = thetaAtJS(sk, instOut[o + X.tiltC], thE, tiltO, bc, mc, tc, 1, 0.35);
+        const sk = NODE_S[k];
+        fTh[base + k] = thetaAtJS(sk, thC, thE, tiltO, bc, mc, tc, b, lam, thA, zone);
+        fThC[base + k] = thetaAtJS(sk, instOut[o + X.tiltC], thE, tiltO, bc, mc, tc, 0, lam, thA, zone);
+        fThO[base + k] = thetaAtJS(sk, instOut[o + X.tiltC], thE, tiltO, bc, mc, tc, 1, lam, thA, zone);
       }
     }
   }
@@ -2347,23 +2394,43 @@ async function main() {
     const o = q * FLOATS_PER_INST, b = q * NK;
     let y = instOut[o + X.h], r = instOut[o + X.rad];
     nodeY[b] = y; nodeR[b] = r;
-    const seg = L / 7;
     for (let k = 0; k < 7; k++) {
       const d = th[off + k + 1] - th[off + k], m = th[off + k] + 0.5 * d, h2 = 0.25 * d * d;
-      const sc = seg * (1 - h2 / 6 + h2 * h2 / 120);
+      const sc = L * (NODE_S[k + 1] - NODE_S[k]) * (1 - h2 / 6 + h2 * h2 / 120);
       y += Math.cos(m) * sc; r += Math.sin(m) * sc;
       nodeY[b + k + 1] = y; nodeR[b + k + 1] = r;
     }
   }
-  function rotateNodes(q, dA) {
-    const b = q * NK, y0 = nodeY[b], r0 = nodeR[b], c = Math.cos(dA), s = Math.sin(dA);
-    for (let k = 1; k < NK; k++) {
-      const ay = nodeY[b + k] - y0, ar = nodeR[b + k] - r0;
-      nodeY[b + k] = y0 + ay * c - ar * s; nodeR[b + k] = r0 + ay * s + ar * c;
+  // BENDING hinge: node angles th_k + A * HW_k. Nodes up to the pivot HJ are re-integrated (the base stays attached and tangent);
+  // everything beyond the pivot moves rigidly with it.
+  let hTh = null, hL = null;
+  function bendNodes(q, A, dA) {
+    const b = q * NK, jy = nodeY[b + HJ], jr = nodeR[b + HJ];
+    let y = nodeY[b], r = nodeR[b];
+    const L = hL[q];
+    for (let k = 0; k < HJ; k++) {
+      const a0 = hTh[b + k] + A * HW[k], a1 = hTh[b + k + 1] + A * HW[k + 1];
+      const d = a1 - a0, m = a0 + 0.5 * d, h2 = 0.25 * d * d;
+      const sc = L * (NODE_S[k + 1] - NODE_S[k]) * (1 - h2 / 6 + h2 * h2 / 120);
+      y += Math.cos(m) * sc; r += Math.sin(m) * sc;
+      nodeY[b + k + 1] = y; nodeR[b + k + 1] = r;
+    }
+    const c = Math.cos(dA), sn = Math.sin(dA);
+    for (let k = HJ + 1; k < NK; k++) {
+      const ay = nodeY[b + k] - jy, ar = nodeR[b + k] - jr;
+      nodeY[b + k] = y + ay * c - ar * sn; nodeR[b + k] = r + ay * sn + ar * c;
     }
   }
+  // effective lever arm: d(position)/d(A) = J * sum_i WM_i * seg_i up to segment ks (+ fraction t of it)
+  let earY = 0, earR = 0;
+  function effArm(q, ks, t) {
+    const b = q * NK; let ey = 0, er = 0;
+    for (let i = 0; i < ks; i++) { ey += WM[i] * (nodeY[b + i + 1] - nodeY[b + i]); er += WM[i] * (nodeR[b + i + 1] - nodeR[b + i]); }
+    if (t > 0) { ey += t * WM[ks] * (nodeY[b + ks + 1] - nodeY[b + ks]); er += t * WM[ks] * (nodeR[b + ks + 1] - nodeR[b + ks]); }
+    earY = ey; earR = er;
+  }
   // probe a point against the polyline of petal j: perpendicular signed distance to the abaxial normal
-  let pbD = 0, pbNy = 0, pbNr = 0, pbCy = 0, pbCr = 0;
+  let pbD = 0, pbNy = 0, pbNr = 0, pbCy = 0, pbCr = 0, pbS = 0, pbT = 0;
   function probe(py, pr, j, cap) {
     const b = j * NK;
     let best = 1e9, ok = false;
@@ -2378,7 +2445,7 @@ async function main() {
       const d = (py - ay) * ny + (pr - ar) * nr, ad = d < 0 ? -d : d;
       if (ad < best && ad < cap) {
         best = ad; ok = true; pbD = d; pbNy = ny; pbNr = nr;
-        const tc = t < 0 ? 0 : (t > 1 ? 1 : t); pbCy = ay + dy * tc; pbCr = ar + dr * tc;
+        const tc = t < 0 ? 0 : (t > 1 ? 1 : t); pbCy = ay + dy * tc; pbCr = ar + dr * tc; pbS = s; pbT = tc;
       }
     }
     return ok;
@@ -2387,7 +2454,7 @@ async function main() {
     let a = Aarr[q] + dA;
     if (a < Alo[q]) a = Alo[q]; else if (a > Ahi[q]) a = Ahi[q];
     const d = a - Aarr[q];
-    if (d !== 0) { Aarr[q] = a; rotateNodes(q, d); if (d > 0.002 || d < -0.002) ver[q]++; }
+    if (d !== 0) { Aarr[q] = a; bendNodes(q, a, d); if (d > 0.002 || d < -0.002) ver[q]++; }
     return d;
   }
   const PROBE_NODES = [2, 4, 6, 7];
@@ -2396,21 +2463,21 @@ async function main() {
     const gap = GAPK * 0.5 * (Li + Lj), cap = 0.14 * Math.min(Li, Lj);
     const ci = comp[i], cj = comp[j], si = ci / (ci + cj), sj = cj / (ci + cj);
     const bi = i * NK, bj = j * NK;
-    let best = 0, kind = 0, kk = 0, Ny = 0, Nr = 0, Cy = 0, Cr = 0;
+    let best = 0, kind = 0, kk = 0, Ny = 0, Nr = 0, Cy = 0, Cr = 0, cS = 0, cT = 0;
     for (let kq = 0; kq < 4; kq++) {
       const k = PROBE_NODES[kq];
       if (probe(nodeY[bi + k], nodeR[bi + k], j, cap)) {
-        const dep = pbD + gap; if (dep > best) { best = dep; kind = 1; kk = k; Ny = pbNy; Nr = pbNr; Cy = pbCy; Cr = pbCr; }
+        const dep = pbD + gap; if (dep > best) { best = dep; kind = 1; kk = k; Ny = pbNy; Nr = pbNr; cS = pbS; cT = pbT; }
       }
       if (probe(nodeY[bj + k], nodeR[bj + k], i, cap)) {
-        const dep = gap - pbD; if (dep > best) { best = dep; kind = 2; kk = k; Ny = pbNy; Nr = pbNr; Cy = pbCy; Cr = pbCr; }
+        const dep = gap - pbD; if (dep > best) { best = dep; kind = 2; kk = k; Ny = pbNy; Nr = pbNr; cS = pbS; cT = pbT; }
       }
     }
     if (kind === 0) return;
     const dep = best * (0.25 + 0.75 * w);
     let ayI, arI, ayJ, arJ;
-    if (kind === 1) { ayI = nodeY[bi + kk] - nodeY[bi]; arI = nodeR[bi + kk] - nodeR[bi]; ayJ = Cy - nodeY[bj]; arJ = Cr - nodeR[bj]; }
-    else { ayJ = nodeY[bj + kk] - nodeY[bj]; arJ = nodeR[bj + kk] - nodeR[bj]; ayI = Cy - nodeY[bi]; arI = Cr - nodeR[bi]; }
+    if (kind === 1) { effArm(i, kk, 0); ayI = earY; arI = earR; effArm(j, cS, cT); ayJ = earY; arJ = earR; }
+    else { effArm(j, kk, 0); ayJ = earY; arJ = earR; effArm(i, cS, cT); ayI = earY; arI = earR; }
     const gI = -arI * Ny + ayI * Nr, gJ = -arJ * Ny + ayJ * Nr;
     const gmin = 0.12 * Math.min(Li, Lj);
     let dI = 0, dJ = 0;
@@ -2425,19 +2492,20 @@ async function main() {
       let worst = 0, wk = 0;
       for (let k = 1; k < NK; k++) { const v = 0.02 - nodeR[b + k]; if (v > worst) { worst = v; wk = k; } }
       if (worst <= 0) return;
-      const ay = nodeY[b + wk] - nodeY[b];
+      effArm(q, wk, 0); const ay = earY;
       if (ay < 0.05) return;
       hingeTo(q, Math.min(0.3, worst / ay));
     }
   }
   // thSrc/Lsrc: node angles and length to project; Aarr receives the hinge increments
   function solveProject(thSrc, Lsrc, sweeps) {
+    hTh = thSrc; hL = Lsrc;
     for (let a = 0; a < nAct; a++) {
       const q = actList[a];
       nodesFrom(q, thSrc, q * NK, Lsrc[q]);
       Aarr[q] = 0;
-      const t0 = thSrc[q * NK];
-      Alo[q] = Math.min(0, fThC[q * NK] - t0 - 0.12); Ahi[q] = Math.max(0, fThO[q * NK] - t0 + 0.35);
+      const t0 = thSrc[q * NK + HJ];
+      Alo[q] = Math.min(0, fThC[q * NK + HJ] - t0 - 0.12); Ahi[q] = Math.max(0, fThO[q * NK + HJ] - t0 + 0.35);
     }
     ver.fill(1, 0, nSpine); pSeen.fill(-1, 0, nPairs); clSeen.fill(-1, 0, nSpine);
     const runPair = (p) => {
@@ -2590,11 +2658,11 @@ async function main() {
       if (kind > 2.5) continue;
       const A = (doSolve && kind < 0.6) ? Aarr[q] : 0;
       tgtA[q] = A;
-      for (let k = 0; k < NK; k++) tgtX[t + k] = fTh[q * NK + k] + A;
+      for (let k = 0; k < NK; k++) tgtX[t + k] = fTh[q * NK + k] + A * HW[k];
       let b = fB[q], L = fL[q];
       if (doSolve && kind < 0.6) {
-        const dF = fTh[q * NK] - fThC[q * NK];
-        const f = dF > 0.06 ? clamp((fTh[q * NK] + A - fThC[q * NK]) / dF, 0, 1.25) : 1;
+        const dF = fTh[q * NK + HJ] - fThC[q * NK + HJ];
+        const f = dF > 0.06 ? clamp((fTh[q * NK + HJ] + A - fThC[q * NK + HJ]) / dF, 0, 1.25) : 1;
         b = clamp(fB[q] * f, 0, 1);
         const sw = sstep(0, 0.07, bloom) * (1 - sstep(0.1, 0.3, bloom)) * (1 - b);
         L = (fLc[q] + (fLo[q] - fLc[q]) * b) * (1 + 0.03 * sw);
@@ -2615,7 +2683,7 @@ async function main() {
         const ov = hq + hn - sp;
         if (ov <= 0) continue;
         const frac = Math.min(1, 4 * ov / (hq + hn));
-        const rho = hand * frac * GAPK * 1.3 * tgtX[q * NS + 8] / sp;
+        const rho = hand * cur.ringRoll * frac * GAPK * 1.3 * tgtX[q * NS + 8] / sp;
         const r = Math.max(-0.35, Math.min(0.35, rho));
         // petal q lies over its successor (right margin out), the successor tucks under: both carry the same sign
         tgtX[q * NS + 10] += 0.5 * r; tgtX[n * NS + 10] += 0.5 * r;
@@ -2667,7 +2735,7 @@ async function main() {
     for (let q = 0; q < nSpine; q++) { const t = q * NS; for (let k = 0; k < NK; k++) thD[q * NK + k] = dispX[t + k]; Lcur[q] = dispX[t + 8]; }
     if (solveEff && nAct > 0) {
       solveProject(thD, Lcur, nAct > 200 ? 1 : 2);
-      for (let a = 0; a < nAct; a++) { const q = actList[a]; for (let k = 0; k < NK; k++) outTh[q * NK + k] = thD[q * NK + k] + Aarr[q]; }
+      for (let a = 0; a < nAct; a++) { const q = actList[a]; for (let k = 0; k < NK; k++) outTh[q * NK + k] = thD[q * NK + k] + Aarr[q] * HW[k]; }
     } else if (solveEff && nAct > 0) {
       for (let a = 0; a < nAct; a++) { const q = actList[a]; for (let k = 0; k < NK; k++) outTh[q * NK + k] = thD[q * NK + k]; }
     }
@@ -2679,6 +2747,59 @@ async function main() {
     }
   }
   // debug: penetration of the displayed pose, in units of petal length (centre-line polylines, all overlapping inner/outer pairs)
+  // debug: attachment gap of every part's base (centre + both base corners of the deformed pose) to the receptacle / stem, in units of
+  // the part's length; positive = floating.
+  function rot3JS(p, ax, ay, az) {
+    let [x, y, z] = p;
+    let c = Math.cos(ax), sn = Math.sin(ax); [y, z] = [y * c - z * sn, y * sn + z * c];
+    c = Math.cos(ay); sn = Math.sin(ay); [x, z] = [x * c + z * sn, -x * sn + z * c];
+    c = Math.cos(az); sn = Math.sin(az); [x, y] = [x * c - y * sn, x * sn + y * c];
+    return [x, y, z];
+  }
+  function recGap(r, y) {
+    let best = 1e9, sg = 1;
+    for (let i = 0; i < REC_N; i++) {
+      const ay = recT.y[i], ar = recT.r[i], dy = recT.y[i + 1] - ay, dr = recT.r[i + 1] - ar, l2 = dy * dy + dr * dr;
+      let t = l2 > 1e-12 ? ((y - ay) * dy + (r - ar) * dr) / l2 : 0; t = t < 0 ? 0 : (t > 1 ? 1 : t);
+      const cy = ay + dy * t, cr = ar + dr * t, d = Math.hypot(y - cy, r - cr);
+      if (d < best) { best = d; const nl = Math.hypot(dy, dr) || 1; sg = ((y - cy) * (dr / nl) * -1 + (r - cr) * (dy / nl)) >= 0 ? 1 : -1; }
+    }
+    return best * sg;
+  }
+  function attachStats() {
+    const res = {}, add = (k, g) => { const e = res[k] || (res[k] = { maxGap: -1e9, meanGap: 0, n: 0 }); if (g > e.maxGap) e.maxGap = g; e.meanGap += g; e.n++; };
+    recBuild(cur);
+    const hasRec = recT.ok;
+    for (let q = 0; q < instCount; q++) {
+      const o = q * FLOATS_PER_INST, kind = instOut[o + X.kind];
+      if (kind > 2.5 && instOut[o + X.delay] < -1) continue;                    // leaf rachides
+      const R = instOut[o + X.rad], y = instOut[o + X.h];
+      if (kind > 1.5 && kind < 2.5) {
+        if (cur.pinnate >= 0 || !cur.stem || cur.leaves <= 0) continue;
+        let best = 1e9;
+        const bx = instOut[o + X.ox] + Math.sin(instOut[o + X.az]) * R, bz = instOut[o + X.oz] + Math.cos(instOut[o + X.az]) * R, by = instOut[o + X.oy];
+        for (let k = 0; k <= 60; k++) { const sp = stemPt(cur, k / 60); const d = Math.hypot(bx - sp[0], by - sp[1], bz - sp[2]) - stemR(cur, k / 60); if (d < best) best = d; }
+        add('leaf', best / Math.max(0.05, instOut[o + X.len])); continue;
+      }
+      if (!hasRec) continue;
+      const L = Math.max(0.03, (q < nSpine && kind < 2.5) ? dispX[q * NS + 8] : instOut[o + X.len]);
+      const name = kind < 0.1 ? 'petal' : (kind < 1 ? (metaOut[q * META + 1] >= 2.5 ? 'bract' : 'sepal') : (kind < 1.5 ? 'floret' : (kind > 3.5 ? 'pistil' : 'stamen')));
+      if (kind < 1) {
+        const bl = q < nSpine ? dispX[q * NS + 9] : 1;
+        const hw = 0.5 * instOut[o + X.wid] * (instOut[o + X.budW] + (1 - instOut[o + X.budW]) * bl) * instOut[o + X.throat];
+        for (const u of [0, 0.5, 1]) {
+          const lx = (2 * u - 1) * hw, phi = clamp(lx / Math.max(R, 0.02), -2.6, 2.6);
+          let p0 = [R * Math.sin(phi), 0, (R * Math.cos(phi) - R) * (flip.z < 0 ? -1 : 1)];
+          if (kind < 0.6) p0 = rot3JS(p0, instOut[o + X.rx], instOut[o + X.ry], instOut[o + X.rz]);
+          const fx = flip.x, fy = flip.y, fz = flip.z;
+          const px = p0[0] * fx, py = p0[1] * fy, pz = p0[2] * fz + R;
+          add(name, recGap(Math.hypot(px, pz), py + y) / L);
+        }
+      } else add(name, recGap(R, y) / L);
+    }
+    for (const k in res) res[k].meanGap /= res[k].n;
+    return res;
+  }
   const worstPair = [-1, -1];
   function worstInfo() {
     const r = [];
@@ -2771,19 +2892,77 @@ async function main() {
   const REC_PROFILES = {
     1: [[-1, 0], [-0.8, 0.3], [-0.55, 0.68], [-0.3, 0.95], [-0.1, 1.0], [0.1, 0.9], [0.3, 0.65], [0.5, 0.3], [0.6, 0]],      // urn hypanthium
     2: [[-1, 0], [-0.7, 0.3], [-0.4, 0.62], [-0.15, 0.92], [0, 1.0], [0.06, 0.97], [0.12, 0.75], [0.16, 0.4], [0.18, 0]],     // dome under a capitulum
-    3: [[-1, 0], [-0.55, 0.22], [-0.2, 0.5], [0.0, 0.78], [0.12, 0.98], [0.15, 1.0], [0.15, 0.6], [0.15, 0]],                // flat-topped inverted cone
+    3: [[-1, 0], [-0.6, 0.16], [-0.28, 0.36], [0, 0.64], [0.12, 0.9], [0.18, 1.0], [0.18, 0.6], [0.18, 0]],   // narrow stalk-swelling obconical receptacle, flat top (petals attach round its underside)
     4: [[-1, 0], [-0.6, 0.5], [-0.2, 0.8], [0, 1.0], [0.1, 0.6], [0.15, 0]],                                               // small ovary base
     5: [[-1, 0], [-0.7, 0.3], [-0.35, 0.62], [-0.1, 0.85], [0, 0.8], [0.1, 1.0], [0.14, 0.7], [0.15, 0]],                  // calyx tube
   };
+  /* ---- receptacle lathe = ONE function. recSurf(p, t) -> {r, y} on the meridional profile (t in 0..1, bottom -> top);
+   * the solid mesh, the part anchoring (anchorOn) and the debug attach() all read the same table, so they cannot disagree. ---- */
+  let recKey = '', recPts = null;
+  const REC_N = 160;
+  const recT = { r: new Float32Array(REC_N + 1), y: new Float32Array(REC_N + 1), th: new Float32Array(REC_N + 1), iMax: 0, ok: false };
+  function recControl(p) {
+    // control polyline in absolute units [y, r]
+    if (p.domeR > 0) {
+      // ball (dahlia): the receptacle is the sphere the florets are phyllotactically placed on
+      const cmax = Math.cos(p.domeMax), pts = [[-p.recH, 0], [-p.recH * 0.45, p.recR * 0.45], [-p.recH * 0.1, p.recR * 0.85]];
+      const phiMax = Math.acos(clamp(cmax, -1, 1));
+      for (let i = 0; i <= 10; i++) { const ph = phiMax * (1 - i / 10), c = Math.cos(ph); pts.push([0.02 + p.domeR * (c - cmax) * 0.9, p.domeR * Math.sin(ph) + p.baseRadius * (ph > 1e-3 ? 1 : 0)]); }
+      pts.push([pts[pts.length - 1][0] + 0.001, 0]);
+      return pts;
+    }
+    const prof = REC_PROFILES[p.recType | 0];
+    return prof ? prof.map((q) => [q[0] * p.recH, q[1] * p.recR]) : null;
+  }
+  function recEval(pts, t, p, o) {
+    const n = pts.length, f = clamp(t, 0, 1) * (n - 1), s = Math.min(Math.floor(f), n - 2), tt = f - s;
+    const a = pts[Math.max(s - 1, 0)], b = pts[s], c = pts[s + 1], d = pts[Math.min(s + 2, n - 1)];
+    const y = catmull(a[0], b[0], c[0], d[0], tt);
+    let r = Math.max(0, catmull(a[1], b[1], c[1], d[1], tt));
+    r += (1 - smooth01((y / p.recH + 1) / 0.45)) * p.stemRad * 0.95;
+    o.y = y; o.r = r;
+  }
+  const recTmp = { y: 0, r: 0 };
+  function recBuild(p) {
+    const key = [p.recType, p.recH, p.recR, p.stemRad, p.domeR, p.domeMax, p.baseRadius].join(',');
+    if (key === recKey) return recT.ok;
+    recKey = key;
+    const pts = recControl(p);
+    recT.ok = !!pts;
+    if (!pts) return false;
+    let mx = -1;
+    for (let i = 0; i <= REC_N; i++) { recEval(pts, i / REC_N, p, recTmp); recT.r[i] = recTmp.r; recT.y[i] = recTmp.y; if (recTmp.r >= mx - 1e-9) { mx = recTmp.r; recT.iMax = i; } }
+    for (let i = 0; i <= REC_N; i++) {
+      const i0 = Math.max(i - 1, 0), i1 = Math.min(i + 1, REC_N);
+      const dr = recT.r[i1] - recT.r[i0], dy = recT.y[i1] - recT.y[i0];
+      recT.th[i] = Math.atan2(dy, -dr);                       // outward normal (dy, -dr) as an angle from +Y toward +r
+    }
+    return true;
+  }
+  const recSurf = (p, t, o) => { recBuild(p); const f = clamp(t, 0, 1) * REC_N, i = Math.min(Math.floor(f), REC_N - 1), u = f - i; o.r = lerp(recT.r[i], recT.r[i + 1], u); o.y = lerp(recT.y[i], recT.y[i + 1], u); o.th = lerp(recT.th[i], recT.th[i + 1], u); return o; };
+  // anchor a part at distance R from the axis. branch 0: top (upper) surface, 1: underside. Result clamps to the rim.
+  const anc = { r: 0, y: 0, th: 0, ok: false };
+  function anchorOn(p, R, branch) {
+    if (!recBuild(p)) { anc.r = R; anc.y = 0.02; anc.th = 0; anc.ok = false; return anc; }
+    const iM = recT.iMax;
+    let i0, i1, st;
+    if (branch) { i0 = iM; i1 = 0; st = -1; } else { i0 = iM; i1 = REC_N; st = 1; }
+    if (R >= recT.r[iM]) { anc.r = recT.r[iM]; anc.y = recT.y[iM]; anc.th = recT.th[iM]; anc.ok = true; return anc; }
+    let i = i0;
+    while (i !== i1 && recT.r[i + st] > R) i += st;
+    const j = Math.max(0, Math.min(REC_N, i + st)), den = recT.r[i] - recT.r[j];
+    const u = Math.abs(den) < 1e-9 ? 0 : clamp((recT.r[i] - R) / den, 0, 1);
+    anc.r = R; anc.y = lerp(recT.y[i], recT.y[j], u); anc.th = lerp(recT.th[i], recT.th[j], u); anc.ok = true;
+    return anc;
+  }
   function addReceptacle(p, h) {
-    const prof = REC_PROFILES[p.recType | 0]; if (!prof) return;
+    if (!recBuild(p)) return;
+    const prof = recControl(p);
     const nv = (prof.length - 1) * 5, nu = 20;
     const rows = [];
     for (let j = 0; j <= nv; j++) {
-      const f = j / nv * (prof.length - 1), s = Math.min(Math.floor(f), prof.length - 2), t = f - s;
-      const a = prof[Math.max(s - 1, 0)], b = prof[s], c = prof[s + 1], d = prof[Math.min(s + 2, prof.length - 1)];
-      const y = catmull(a[0], b[0], c[0], d[0], t) * p.recH, r = Math.max(0, catmull(a[1], b[1], c[1], d[1], t)) * p.recR;
-      rows.push([y, r + (1 - smooth01((y / p.recH + 1) / 0.45)) * p.stemRad * 0.95, (y / p.recH + 1) / 1.7]);
+      recSurf(p, j / nv, recTmp);
+      rows.push([recTmp.y, recTmp.r, (recTmp.y / p.recH + 1) / 1.7]);
     }
     const c1 = hsl2rgb(p.recHue, p.recSat, p.recLight), c2 = hsl2rgb(p.recHue2, p.recSat2, p.recLight2);
     addGrid(nu, nv, (i, j) => { const a = i / nu * Math.PI * 2, [y, r] = rows[j]; return headPt(h, Math.cos(a) * r, y, Math.sin(a) * r); },
@@ -3151,7 +3330,7 @@ async function main() {
   canvas.addEventListener('touchend', () => { pinchDist = 0; });
 
   /* ----------------------------- loop ------------------------------ */
-  if (new URLSearchParams(location.search).has('debug')) window.__flower = { cam, lose: () => device.destroy(), quality: () => ({ renderScale, budgetLevel, w: canvas.width, h: canvas.height, subdiv: $('subdiv').value, tris: totalTris }), cpuNaN: () => { let bad = 0; for (let i = 0; i < nSpine * 12; i++) if (!isFinite(spineData[i])) bad++; for (let i = 0; i < instCount * FLOATS_PER_INST; i++) if (!isFinite(instOut[i])) bad++; return bad; }, settle: () => { cpuStage(bloomT, 0.1, true); }, penetration: () => penetrationStats(), step: (dt, n) => { for (let i = 0; i < n; i++) cpuStage(bloomT, dt, false); }, dump: () => Array.from(spineData.subarray(0, nSpine * 12)), err: () => { let m = 0; for (let q = 0; q < nSpine; q++) for (let c = 0; c < NS; c++) m = Math.max(m, Math.abs(dispX[q * NS + c] - tgtX[q * NS + c])); return m; }, worst: () => worstInfo(), setSolve: (on) => { solveOn = !!on; needSnap = true; }, get prof() { return prof; }, get solverMs() { return [solverMs, solverMsAvg, solverMsMax]; },
+  if (new URLSearchParams(location.search).has('debug')) window.__flower = { cam, lose: () => device.destroy(), quality: () => ({ renderScale, budgetLevel, w: canvas.width, h: canvas.height, subdiv: $('subdiv').value, tris: totalTris }), cpuNaN: () => { let bad = 0; for (let i = 0; i < nSpine * 12; i++) if (!isFinite(spineData[i])) bad++; for (let i = 0; i < instCount * FLOATS_PER_INST; i++) if (!isFinite(instOut[i])) bad++; return bad; }, settle: () => { cpuStage(bloomT, 0.1, true); }, penetration: () => penetrationStats(), attach: () => attachStats(), step: (dt, n) => { for (let i = 0; i < n; i++) cpuStage(bloomT, dt, false); }, dump: () => Array.from(spineData.subarray(0, nSpine * 12)), err: () => { let m = 0; for (let q = 0; q < nSpine; q++) for (let c = 0; c < NS; c++) m = Math.max(m, Math.abs(dispX[q * NS + c] - tgtX[q * NS + c])); return m; }, worst: () => worstInfo(), setSolve: (on) => { solveOn = !!on; needSnap = true; }, get prof() { return prof; }, get solverMs() { return [solverMs, solverMsAvg, solverMsMax]; },
      load: (i) => { presetSel.value = i; loadPreset(i, false); }, get inst() { return instCount; },
     stats: () => ({ tris: totalTris, budget: BUDGETS[budgetLevel] * budgetScale, buckets: buckets.map((b) => ({ kind: b.kind, count: b.count, nu: b.nu, nv: b.nv, tris: b.tris })), instances: instCount, solidTris: solNI / 3 }) };
   loadPreset(0, false);
