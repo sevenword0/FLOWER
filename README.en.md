@@ -46,14 +46,24 @@ Each preset follows the structure and opening behaviour of the real flower.
 
 | Preset | Structure | How it opens |
 | --- | --- | --- |
-| Rose | Several whorls of petals in an overlapping spiral, 5 sepals | Outer petals reflex first while the core stays cupped |
-| Daisy | One whorl of 26 narrow ray florets around a disc of disc florets | Spreads flat, each ray slightly out of step with its neighbours |
-| Sunflower | One whorl of 30 ray florets around a large golden-angle spiral disc, with an involucre | Rays folded over the disc stand up and spread |
-| Tulip | 6 tepals in two whorls of 3, 6 stamens | Opens from an overlapping wrapped bud into a goblet |
-| Lily | 6 tepals in two whorls of 3, long stamens and pistil | Spreads wide with the tips reflexed back |
-| Lotus | Several whorls of broad petals around a central seed pod ringed by stamens | Whorl by whorl from the outside |
+| Rose | Several whorls of petals in an overlapping spiral, 5 sepals | Outer petals roll back from the tip and margins first while the core stays cupped. The sepals stay attached and arch back |
+| Daisy | One whorl of 26 flat, strap-shaped ray florets around a disc of disc florets | Spreads flat, each ray slightly out of step with its neighbours |
+| Sunflower | One whorl of 30 ray florets around a large golden-angle spiral disc, with an involucre | Rays standing inside the involucre spread out evenly |
+| Tulip | 6 tepals in two whorls of 3, 6 stamens | Opens from a bud with a rounded bowl-shaped bottom into a goblet |
+| Lily | 6 tepals in two whorls of 3, long stamens and pistil | Spreads wide from a narrow funnel base, with the tips reflexed back |
+| Lotus | Several whorls of broad petals attached in overlap below the receptacle, around a central seed pod ringed by stamens | Whorl by whorl from the outside |
 | Cherry blossom | 5 notched petals, many slender stamens; 4 blossoms on one twig | All together, wide open |
-| Dahlia | Dense spiral of petals, quilled into tubes | Row by row from the outside inward |
+| Dahlia | Dense spiral of petals, quilled into tubes | In one continuous sweep from the outside to the centre |
+
+## Attachment and bending
+
+Petals, sepals, bracts and stamens all sit on the surface of the receptacle (the base of the flower).
+
+- **One source of truth**: a single receptacle profile curve is used both for the receptacle that is drawn and for where the parts attach. Each base is sunk slightly into the surface, so no gap opens.
+- **Rounded base edge**: the base edge of a petal is not a straight line; it follows the round surface of the receptacle.
+- **Curved departure**: a petal leaves in the direction of the receptacle surface and bends into its pose over roughly the first 15–35% of its length. This gives the tulip its round bottom and the lily its narrow funnel.
+- **Bending, not rotation**: when a petal opens or is pushed by a neighbour, its base stays fixed and it bends more the farther it is from the base. Sepals and bracts arch back the same way.
+- **Unfurl direction**: most flowers open from the base first; the rose rolls back from the tip and margins first.
 
 ## Petal interaction
 
@@ -64,7 +74,7 @@ Petals are aware of each other. Each petal's base-to-tip curve (its spine) is re
 - **Overlap within a whorl**: neighbouring petals of the same whorl sit with one margin over and the other margin under.
 - **Springiness**: a released petal overshoots slightly and settles. The same position of the "개화 정도" (bloom amount) slider still always gives the same shape.
 
-Limits: this is a reduced model in which each petal hinges as a whole about its base. Local dents at the point of contact are not modelled. Some overlap can remain in the bud state of flowers with very many petals and in randomly generated flowers. With "Z 반전" (flip Z) or the petal rotation sliders (X, Y, Z), interaction is switched off and each petal moves independently.
+Limits: when petals push on each other they deform in one way only, a broad bend from the base to mid-blade. Local dents at the point of contact are not modelled. Some overlap can remain in the bud state of flowers with very many petals and in randomly generated flowers. With "Z 반전" (flip Z) or the petal rotation sliders (X, Y, Z), interaction is switched off and each petal moves independently. Turning petal rotation X or Y close to 90 degrees lifts the base corners off the receptacle. Randomly generated flowers use the default attachment settings, so their bases can look cruder than the presets.
 
 ## Polygon budget
 
