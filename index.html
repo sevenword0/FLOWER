@@ -130,10 +130,14 @@
     <div class="row"><label>중심↔외곽 높이</label><input type="range" id="heightBias" min="-1" max="1" step="0.01" value="0"><span class="val" id="heightBiasV"></span></div>
     <div class="row"><label>중심↔외곽 벌어짐</label><input type="range" id="openBias" min="-1" max="1.5" step="0.01" value="0.45"><span class="val" id="openBiasV"></span></div>
     <div class="row"><label>겹침 깊이(층 분리)</label><input type="range" id="petalLayer" min="0" max="1" step="0.01" value="0"><span class="val" id="petalLayerV"></span></div>
+    <div class="row"><label>밑동 벌어짐</label><input type="range" id="baseFlare" min="-1.4" max="0.8" step="0.01" value="0"><span class="val" id="baseFlareV"></span></div>
+    <div class="row"><label>밑동 곡선 구간</label><input type="range" id="baseZone" min="0.05" max="0.6" step="0.01" value="0.22"><span class="val" id="baseZoneV"></span></div>
+    <div class="row"><label>펴지는 방향 (밑동↔끝)</label><input type="range" id="unfurl" min="-1" max="1" step="0.01" value="0.35"><span class="val" id="unfurlV"></span></div>
     <div class="row"><label>꽃받침 수</label><input type="range" id="sepals" min="0" max="8" step="1" value="0"><span class="val" id="sepalsV"></span></div>
     <div class="row"><label>꽃받침 길이</label><input type="range" id="sepalLen" min="0.2" max="1.4" step="0.01" value="0.55"><span class="val" id="sepalLenV"></span></div>
     <div class="row"><label>꽃받침 벌어짐</label><input type="range" id="sepalOpen" min="0.2" max="2.6" step="0.01" value="1.95"><span class="val" id="sepalOpenV"></span></div>
     <div class="row"><label>꽃받침 색조</label><input type="range" id="sepalHue" min="60" max="160" step="1" value="125"><span class="val" id="sepalHueV"></span></div>
+    <div class="row"><label>꽃받침 휘어짐</label><input type="range" id="sepalCurl" min="0" max="4" step="0.01" value="1"><span class="val" id="sepalCurlV"></span></div>
     <div class="row"><label>말림(컵)</label><input type="range" id="cup" min="0" max="4.4" step="0.01" value="0.8"><span class="val" id="cupV"></span></div>
     <div class="row"><label>말림 축</label><input type="range" id="cupAxis" min="0" max="1.57" step="0.01" value="0"><span class="val" id="cupAxisV"></span></div>
     <div class="row"><label>뿌리쪽 곡률</label><input type="range" id="baseCurl" min="-2" max="2.6" step="0.01" value="0.5"><span class="val" id="baseCurlV"></span></div>
@@ -327,7 +331,7 @@ function P(o) {
     radIn: 0.35, radOut: 1.2,         // attachment radius range (x baseRadius) centre -> outside
     domeR: 0, domeMax: 2.0,           // ball/dome phyllotaxis (spiral florets placed on a sphere)
     // ---- receptacle (solid lathe) ----
-    recType: 0, recH: 0.45, recR: 0.2, recHue: 100, recSat: 0.45, recLight: 0.36, recHue2: 100, recSat2: 0.45, recLight2: 0.36,
+    recType: 0, recH: 0.45, recR: 0.2, budTip: -1, cupBud: 1.15, recHue: 100, recSat: 0.45, recLight: 0.36, recHue2: 100, recSat2: 0.45, recLight2: 0.36,
     // ---- involucre ----
     bractRows: 0, bractN: 13, bractLen: 0.5, bractWid: 0.3, bractOpen: 1.9, bractAcu: 0.8, bractHue: 105, bractSat: 0.45, bractLight: 0.32, bractRad: 0.2,
     // ---- stamen / pistil detail ----
@@ -345,7 +349,7 @@ function P(o) {
     leafRough: 0.42, leafVeinS: 0.5, leafVeinD: 9, leafPar: 0, leafTrans: 0.30,               // leaves, sepals, bracts
     frameDist: 6.8, frameY: 0.1,                                                              // default camera framing
     // ---- stage-4: attachment / bending ----
-    baseFlare: 0, baseZone: 0.22, baseHold: 1, // attachment angle = surface normal + flare; length fraction over which the clamped base blends into the pose
+    wrapZone: 0.22, baseFlare: 0, baseZone: 0.22, baseHold: 1, // attachment angle = surface normal + flare; length fraction over which the clamped base blends into the pose
     baseW: -1,                                 // base width as a fraction of the receptacle circle (-1: auto from the count)
     unfurl: 0.35, sepalUnfurl: -0.4, sepalCurl: 1, sepalOpen0: -1,  // + base opens first, - tip opens first; sepal arch curvature; sepal open tangent at the base (-1: derived)
     sepalClose: 0.35, ringRoll: 1, stamenBudL: 0.5, anchorMode: 0,                             // 0: radius-driven anchoring on the receptacle top; 1: rim
@@ -378,7 +382,7 @@ const PRESETS = {
     petalLayer: 0, baseRadius: 0.16, radIn: 0.3, radOut: 1.1, budBelly: 1, budClose: 0.75, budWidth: 0.72, budLen: 0.58,
     bloomBias: 0.42, bloomDur: 0.9, hold: 0.0, jitter: 0.1, hue: 352, sat: 0.78, light: 0.34, hueTipShift: 8, tipLight: 0.07,
     sepals: 5, sepalLen: 0.85, sepalWidth: 0.22, sepalOpen: 1.15, sepalCurl: 3.0, sepalUnfurl: -0.45, sepalHue: 122, sepalSat: 0.5, sepalLight: 0.3,
-    unfurl: -0.55, baseZone: 0.2, baseW: 0.42,
+    unfurl: -0.55, baseZone: 0.2, baseW: 0.42, cupBud: 0.9,
     stamens: 40, stamenLen: 0.2, stamenRadius: 0.1, stamenSpread: 0.45, antherHue: 48, antherSat: 0.95, antherLight: 0.5, filHue: 52, filSat: 0.6, filLight: 0.7,
     pistil: 1, pistilLen: 0.16, pistilHue: 80, pistilSat: 0.4, pistilLight: 0.6, stigmaR: 0.03,
     recType: 1, recH: 0.52, recR: 0.2, recHue: 112, recSat: 0.5, recLight: 0.3, recHue2: 105, recSat2: 0.55, recLight2: 0.36,
@@ -420,7 +424,7 @@ const PRESETS = {
     mat: 4, veinS: 0.18, veinD: 6, rough: 0.30, trans: 0.55, sheen: 0, accDH: -40, accS: 0.5, accL: 0.1, leafRough: 0.62, leafPar: 1, leafVeinD: 7, leafVeinS: 0.4,
     sizeBias: 0.1, openBias: 0.05, budClose: 0.6, petalCount: 3, whorls: 2, spiral: 0, petalLength: 1.15, petalWidth: 0.88, cup: 1.6, openAngle: 0.36,
     baseCurl: 0.5, midCurl: 0.1, tipCurl: 0.2, budWidth: 0.95, budLen: 0.7, widthPow: 1.05, petalShape: 0.42, tipRound: 1.0, acu: 0.12,
-    keel: 0.1, ruffle: 0.01, margRuff: 0.01, baseRadius: 0.13, radIn: 0.85, radOut: 1.15, petalLayer: 0, budBelly: 1.0, baseZone: 0.34, baseFlare: 0.15, baseW: 0.85, stamenBudL: 0.22,
+    keel: 0.1, ruffle: 0.01, margRuff: 0.01, baseRadius: 0.13, radIn: 0.85, radOut: 1.15, petalLayer: 0, budBelly: 1.0, baseZone: 0.34, baseFlare: 0.15, baseW: 0.85, wrapZone: 0.85, stamenBudL: 0.22,
     hue: 350, sat: 0.82, light: 0.52, hueTipShift: 6, tipLight: 0.06, bloomBias: 0.25, jitter: 0.02, bloomStagger: 0.25,
     stamens: 6, stamenLen: 0.34, stamenRadius: 0.04, stamenSpread: 0.08, stamenArch: 0.1, antherHue: 262, antherSat: 0.35, antherLight: 0.14, antherLen: 0.3, antherRad: 0.02, filHue: 60, filSat: 0.2, filLight: 0.8, filRad: 0.01,
     pistil: 1, pistilLen: 0.4, pistilWid: 0.04, pistilHue: 88, pistilSat: 0.4, pistilLight: 0.55, stigmaLobes: 3, stigmaR: 0.07, ovaryR: 0.075, ovaryFrac: 0.5, ovHue: 100, ovSat: 0.5, ovLight: 0.42,
@@ -449,12 +453,12 @@ const PRESETS = {
     mat: 6, veinS: 0.55, veinD: 5, rough: 0.45, trans: 0.5, sheen: 0.15, accDH: -6, accS: 0.7, accL: 0.55, leafRough: 0.5,
     petalCount: 11, whorls: 2, spiral: 1, petalLength: 1.0, petalWidth: 0.86, sizeBias: 0.7, widthPow: 0.9, petalShape: 0.55, tipRound: 0.7, acu: 0.35,
     cup: 2.3, openAngle: 0.42, openBias: 1.0, budClose: 0.25, baseCurl: 0.2, midCurl: 0.5, tipCurl: 1.1, innerCurl: -0.5, keel: 0, margRuff: 0, ruffle: 0, jitter: 0.04,
-    baseW: 0.3, baseRadius: 0.36, radIn: 0.8, radOut: 1.15, petalLayer: 0, baseFlare: -1.0, budBelly: 0.6, budWidth: 0.78, budLen: 0.62, hue: 338, sat: 0.45, light: 0.84, tipLight: -0.22, hueTipShift: 8,
+    baseW: 0.12, baseRadius: 0.17, radIn: 0.8, radOut: 1.15, petalLayer: 0, baseFlare: -1.0, budBelly: 1.0, budWidth: 0.78, budLen: 0.62, hue: 338, sat: 0.45, light: 0.84, tipLight: -0.22, hueTipShift: 8,
     bloomBias: 0.3, bloomDur: 0.78, bloomStagger: 0.45,
-    floret: 1, floretCount: 90, floretRadius: 0.34, floretDome: 0, discY: 0.09, floretHue: 70, floretSat: 0.45, floretLight: 0.3, discSlope: 0.3,
-    stamens: 200, stamenLen: 0.26, stamenRadius: 0.28, stamenBudL: 0.2, stamenSpread: 0.2, stamenArch: 0.2, antherHue: 52, antherSat: 0.95, antherLight: 0.55, antherLen: 0.22, antherRad: 0.012, filHue: 48, filSat: 0.7, filLight: 0.7, filRad: 0.006,
+    floret: 1, floretCount: 90, floretRadius: 0.17, floretDome: 0, discY: 0.09, floretHue: 70, floretSat: 0.45, floretLight: 0.3, discSlope: 0.3,
+    stamens: 200, stamenLen: 0.26, stamenRadius: 0.15, stamenBudL: 0.2, stamenSpread: 0.2, stamenArch: 0.2, antherHue: 52, antherSat: 0.95, antherLight: 0.55, antherLen: 0.22, antherRad: 0.012, filHue: 48, filSat: 0.7, filLight: 0.7, filRad: 0.006,
     sepals: 4, sepalLen: 0.6, sepalWidth: 0.3, sepalHue: 120, sepalOpen: 2.2, sepalSat: 0.35, sepalLight: 0.5,
-    recType: 3, recH: 0.6, recR: 0.4, anchorMode: 1, recHue: 82, recSat: 0.6, recLight: 0.45, recHue2: 56, recSat2: 0.7, recLight2: 0.52,
+    recType: 6, recH: 0.6, recR: 0.2, budTip: 0.31, cupBud: 0.55, anchorMode: 1, recHue: 82, recSat: 0.6, recLight: 0.45, recHue2: 56, recSat2: 0.7, recLight2: 0.52,
     leaves: 0, stemRad: 0.065, stemRadBot: 0.08, stemHue: 100, stemSat: 0.4, stemLight: 0.38, stemBend: 0.3, stemLen: 2.6,
   }),
   // CHERRY BLOSSOM (Somei-yoshino): 5 notched obovate petals, almost flat; 5 small sepals on a reddish calyx tube;
@@ -1271,7 +1275,9 @@ fn deformPetal(Pp : Petal, sc : vec4<f32>, u : f32, v : f32, sp : vec3<f32>) -> 
   let wz = Rs * cos(phi) - Rs;
   let isLeaf = kind > 1.5;
   // the base edge always follows the receptacle circle (wrap fades out over the first ~22% of the length when open)
-  let wrapW = max(1.0 - bloom, 1.0 - smoothstep(0.0, 0.22, v));
+  let wzp = Pp.s2.y;                                           // petals only: wrap zone * 0.4 (0 = default 0.22)
+  let wrapZ = select(0.22, wzp * 2.5, wzp > 0.001 && kind < 0.1);
+  let wrapW = max(1.0 - bloom, 1.0 - smoothstep(0.0, wrapZ, v));
   let px = select(mix(lx, wx, wrapW), lx, isLeaf);
   let fzs = select(1.0, sign(U.flip.z), U.flip.z != 0.0);   // placePos mirrors z about the base: pre-compensate so the wrapped base edge stays on the receptacle circle
   let pz = tz + select(wz * wrapW * fzs, 0.0, isLeaf);
@@ -2033,15 +2039,19 @@ async function main() {
         let tiltO = p.openAngle * (0.925 + p.openBias * (wf - 0.5));
         // anchor ON the receptacle surface (single source of truth: recSurf / anchorOn); dome flowers sit on their sphere
         let hBase, thN;
+        const layN = whorls > 1 ? 1 - wf : (i % 2) * 0.5;
         if (domeMode) {
-          const cmax = Math.cos(p.domeMax), cphi = 1 - (1 - cmax) * Math.pow(wf, 0.9), phi = Math.acos(clamp(cphi, -1, 1));
+          // heightBias warps where along the sphere the florets sit (+: bunched toward the apex), petalLayer lets alternate florets of the
+          // spiral sink a little toward the apex (shingle); openBias spreads outer florets more than inner ones. Everything stays on the sphere.
+          let wfp = Math.pow(wf, Math.exp(1.2 * p.heightBias));
+          wfp = clamp(wfp - p.petalLayer * 0.12 * (1 - wf) * (idx % 2 ? 1 : 0.3), 0, 1);
+          const cmax = Math.cos(p.domeMax), cphi = 1 - (1 - cmax) * Math.pow(wfp, 0.9), phi = Math.acos(clamp(cphi, -1, 1));
           radius = p.domeR * Math.sin(phi) + p.baseRadius * (phi > 1e-3 ? 1 : 0);
           hBase = 0.02 + p.domeR * (cphi - cmax) * 0.9;
-          tiltO = phi * p.openAngle; thN = phi;
+          tiltO = phi * p.openAngle * Math.max(0.2, 1 + p.openBias * (wf - 0.5) * 0.9); thN = phi;
         } else {
           // centre<->outer height and layer separation slide the anchor ALONG the receptacle, so bases stay attached:
           // inner layers move toward the apex (top branch) or the rim (underside branch), outer layers the other way.
-          const layN = whorls > 1 ? 1 - wf : (i % 2) * 0.5;
           const lift = p.heightBias * (0.5 - wf) * 0.6 + p.petalLayer * layN * 0.5;
           radius *= clamp(p.anchorMode ? 1 + lift : 1 - lift, 0.25, 1.6);
           const an = anchorOn(p, radius, p.anchorMode ? 1 : 0); radius = an.r; hBase = an.y; thN = an.th;
@@ -2051,7 +2061,10 @@ async function main() {
         const widS = p.petalWidth * (1 + p.sizeBias * (wf - 0.5) * 0.6) * (1 + (r4 - 0.5) * 2 * J);
         const tiltC = (0.22 + 0.5 * wf) * p.budBelly;
         const inner = 1 - wf;
-        const thA = Math.max(0.05, tiltC + (clamp(thN, 0, 1.55) + p.baseFlare - tiltC) * p.baseHold);       // attachment direction (clamped base tangent)
+        // petalLayer also stands the inner layers up (base direction and open angle), so the shingling shows on flat receptacles too
+        const layerUp = p.petalLayer * layN * (domeMode ? 0 : 1);
+        if (layerUp !== 0) tiltO = Math.max(0.05, tiltO - 0.35 * layerUp);
+        const thA = Math.max(0.05, tiltC + (clamp(thN, 0, 1.55) + p.baseFlare - tiltC) * p.baseHold - 0.5 * layerUp);       // attachment direction (clamped base tangent)
         const sinkP = 0.015 * lenS;
         radius -= sinkP * Math.sin(thN); hBase -= sinkP * Math.cos(thN);
         const bwFrac = p.baseW >= 0 ? p.baseW : (p.spiral ? 0.35 : Math.min(1, 1.05 / perW));
@@ -2062,19 +2075,19 @@ async function main() {
         const I = newInst(0);
         I[X.az] = az + (r1 - 0.5) * J * (p.spiral ? 0.4 : 1.2); I[X.rad] = radius; I[X.h] = hBase; I[X.tiltC] = tiltC;
         I[X.tiltO] = tiltO; I[X.len] = lenS; I[X.wid] = widS; I[X.bc] = bc;
-        I[X.cupC] = clamp(p.cup * 1.15, 0, 5); I[X.cupO] = p.cup * (0.6 - 0.25 * wf);
+        I[X.cupC] = clamp(p.cup * p.cupBud, 0, 5); I[X.cupO] = p.cup * (0.6 - 0.25 * wf);
         I[X.delay] = delay; I[X.dur] = p.bloomDur > 0 ? p.bloomDur : clamp(1 - delay, 0.25, 1);
         putCol(I, X.c0, colBase); putCol(I, X.c1, colTip); I[X.wpow] = p.widthPow;
         I[X.ruff] = p.ruffle; I[X.ruffN] = p.ruffN; I[X.twist] = (r3 - 0.5) * J * 3.0 * (0.5 + wf); I[X.shape] = p.petalShape;
         I[X.notch] = p.notch; I[X.quill] = p.quill * (0.5 + 0.5 * wf); I[X.tc] = tc; I[X.tipR] = p.tipRound;
         I[X.mc] = mc; I[X.rx] = p.rotX; I[X.ry] = p.rotY; I[X.rz] = p.rotZ;
-        I[X.budW] = p.budWidth; I[X.budL] = p.budLen; I[X.thEnd] = closedEnd(radius, lenS * p.budLen, tiltC, p.budClose, thA, p.baseZone); I[X.phase] = r1 * 6.2832;
+        I[X.budW] = p.budWidth; I[X.budL] = p.budLen; I[X.thEnd] = closedEnd(radius, lenS * p.budLen, tiltC, p.budTip > 0 ? 1 - p.budTip * (0.7 + 0.3 * wf) / Math.max(radius, 0.02) : p.budClose, thA, p.baseZone); I[X.phase] = r1 * 6.2832;
         I[X.thA] = thA; I[X.throat] = Math.min(1, bwFrac * 6.2832 * radius / Math.max(0.05, widS * Math.min(1, p.budWidth)));
         const rollAmt = p.roll > 0 ? p.roll * smooth01((wf - 0.1) / 0.9) : p.roll;
         I[X.j0] = p.keel * (0.8 + 0.4 * r3); I[X.j1] = rollAmt * (0.85 + 0.3 * r4); I[X.j2] = p.claw; I[X.j3] = p.clawLen;
         I[X.k0] = p.acu; I[X.k1] = p.teeth; I[X.k2] = p.pleat; I[X.k3] = p.pleatN;
         I[X.margA] = p.margRuff * (0.6 + 0.8 * r2); I[X.margN] = p.margN; I[X.rollZ] = p.rollZone; I[X.rollV] = p.rollV0;
-        putCol(I, X.cm, accCol); putMat(I, p.mat, p.veinS, p.veinD, p.rough, p.trans, p.sheen, p.markS, wf, p.relief, 0);
+        putCol(I, X.cm, accCol); putMat(I, p.mat, p.veinS, p.veinD, p.rough, p.trans, p.sheen, p.markS, wf, p.relief, Math.abs(p.wrapZone - 0.22) > 1e-6 ? clamp(p.wrapZone, 0.05, 1) * 0.4 : 0);
         putHead(I, h);
         metaScratch[0] = h.id; metaScratch[1] = wf; metaScratch[2] = p.spiral ? -1 : w; metaScratch[3] = perW; metaScratch[4] = i; metaScratch[6] = domeMode ? 1 : 0;
         commit();
@@ -2114,7 +2127,7 @@ async function main() {
         gpLayer = 3 - 0.1 * r;
         for (let i = 0; i < bn; i++)
           greenPart((i / bn) * Math.PI * 2 + r * 0.45 + 0.2, p.bractRad * (1 + 0.09 * r), 1, 0.35 + 0.1 * r, p.bractOpen * (1 - 0.1 * r) + 0.1 * r,
-            p.bractLen * (1 - 0.12 * r), p.bractWid, p.bractAcu, p.bractHue, p.bractSat, p.bractLight + 0.02 * r, 2000 + r * 100 + i + 500 * h.id, h, 1.2, 0.02 * r, false);
+            p.bractLen * (1 - 0.12 * r), p.bractWid, p.bractAcu, p.bractHue, p.bractSat, p.bractLight + 0.02 * r, 2000 + r * 100 + i + 500 * h.id, h, 1.2 * p.sepalCurl, 0.02 * r, false);
       }
     }
 
@@ -2219,7 +2232,8 @@ async function main() {
           const I = newInst(1);
           const anF = anchorOn(p, p.floretRadius * rr, 0);
           const slopeS = clamp(anF.th, 0, 1.2);
-          I[X.az] = i * GOLDEN; I[X.rad] = anF.r; I[X.h] = anF.y - Math.max(0.01, 0.15 * sp * 1.9); I[X.tiltC] = slopeS * 0.8; I[X.tiltO] = slopeS;
+          const sk = Math.max(0.01, 0.15 * sp * 1.9), sw = smooth01((anF.th - 0.5) / 0.5);      // sink along the surface normal where the receptacle is steep
+          I[X.az] = i * GOLDEN; I[X.rad] = anF.r - sk * sw * Math.sin(clamp(anF.th, 0, 1.57)); I[X.h] = anF.y - sk * (1 - sw * (1 - Math.cos(clamp(anF.th, 0, 1.57)))); I[X.tiltC] = slopeS * 0.8; I[X.tiltO] = slopeS;
           I[X.len] = sp * 1.9; I[X.wid] = sp * 0.55; I[X.delay] = delay; I[X.dur] = 0.28; I[X.budL] = 0.55;
           putCol(I, X.c0, fa); putCol(I, X.c1, fb); putCol(I, X.cm, fm);
           putHead(I, h); commit();
@@ -2899,6 +2913,7 @@ async function main() {
     2: [[-1, 0], [-0.7, 0.3], [-0.4, 0.62], [-0.15, 0.92], [0, 1.0], [0.06, 0.97], [0.12, 0.75], [0.16, 0.4], [0.18, 0]],     // dome under a capitulum
     3: [[-1, 0], [-0.6, 0.16], [-0.28, 0.36], [0, 0.64], [0.12, 0.9], [0.18, 1.0], [0.18, 0.6], [0.18, 0]],   // narrow stalk-swelling obconical receptacle, flat top (petals attach round its underside)
     4: [[-1, 0], [-0.6, 0.5], [-0.2, 0.8], [0, 1.0], [0.1, 0.6], [0.15, 0]],                                               // small ovary base
+    6: [[-1, 0], [-0.62, 0.2], [-0.3, 0.42], [-0.08, 0.72], [0.08, 0.93], [0.16, 1.0], [0.2, 1.0], [0.2, 0.6], [0.2, 0]],   // lotus: stalk widening gently into a small swelling / seed pod; petals attach round its underside
     5: [[-1, 0], [-0.7, 0.3], [-0.35, 0.62], [-0.1, 0.85], [0, 0.8], [0.1, 1.0], [0.14, 0.7], [0.15, 0]],                  // calyx tube
   };
   /* ---- receptacle lathe = ONE function. recSurf(p, t) -> {r, y} on the meridional profile (t in 0..1, bottom -> top);
@@ -3100,15 +3115,15 @@ async function main() {
   const presetSel = $('preset');
   PRESET_NAMES.forEach((nm, i) => { const o = document.createElement('option'); o.value = i; o.textContent = nm; presetSel.appendChild(o); });
 
-  const SLIDERS = ['bloom','speed','bloomBias','petalCount','whorls','petalLength','petalWidth','petalShape','tipRound','sizeBias','heightBias','openBias','petalLayer','sepals','sepalLen','sepalOpen','sepalHue','cup','baseCurl','midCurl','tipCurl','openAngle','ruffle','rotX','rotY','rotZ','hue','sat','light'];
-  const fmt = { bloom: 2, speed: 2, bloomBias: 2, petalLength: 2, petalWidth: 2, petalShape: 2, tipRound: 2, sizeBias: 2, heightBias: 2, openBias: 2, petalLayer: 2, sepalLen: 2, sepalOpen: 2, cup: 2, baseCurl: 2, midCurl: 2, tipCurl: 2, openAngle: 2, ruffle: 2, rotX: 2, rotY: 2, rotZ: 2, sat: 2, light: 2 };
+  const SLIDERS = ['bloom','speed','bloomBias','petalCount','whorls','petalLength','petalWidth','petalShape','tipRound','sizeBias','heightBias','openBias','petalLayer','sepals','sepalLen','sepalOpen','sepalHue','cup','baseCurl','midCurl','tipCurl','openAngle','ruffle','rotX','rotY','rotZ','hue','sat','light','baseFlare','baseZone','unfurl','sepalCurl'];
+  const fmt = { bloom: 2, speed: 2, bloomBias: 2, petalLength: 2, petalWidth: 2, petalShape: 2, tipRound: 2, sizeBias: 2, heightBias: 2, openBias: 2, petalLayer: 2, sepalLen: 2, sepalOpen: 2, cup: 2, baseCurl: 2, midCurl: 2, tipCurl: 2, openAngle: 2, ruffle: 2, rotX: 2, rotY: 2, rotZ: 2, sat: 2, light: 2, baseFlare: 2, baseZone: 2, unfurl: 2, sepalCurl: 2 };
   function refreshLabel(id) {
     const el = $(id), lab = $(id + 'V'); if (!lab) return;
     const d = fmt[id]; lab.textContent = d != null ? (+el.value).toFixed(d) : el.value;
   }
   // map slider id -> param key
   const SKEY = { bloomBias:'bloomBias', petalCount:'petalCount', whorls:'whorls', petalLength:'petalLength', petalWidth:'petalWidth',
-    petalShape:'petalShape', tipRound:'tipRound', sizeBias:'sizeBias', heightBias:'heightBias', openBias:'openBias', petalLayer:'petalLayer', sepals:'sepals', sepalLen:'sepalLen', sepalOpen:'sepalOpen', sepalHue:'sepalHue', cup:'cup', baseCurl:'baseCurl', midCurl:'midCurl', tipCurl:'tipCurl', openAngle:'openAngle', ruffle:'ruffle', rotX:'rotX', rotY:'rotY', rotZ:'rotZ', hue:'hue', sat:'sat', light:'light' };
+    petalShape:'petalShape', tipRound:'tipRound', sizeBias:'sizeBias', heightBias:'heightBias', openBias:'openBias', petalLayer:'petalLayer', sepals:'sepals', sepalLen:'sepalLen', sepalOpen:'sepalOpen', sepalHue:'sepalHue', cup:'cup', baseCurl:'baseCurl', midCurl:'midCurl', tipCurl:'tipCurl', openAngle:'openAngle', ruffle:'ruffle', rotX:'rotX', rotY:'rotY', rotZ:'rotZ', hue:'hue', sat:'sat', light:'light', baseFlare:'baseFlare', baseZone:'baseZone', unfurl:'unfurl', sepalCurl:'sepalCurl' };
 
   let autoBloom = true, bloomT = 0, autoRotate = true, showStem = true, curBg = 2;
   let cycle = false, cycleTimer = 0;
@@ -3196,17 +3211,25 @@ async function main() {
 
   function randomFlower() {
     seed = (Math.random() * 1e6) | 0;
-    const baseHue = Math.random() * 360;
+    const h0 = Math.random() * 360, baseHue = h0 > 75 && h0 < 195 ? 195 + (h0 - 75) * 1.25 : h0;   // petals are rarely green or cyan: fold that band into blue..magenta
     const hasFloret = Math.random() < 0.45;
     const whorls = 1 + (Math.random() * 7 | 0);
     const hasStamen = !hasFloret && Math.random() < 0.55;       // exposed stamens when no disc
     const fRad = lerp(0.12, 0.55, Math.random());
+    // coherent attachment: petal count per whorl is capped by the whorl count (<= ~110 petals), widths follow the circle they share, and the
+    // receptacle / attachment radius / base direction are derived from one another instead of keeping the defaults
+    const perW = Math.min(4 + (Math.random() * 40 | 0), Math.floor(110 / whorls));
+    const spiralR = whorls > 2 ? 1 : (Math.random() < 0.5 ? 1 : 0);
+    const wMax = clamp(7 / perW * (1 + 0.25 * Math.min(whorls - 1, 3)), 0.22, 1.3);
+    const pw = wMax * lerp(0.55, 1.0, Math.random());
+    const recR = hasFloret ? fRad * 1.05 : lerp(0.14, 0.24, Math.random());
+    const baseR = hasFloret ? fRad * 1.06 : recR * lerp(0.75, 1.0, Math.random());
     const p = P({
-      petalCount: 4 + (Math.random() * 40 | 0),
+      petalCount: perW,
       whorls,
       petalLength: lerp(0.7, 2.0, Math.random()),
-      petalWidth: lerp(0.3, 1.3, Math.random()),
-      widthPow: lerp(0.8, 2.0, Math.random()),
+      petalWidth: pw,
+      widthPow: lerp(1.0, 2.0, Math.random()),
       petalShape: lerp(0.3, 0.72, Math.random()),
       tipRound: lerp(0.2, 1.0, Math.random()),
       sizeBias: lerp(-0.4, 1.2, Math.random()),
@@ -3221,20 +3244,23 @@ async function main() {
       midCurl: lerp(-0.4, 1.8, Math.random()),
       tipCurl: lerp(-0.4, 2.5, Math.random()),
       openAngle: lerp(0.5, 2.0, Math.random()),
-      ruffle: lerp(0, 0.5, Math.random()),
+      ruffle: lerp(0, 0.4, Math.random()) * clamp(pw / 0.9, 0.15, 1),     // ruffle amplitude follows the petal width (narrow rays would turn boxy)
       notch: Math.random() < 0.3 ? lerp(0.15, 0.6, Math.random()) : 0,
       quill: Math.random() < 0.2 ? lerp(0.8, 2.0, Math.random()) : 0,
-      spiral: whorls > 2 ? 1 : (Math.random() < 0.5 ? 1 : 0),
+      spiral: spiralR,
+      baseRadius: baseR, radIn: hasFloret ? lerp(0.7, 1, Math.random()) : lerp(0.25, 0.55, Math.random()), radOut: hasFloret ? 1 : lerp(1.0, 1.25, Math.random()),
+      baseFlare: hasFloret ? lerp(-0.9, -0.6, Math.random()) : lerp(-0.5, 0.15, Math.random()), baseZone: lerp(0.15, 0.3, Math.random()),
+      unfurl: Math.random() < 0.25 ? lerp(-0.5, -0.2, Math.random()) : lerp(0.2, 0.5, Math.random()),
       bloomStagger: lerp(0.2, 0.6, Math.random()),
       bloomBias: (Math.random() < 0.25 ? -1 : 1) * lerp(0.15, 0.8, Math.random()),
 
       jitter: lerp(0, 0.12, Math.random()),
-      hue: baseHue, sat: lerp(0.2, 0.95, Math.random()), light: lerp(0.45, 0.92, Math.random()),
+      hue: baseHue, sat: lerp(0.35, 0.95, Math.random()), light: lerp(0.36, 0.72, Math.random()), tipLight: 0.06,   // above ~0.75 lightness every hue renders as white
       hueTipShift: lerp(-30, 40, Math.random()),
       floret: hasFloret ? 1 : 0,
       floretCount: hasFloret ? 60 + (Math.random() * 450 | 0) : 0,
       floretRadius: fRad,
-      recType: hasFloret ? 2 : (Math.random() < 0.5 ? 1 : 4), recR: hasFloret ? fRad * 1.05 : 0.16, recH: 0.4,
+      recType: hasFloret ? 2 : (Math.random() < 0.5 ? 1 : 4), recR, recH: hasFloret ? 0.3 : 0.4,
       recHue: lerp(95, 130, Math.random()), recSat: 0.5, recLight: 0.32,
       bractRows: hasFloret && Math.random() < 0.6 ? 2 : 0, bractRad: fRad * 1.05, bractLen: 0.2 + fRad * 0.8, bractWid: 0.2,
       discRing: Math.random() < 0.4 ? lerp(0.3, 1.0, Math.random()) : 0,
@@ -3335,7 +3361,7 @@ async function main() {
   canvas.addEventListener('touchend', () => { pinchDist = 0; });
 
   /* ----------------------------- loop ------------------------------ */
-  if (new URLSearchParams(location.search).has('debug')) window.__flower = { cam, lose: () => device.destroy(), quality: () => ({ renderScale, budgetLevel, w: canvas.width, h: canvas.height, subdiv: $('subdiv').value, tris: totalTris }), cpuNaN: () => { let bad = 0; for (let i = 0; i < nSpine * 12; i++) if (!isFinite(spineData[i])) bad++; for (let i = 0; i < instCount * FLOATS_PER_INST; i++) if (!isFinite(instOut[i])) bad++; return bad; }, settle: () => { cpuStage(bloomT, 0.1, true); }, penetration: () => penetrationStats(), attach: () => attachStats(), sig: () => { let a = 0; for (let i = 0; i < instCount * FLOATS_PER_INST; i++) a = (a * 31 + Math.round(instOut[i] * 1e4)) | 0; for (let i = 0; i < nSpine * 12; i++) a = (a * 31 + Math.round(spineData[i] * 1e4)) | 0; return a; }, step: (dt, n) => { for (let i = 0; i < n; i++) cpuStage(bloomT, dt, false); }, dump: () => Array.from(spineData.subarray(0, nSpine * 12)), err: () => { let m = 0; for (let q = 0; q < nSpine; q++) for (let c = 0; c < NS; c++) m = Math.max(m, Math.abs(dispX[q * NS + c] - tgtX[q * NS + c])); return m; }, worst: () => worstInfo(), setSolve: (on) => { solveOn = !!on; needSnap = true; }, get prof() { return prof; }, get solverMs() { return [solverMs, solverMsAvg, solverMsMax]; },
+  if (new URLSearchParams(location.search).has('debug')) window.__flower = { cam, setp: (k, v) => { cur[k] = v; tgt[k] = v; }, getp: (k) => cur[k], snap: () => { for (const k in tgt) cur[k] = tgt[k]; }, lose: () => device.destroy(), quality: () => ({ renderScale, budgetLevel, w: canvas.width, h: canvas.height, subdiv: $('subdiv').value, tris: totalTris }), cpuNaN: () => { let bad = 0; for (let i = 0; i < nSpine * 12; i++) if (!isFinite(spineData[i])) bad++; for (let i = 0; i < instCount * FLOATS_PER_INST; i++) if (!isFinite(instOut[i])) bad++; return bad; }, settle: () => { cpuStage(bloomT, 0.1, true); }, penetration: () => penetrationStats(), attach: () => attachStats(), sig: () => { let a = 0; for (let i = 0; i < instCount * FLOATS_PER_INST; i++) a = (a * 31 + Math.round(instOut[i] * 1e4)) | 0; for (let i = 0; i < nSpine * 12; i++) a = (a * 31 + Math.round(spineData[i] * 1e4)) | 0; return a; }, step: (dt, n) => { for (let i = 0; i < n; i++) cpuStage(bloomT, dt, false); }, dump: () => Array.from(spineData.subarray(0, nSpine * 12)), err: () => { let m = 0; for (let q = 0; q < nSpine; q++) for (let c = 0; c < NS; c++) m = Math.max(m, Math.abs(dispX[q * NS + c] - tgtX[q * NS + c])); return m; }, worst: () => worstInfo(), setSolve: (on) => { solveOn = !!on; needSnap = true; }, get prof() { return prof; }, get solverMs() { return [solverMs, solverMsAvg, solverMsMax]; },
      load: (i) => { presetSel.value = i; loadPreset(i, false); }, get inst() { return instCount; },
     stats: () => ({ tris: totalTris, budget: BUDGETS[budgetLevel] * budgetScale, buckets: buckets.map((b) => ({ kind: b.kind, count: b.count, nu: b.nu, nv: b.nv, tris: b.tris })), instances: instCount, solidTris: solNI / 3 }) };
   loadPreset(0, false);
