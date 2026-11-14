@@ -32,7 +32,7 @@ Open it in a current version of one of the browsers above.
 | Tab | What it controls |
 | --- | --- |
 | **생성** (Create) | Flower type (8 presets), random flower, replay, auto showcase, copy current settings. Bloom amount, speed, centre↔outer deviation, easing |
-| **형태** (Shape) | Petal count, whorls, length, width, widest point, tip roundness, cup, base/mid/tip curvature, opening angle, ruffle, sepals, colour |
+| **형태** (Shape) | Petal count, whorls, length, width, widest point, tip roundness, cup, base/mid/tip curvature, opening angle, ruffle, base flare and base curve zone, unfurl direction, sepals and sepal curl, colour |
 | **조명** (Lighting) | Specular gloss, main light azimuth and elevation, AO / SSGI / soft shadow toggles and strengths, polygon budget (four triangle-count caps) |
 | **장면** (Scene) | Stem and leaves, auto-rotate, 5 backgrounds |
 
@@ -51,7 +51,7 @@ Each preset follows the structure and opening behaviour of the real flower.
 | Sunflower | One whorl of 30 ray florets around a large golden-angle spiral disc, with an involucre | Rays standing inside the involucre spread out evenly |
 | Tulip | 6 tepals in two whorls of 3, 6 stamens | Opens from a bud with a rounded bowl-shaped bottom into a goblet |
 | Lily | 6 tepals in two whorls of 3, long stamens and pistil | Spreads wide from a narrow funnel base, with the tips reflexed back |
-| Lotus | Several whorls of broad petals attached in overlap below the receptacle, around a central seed pod ringed by stamens | Whorl by whorl from the outside |
+| Lotus | Several whorls of broad petals attached in overlap around a small receptacle at the top of the stalk, around a central seed pod ringed by stamens | Whorl by whorl from the outside, out of a pointed egg-shaped bud |
 | Cherry blossom | 5 notched petals, many slender stamens; 4 blossoms on one twig | All together, wide open |
 | Dahlia | Dense spiral of petals, quilled into tubes | In one continuous sweep from the outside to the centre |
 
@@ -65,6 +65,18 @@ Petals, sepals, bracts and stamens all sit on the surface of the receptacle (the
 - **Bending, not rotation**: when a petal opens or is pushed by a neighbour, its base stays fixed and it bends more the farther it is from the base. Sepals and bracts arch back the same way.
 - **Unfurl direction**: most flowers open from the base first; the rose rolls back from the tip and margins first.
 
+These can be adjusted in the Shape tab.
+
+| Slider | What it changes |
+| --- | --- |
+| 밑동 벌어짐 (base flare) | The direction in which a petal leaves the receptacle. Lower values make it leave more sideways, giving a round bowl-shaped bottom |
+| 밑동 곡선 구간 (base curve zone) | The length over which the petal bends from that direction into its pose |
+| 펴지는 방향 (unfurl direction, base↔tip) | Positive opens from the base first, negative from the tip and margins first |
+| 꽃받침 휘어짐 (sepal curl) | How far sepals and bracts arch back |
+| 중심↔외곽 높이 (centre↔outer height), 겹침 깊이(층 분리) (layer separation) | Move each petal's attachment along the receptacle surface; bases stay attached |
+
+At the ends of a slider's range, petals can visibly overlap.
+
 ## Petal interaction
 
 Petals are aware of each other. Each petal's base-to-tip curve (its spine) is reduced to 8 points and the whole flower is solved together.
@@ -74,7 +86,7 @@ Petals are aware of each other. Each petal's base-to-tip curve (its spine) is re
 - **Overlap within a whorl**: neighbouring petals of the same whorl sit with one margin over and the other margin under.
 - **Springiness**: a released petal overshoots slightly and settles. The same position of the "개화 정도" (bloom amount) slider still always gives the same shape.
 
-Limits: when petals push on each other they deform in one way only, a broad bend from the base to mid-blade. Local dents at the point of contact are not modelled. Some overlap can remain in the bud state of flowers with very many petals and in randomly generated flowers. With "Z 반전" (flip Z) or the petal rotation sliders (X, Y, Z), interaction is switched off and each petal moves independently. Turning petal rotation X or Y close to 90 degrees lifts the base corners off the receptacle. Randomly generated flowers use the default attachment settings, so their bases can look cruder than the presets.
+Limits: when petals push on each other they deform in one way only, a broad bend from the base to mid-blade. Local dents at the point of contact are not modelled. Some overlap can remain in the bud state of flowers with very many petals and in randomly generated flowers. With "Z 반전" (flip Z) or the petal rotation sliders (X, Y, Z), interaction is switched off and each petal moves independently. Turning petal rotation X or Y close to 90 degrees lifts the base corners off the receptacle. Randomly generated flowers get a receptacle and attachment settings matched to their size, but they are not tuned as carefully as the presets.
 
 ## Polygon budget
 
